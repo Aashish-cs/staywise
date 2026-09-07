@@ -8,12 +8,13 @@ Create one repository for the team and keep it private until the course team is 
 
 1. Create a free Supabase project.
 2. Run `supabase/schema.sql`.
-3. In Authentication settings, enable email confirmation.
-4. Add redirect URLs:
+3. Run `supabase/phase2_seed.sql` for synthetic demo listings.
+4. In Authentication settings, enable email confirmation.
+5. Add redirect URLs:
    - `http://localhost:3000/auth/callback`
    - `https://YOUR-VERCEL-DOMAIN.vercel.app/auth/callback`
-5. In Authentication email settings, configure custom SMTP using Resend.
-6. Keep Row Level Security enabled on every application table.
+6. In Authentication email settings, configure custom SMTP using Resend.
+7. Keep Row Level Security enabled on every application table.
 
 ## Resend SMTP
 
@@ -42,6 +43,7 @@ Use Resend as the SMTP provider for Supabase Auth emails:
 - Password reset tested.
 - Supabase custom SMTP configured.
 - RLS policies verified.
+- `supabase/phase2_seed.sql` run for demo listings.
 - No `.env.local` or API secrets committed.
 - `pnpm lint`, `pnpm typecheck`, and `pnpm build` pass.
 - Demo accounts prepared for guest and host roles.

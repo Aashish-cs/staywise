@@ -18,7 +18,7 @@ create table if not exists public.profiles (
 
 create table if not exists public.listings (
   id uuid primary key default gen_random_uuid(),
-  host_id uuid not null references public.profiles(id) on delete cascade,
+  host_id uuid references public.profiles(id) on delete set null,
   title text not null,
   description text not null,
   city text not null,
@@ -36,6 +36,24 @@ create table if not exists public.listings (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.listings alter column host_id drop not null;
+
+do $$
+begin
+  alter table public.listings drop constraint if exists listings_host_id_fkey;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'listings_host_id_fkey'
+      and conrelid = 'public.listings'::regclass
+  ) then
+    alter table public.listings
+      add constraint listings_host_id_fkey
+      foreign key (host_id) references public.profiles(id) on delete set null;
+  end if;
+end $$;
 
 create table if not exists public.listing_images (
   id uuid primary key default gen_random_uuid(),
@@ -155,6 +173,7 @@ drop policy if exists "Guests manage own favorites" on public.favorites;
 drop policy if exists "Guests and hosts read related reservations" on public.reservations;
 drop policy if exists "Guests create own reservations" on public.reservations;
 drop policy if exists "Guests cancel own reservations" on public.reservations;
+drop function if exists public.cancel_reservation(uuid);
 
 create policy "Profiles are readable by owner"
 on public.profiles for select
@@ -287,9 +306,29 @@ with check (
     where profiles.id = auth.uid()
       and profiles.role = 'guest'
   )
+  and exists (
+    select 1 from public.listings
+    where listings.id = reservations.listing_id
+      and listings.is_active = true
+      and listings.capacity >= reservations.guests
+      and listings.price_per_night = reservations.nightly_rate
+  )
 );
 
-create policy "Guests cancel own reservations"
-on public.reservations for update
-using (auth.uid() = guest_id)
-with check (auth.uid() = guest_id and status in ('confirmed', 'cancelled'));
+create or replace function public.cancel_reservation(reservation_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.reservations
+  set status = 'cancelled',
+      updated_at = now()
+  where id = reservation_id
+    and guest_id = auth.uid()
+    and status = 'confirmed';
+end;
+$$;
+
+grant execute on function public.cancel_reservation(uuid) to authenticated;

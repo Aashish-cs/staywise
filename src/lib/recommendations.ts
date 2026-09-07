@@ -1,10 +1,11 @@
 import { z } from "zod";
 import {
   featuredAmenities,
-  staywiseListings,
   type Listing,
   type TripPurpose,
 } from "@/lib/listings";
+
+const amenityValues = [...featuredAmenities] as [string, ...string[]];
 
 export const searchSchema = z.object({
   destination: z.string().trim().min(0).default(""),
@@ -13,7 +14,7 @@ export const searchSchema = z.object({
   tripPurpose: z
     .enum(["business", "family", "remote-work", "romantic", "solo", "group", "outdoor"])
     .default("remote-work"),
-  amenities: z.array(z.enum(featuredAmenities as [string, ...string[]])).default([]),
+  amenities: z.array(z.enum(amenityValues)).default([]),
   month: z.string().trim().default("Sep"),
 });
 
@@ -37,7 +38,7 @@ const purposeSignals: Record<TripPurpose, string[]> = {
 
 export function rankListings(
   rawInput: Partial<SearchInput>,
-  listings: Listing[] = staywiseListings,
+  listings: Listing[] = [],
 ): RankedListing[] {
   const input = searchSchema.parse(rawInput);
   const destination = input.destination.toLowerCase();

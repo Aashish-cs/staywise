@@ -1,6 +1,6 @@
 # StayWise
 
-StayWise is a senior design project for an AI-assisted short-term rental marketplace. Guests can search for stays, create trip preferences, save listings, and receive explainable recommendations. Hosts can manage listings, availability, pricing, and reservation demand.
+StayWise is a senior design project for an AI-assisted short-term rental marketplace. Guests can search real database listings, save places, reserve stays, and receive explainable recommendations. Hosts can publish listings and view reservation demand.
 
 ## Tech Stack
 
@@ -20,7 +20,7 @@ pnpm dev
 
 Open `http://localhost:3000`.
 
-Auth screens compile without secrets, but real sign-up, email confirmation, password reset, and protected account data require Supabase environment variables.
+Auth screens compile without secrets, but real sign-up, email confirmation, password reset, listings, favorites, and reservations require Supabase environment variables.
 
 ## Environment Variables
 
@@ -36,9 +36,12 @@ Resend is configured inside Supabase as a custom SMTP provider. Do not put the R
 
 1. Create a Supabase project.
 2. Run `supabase/schema.sql` in the SQL editor.
-3. Turn on email confirmation in Supabase Auth settings.
-4. Configure custom SMTP with Resend.
-5. Add `http://localhost:3000/auth/callback` and the Vercel production callback URL to Supabase redirect URLs.
+3. Run `supabase/phase2_seed.sql` to add synthetic marketplace listings for demo search and reservations.
+4. Turn on email confirmation in Supabase Auth settings.
+5. Configure custom SMTP with Resend.
+6. Add `http://localhost:3000/auth/callback` and the Vercel production callback URL to Supabase redirect URLs.
+
+The seed listings are synthetic StayWise data with public stock imagery. Do not scrape Airbnb or copy private marketplace content into this database.
 
 ## Useful Scripts
 
@@ -51,8 +54,8 @@ pnpm build
 
 ## Deployment
 
-Use GitHub as the source repository and import it into Vercel. Add the same environment variables in Vercel Project Settings. The database, auth, email, and deployment setup is documented in `docs/deployment.md`.
+Use GitHub as the source repository and import it into Vercel. Add the same environment variables in Vercel Project Settings. The database, auth, email, seed data, and deployment setup is documented in `docs/deployment.md`.
 
 ## Project Scope
 
-The current implementation focuses on the September 2026 milestone: a polished web foundation with authentication, listing search, and explainable recommendation logic. Payment processing, guest-host messaging, reviews, advanced adaptive learning, native mobile apps, and calendar sync remain future items per the SRS.
+The current implementation covers authentication, Supabase-backed listing search, explainable AI ranking, guest reservations, persisted favorites, and a host listing dashboard. Payment processing, guest-host messaging, reviews, advanced adaptive learning, native mobile apps, and calendar sync remain future items per the SRS.

@@ -113,6 +113,33 @@ button {
   font-weight: 500;
 }
 
+.field-textarea {
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  color: var(--foreground);
+  font-size: 0.95rem;
+  font-weight: 600;
+  min-height: 7rem;
+  padding: 0.9rem;
+  resize: vertical;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+  width: 100%;
+}
+
+.field-textarea:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px rgba(255, 56, 92, 0.12);
+  outline: none;
+}
+
+.field-textarea::placeholder {
+  color: #9b8f87;
+  font-weight: 500;
+}
+
 .choice-button {
   align-items: center;
   background: #ffffff;

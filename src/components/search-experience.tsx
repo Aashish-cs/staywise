@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import {
   BriefcaseBusiness,
@@ -23,8 +24,12 @@ import {
   Users,
   Wifi,
 } from "lucide-react";
+import { toggleFavoriteAction } from "@/app/favorites/actions";
 import {
   featuredAmenities,
+  popularDestinations,
+  stayMonths,
+  type Listing,
   tripPurposeLabels,
   type TripPurpose,
 } from "@/lib/listings";
@@ -49,17 +54,46 @@ const defaultSearch: SearchInput = {
   month: "Sep",
 };
 
-const destinations = ["Austin", "Chicago", "Seattle", "Denver", "Miami", "New York"];
-const months = ["Sep", "Oct", "Nov", "Dec"];
-
-export function SearchExperience() {
+export function SearchExperience({
+  initialFavoriteIds,
+  initialListings,
+  isSignedIn,
+}: {
+  initialFavoriteIds: string[];
+  initialListings: Listing[];
+  isSignedIn: boolean;
+}) {
+  const router = useRouter();
   const [search, setSearch] = useState<SearchInput>(defaultSearch);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [savedIds, setSavedIds] = useState<string[]>(["chicago-design-apartment"]);
+  const [savedIds, setSavedIds] = useState<string[]>(initialFavoriteIds);
+  const [, startTransition] = useTransition();
 
-  const rankedListings = useMemo(() => rankListings(search), [search]);
+  const rankedListings = useMemo(
+    () => rankListings(search, initialListings),
+    [initialListings, search],
+  );
   const selectedListing =
     rankedListings.find((listing) => listing.id === selectedId) ?? rankedListings[0];
+  const destinations = useMemo(() => {
+    const dbDestinations = initialListings.map((listing) => listing.city);
+    return Array.from(new Set([...popularDestinations, ...dbDestinations]));
+  }, [initialListings]);
+  const listingDetailQuery = new URLSearchParams({
+    guests: String(search.guests),
+    budget: String(search.maxNightlyBudget),
+    month: search.month,
+    purpose: search.tripPurpose,
+  }).toString();
+  const averageNightlyRate =
+    initialListings.length > 0
+      ? Math.round(
+          initialListings.reduce(
+            (total, listing) => total + listing.pricePerNight,
+            0,
+          ) / initialListings.length,
+        )
+      : 0;
 
   function updateSearch<K extends keyof SearchInput>(key: K, value: SearchInput[K]) {
     setSearch((current) => ({ ...current, [key]: value }));
@@ -76,11 +110,24 @@ export function SearchExperience() {
   }
 
   function toggleSaved(id: string) {
+    if (!isSignedIn) {
+      router.push("/auth");
+      return;
+    }
+
+    const intent = savedIds.includes(id) ? "remove" : "save";
     setSavedIds((current) =>
-      current.includes(id)
+      intent === "remove"
         ? current.filter((savedId) => savedId !== id)
         : [...current, id],
     );
+
+    startTransition(() => {
+      const formData = new FormData();
+      formData.set("listingId", id);
+      formData.set("intent", intent);
+      void toggleFavoriteAction(formData);
+    });
   }
 
   return (
@@ -142,7 +189,7 @@ export function SearchExperience() {
                   <input
                     value={search.destination}
                     onChange={(event) => updateSearch("destination", event.target.value)}
-                    placeholder="Try Austin or Chicago"
+                    placeholder="Try Dallas or Chicago"
                     className="field-input"
                   />
                 </span>
@@ -170,7 +217,7 @@ export function SearchExperience() {
                       onChange={(event) => updateSearch("month", event.target.value)}
                       className="field-input"
                     >
-                      {months.map((month) => (
+                      {stayMonths.map((month) => (
                         <option key={month}>{month}</option>
                       ))}
                     </select>
@@ -304,7 +351,7 @@ export function SearchExperience() {
                         <div className="relative aspect-[4/3] overflow-hidden bg-[#e8dfd6]">
                           <Image
                             src={listing.imageUrl}
-                            alt={listing.title}
+                            alt={listing.imageAlt}
                             fill
                             sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
                             className="object-cover transition duration-500 group-hover:scale-105"
@@ -365,7 +412,7 @@ export function SearchExperience() {
                           Save
                         </button>
                         <Link
-                          href="/auth"
+                          href={`/listings/${listing.id}?${listingDetailQuery}`}
                           className="rounded-full bg-[#201a18] px-4 py-2 text-sm font-semibold text-white hover:bg-black"
                         >
                           Reserve
@@ -434,7 +481,8 @@ export function SearchExperience() {
               <div className="mt-6 rounded-[24px] border border-dashed border-[#d7c8bd] bg-white p-8 text-center">
                 <p className="text-lg font-semibold">No stays match this trip yet.</p>
                 <p className="mt-2 text-sm text-[#786a60]">
-                  Try a different month, a wider budget, or fewer required amenities.
+                  Try a different city, a wider budget, or seed active listings in
+                  Supabase.
                 </p>
               </div>
             )}
@@ -489,9 +537,21 @@ export function SearchExperience() {
               Listings stay connected to demand.
             </h2>
             <div className="mt-5 space-y-3">
-              <HostRow label="Active listings" value="8" trend="+2 this sprint" />
-              <HostRow label="Upcoming reservations" value="12" trend="4 need review" />
-              <HostRow label="Average match quality" value="89%" trend="+7% after tuning" />
+              <HostRow
+                label="Active listings"
+                value={`${initialListings.length}`}
+                trend="Loaded from Supabase"
+              />
+              <HostRow
+                label="Search cities"
+                value={`${destinations.length}`}
+                trend="Filtered live by trip"
+              />
+              <HostRow
+                label="Average nightly"
+                value={averageNightlyRate ? `$${averageNightlyRate}` : "$0"}
+                trend="Computed from listings"
+              />
             </div>
           </div>
         </div>

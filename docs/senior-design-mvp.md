@@ -12,10 +12,10 @@
 
 ## October 2026
 
-- Supabase tables connected to the UI.
-- Real listing create/edit forms.
-- Favorites persisted per user.
-- Reservation creation and availability updates.
+- Supabase tables connected to listing search and detail pages.
+- Host listing creation connected to Row Level Security.
+- Favorites persisted per guest account.
+- Reservation creation and cancellation connected to guest dashboard.
 - Baseline recommendation evaluation with synthetic scenarios.
 
 ## November 2026

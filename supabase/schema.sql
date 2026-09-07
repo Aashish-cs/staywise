@@ -140,6 +140,22 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+drop policy if exists "Profiles are readable by owner" on public.profiles;
+drop policy if exists "Profiles are editable by owner" on public.profiles;
+drop policy if exists "Active listings are public" on public.listings;
+drop policy if exists "Hosts create own listings" on public.listings;
+drop policy if exists "Hosts update own listings" on public.listings;
+drop policy if exists "Hosts delete own listings" on public.listings;
+drop policy if exists "Listing images follow listing visibility" on public.listing_images;
+drop policy if exists "Hosts manage own listing images" on public.listing_images;
+drop policy if exists "Listing amenities follow listing visibility" on public.listing_amenities;
+drop policy if exists "Hosts manage own listing amenities" on public.listing_amenities;
+drop policy if exists "Guests manage own trips" on public.trips;
+drop policy if exists "Guests manage own favorites" on public.favorites;
+drop policy if exists "Guests and hosts read related reservations" on public.reservations;
+drop policy if exists "Guests create own reservations" on public.reservations;
+drop policy if exists "Guests cancel own reservations" on public.reservations;
+
 create policy "Profiles are readable by owner"
 on public.profiles for select
 using (auth.uid() = id);

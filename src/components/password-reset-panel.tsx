@@ -44,7 +44,7 @@ export function PasswordResetPanel() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f3ee] px-5 py-10 text-[#201a18]">
       <section className="w-full max-w-md rounded-[28px] border border-[#eadfd6] bg-[#fffaf5] p-6 shadow-sm">
-        <Link href="/auth" className="inline-flex items-center gap-2 text-sm font-semibold text-[#5f5148] hover:text-[#ff385c]">
+        <Link href="/auth?mode=signin" className="inline-flex items-center gap-2 text-sm font-semibold text-[#5f5148] hover:text-[#ff385c]">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Back to sign in
         </Link>

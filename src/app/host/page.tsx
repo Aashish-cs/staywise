@@ -43,7 +43,7 @@ export default async function HostPage() {
             <span className="text-xl font-semibold">StayWise</span>
           </Link>
           <Link
-            href={user ? "/dashboard" : "/auth"}
+            href={user ? "/dashboard" : "/auth?mode=signin&role=host"}
             className="rounded-full bg-[#201a18] px-4 py-2 text-sm font-semibold text-white"
           >
             {user ? "Guest trips" : "Host sign in"}
@@ -60,7 +60,7 @@ export default async function HostPage() {
             </h1>
           </div>
           <Link
-            href="/auth"
+            href="/auth?mode=signup&role=host"
             className="inline-flex h-12 items-center justify-center rounded-full border border-[#eadfd6] bg-white px-5 text-sm font-semibold hover:border-[#ff385c]"
           >
             {isHost ? user?.email : "Create host account"}
@@ -72,7 +72,7 @@ export default async function HostPage() {
             title="Sign in as a host"
             body="Host tools are connected to verified accounts so listings and reservations stay private to the right owner."
             action="Open auth"
-            href="/auth"
+            href="/auth?mode=signin&role=host"
           />
         )}
 

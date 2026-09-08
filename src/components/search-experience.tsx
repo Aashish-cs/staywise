@@ -55,10 +55,12 @@ const defaultSearch: SearchInput = {
 };
 
 export function SearchExperience({
+  accountRole,
   initialFavoriteIds,
   initialListings,
   isSignedIn,
 }: {
+  accountRole: "guest" | "host" | null;
   initialFavoriteIds: string[];
   initialListings: Listing[];
   isSignedIn: boolean;
@@ -69,6 +71,7 @@ export function SearchExperience({
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [showMapPanel, setShowMapPanel] = useState(false);
   const [savedIds, setSavedIds] = useState<string[]>(initialFavoriteIds);
+  const [notice, setNotice] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   const rankedListings = useMemo(
@@ -96,6 +99,16 @@ export function SearchExperience({
           ) / initialListings.length,
         )
       : 0;
+  const accountHref = isSignedIn
+    ? accountRole === "host"
+      ? "/host"
+      : "/dashboard"
+    : "/auth?mode=signin";
+  const accountLabel = isSignedIn
+    ? accountRole === "host"
+      ? "Host"
+      : "Trips"
+    : "Sign in";
 
   function updateSearch<K extends keyof SearchInput>(key: K, value: SearchInput[K]) {
     setSearch((current) => ({ ...current, [key]: value }));
@@ -113,22 +126,49 @@ export function SearchExperience({
 
   function toggleSaved(id: string) {
     if (!isSignedIn) {
-      router.push("/auth");
+      router.push("/auth?mode=signin");
       return;
     }
 
-    const intent = savedIds.includes(id) ? "remove" : "save";
+    if (accountRole !== "guest") {
+      setNotice("Use a guest account to save stays.");
+      return;
+    }
+
+    const wasSaved = savedIds.includes(id);
+    const intent = wasSaved ? "remove" : "save";
     setSavedIds((current) =>
       intent === "remove"
         ? current.filter((savedId) => savedId !== id)
         : [...current, id],
     );
+    setNotice(null);
 
     startTransition(() => {
       const formData = new FormData();
       formData.set("listingId", id);
       formData.set("intent", intent);
-      void toggleFavoriteAction(formData);
+      void toggleFavoriteAction(formData)
+        .then((result) => {
+          if (result?.ok) {
+            return;
+          }
+
+          setSavedIds((current) =>
+            wasSaved
+              ? Array.from(new Set([...current, id]))
+              : current.filter((savedId) => savedId !== id),
+          );
+          setNotice(result?.message ?? "This saved stay change did not finish.");
+        })
+        .catch(() => {
+          setSavedIds((current) =>
+            wasSaved
+              ? Array.from(new Set([...current, id]))
+              : current.filter((savedId) => savedId !== id),
+          );
+          setNotice("This saved stay change did not finish.");
+        });
     });
   }
 
@@ -178,9 +218,9 @@ export function SearchExperience({
           <div className="flex items-center gap-2">
             <Link
               className="hidden rounded-full px-4 py-2 text-sm font-semibold hover:bg-white md:block"
-              href={isSignedIn ? "/dashboard" : "/auth"}
+              href={accountHref}
             >
-              {isSignedIn ? "Trips" : "Sign in"}
+              {accountLabel}
             </Link>
             <div className="relative">
               <button
@@ -224,14 +264,14 @@ export function SearchExperience({
                   ) : (
                     <>
                       <Link
-                        href="/auth"
+                        href="/auth?mode=signin"
                         className="block px-4 py-3 hover:bg-[#fff3f5]"
                         onClick={() => setIsAccountMenuOpen(false)}
                       >
                         Sign in
                       </Link>
                       <Link
-                        href="/auth"
+                        href="/auth?mode=signup"
                         className="block px-4 py-3 hover:bg-[#fff3f5]"
                         onClick={() => setIsAccountMenuOpen(false)}
                       >
@@ -392,6 +432,12 @@ export function SearchExperience({
                 <Search className="h-4 w-4" aria-hidden="true" />
                 Search StayWise
               </button>
+
+              {notice && (
+                <p className="rounded-2xl bg-[#fff3f5] p-3 text-sm font-semibold text-[#bd1740]">
+                  {notice}
+                </p>
+              )}
             </div>
           </aside>
 

@@ -16,13 +16,19 @@ export async function toggleFavoriteAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    return;
+    return {
+      ok: false,
+      message: "This listing could not be saved.",
+    };
   }
 
   const supabase = await createSupabaseServerClient();
 
   if (!supabase) {
-    return;
+    return {
+      ok: false,
+      message: "Supabase is not configured for saved stays yet.",
+    };
   }
 
   const {
@@ -30,7 +36,10 @@ export async function toggleFavoriteAction(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return;
+    return {
+      ok: false,
+      message: "Sign in as a guest before saving stays.",
+    };
   }
 
   const { data: profile } = await supabase
@@ -40,22 +49,47 @@ export async function toggleFavoriteAction(formData: FormData) {
     .maybeSingle();
 
   if (profile?.role !== "guest") {
-    return;
+    return {
+      ok: false,
+      message: "Use a guest account to save stays.",
+    };
   }
 
   if (parsed.data.intent === "save") {
-    await supabase.from("favorites").upsert({
+    const { error } = await supabase.from("favorites").upsert({
       guest_id: user.id,
       listing_id: parsed.data.listingId,
     });
+
+    if (error) {
+      return {
+        ok: false,
+        message: error.message,
+      };
+    }
   } else {
-    await supabase
+    const { error } = await supabase
       .from("favorites")
       .delete()
       .eq("guest_id", user.id)
       .eq("listing_id", parsed.data.listingId);
+
+    if (error) {
+      return {
+        ok: false,
+        message: error.message,
+      };
+    }
   }
 
   revalidatePath("/");
   revalidatePath("/dashboard");
+
+  return {
+    ok: true,
+    message:
+      parsed.data.intent === "save"
+        ? "Saved to your trips."
+        : "Removed from saved stays.",
+  };
 }

@@ -145,7 +145,7 @@ export function ReservationPanel({
           </button>
         ) : (
           <Link
-            href="/auth"
+            href="/auth?mode=signin"
             className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#ff385c] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#df2348]"
           >
             Sign in to reserve

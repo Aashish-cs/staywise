@@ -69,7 +69,7 @@ export default async function DashboardPage() {
               : "Create a verified guest account to reserve places and keep a private trip history."}
           </p>
           <Link
-            href={user ? "/" : "/auth"}
+            href={user ? "/" : "/auth?mode=signin"}
             className="mt-5 inline-flex h-11 items-center justify-center rounded-full bg-[#ff385c] px-5 text-sm font-semibold text-white hover:bg-[#df2348]"
           >
             {user ? "Find another stay" : "Sign in"}
@@ -249,7 +249,7 @@ function DashboardHeader({ email }: { email?: string }) {
             </button>
           </form>
         ) : (
-          <Link href="/auth" className="rounded-full border border-[#eadfd6] bg-white px-4 py-2 text-sm font-semibold">
+          <Link href="/auth?mode=signin" className="rounded-full border border-[#eadfd6] bg-white px-4 py-2 text-sm font-semibold">
             Sign in
           </Link>
         )}

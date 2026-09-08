@@ -12,10 +12,16 @@ import { hasSupabaseConfig } from "@/lib/supabase/config";
 type AuthMode = "signin" | "signup";
 type AccountRole = "guest" | "host";
 
-export function AuthPanel() {
+export function AuthPanel({
+  initialMode = "signup",
+  initialRole = "guest",
+}: {
+  initialMode?: AuthMode;
+  initialRole?: AccountRole;
+}) {
   const router = useRouter();
-  const [mode, setMode] = useState<AuthMode>("signup");
-  const [role, setRole] = useState<AccountRole>("guest");
+  const [mode, setMode] = useState<AuthMode>(initialMode);
+  const [role, setRole] = useState<AccountRole>(initialRole);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -83,7 +89,8 @@ export function AuthPanel() {
         .eq("id", data.user.id)
         .maybeSingle();
 
-      router.replace(profile?.role === "host" ? "/host" : "/dashboard");
+      const roleFromProfile = profile?.role ?? data.user.user_metadata?.role;
+      router.replace(roleFromProfile === "host" ? "/host" : "/dashboard");
     } finally {
       setIsSubmitting(false);
     }

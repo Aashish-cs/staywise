@@ -89,7 +89,7 @@ export default async function ListingPage({
             <span className="text-xl font-semibold">StayWise</span>
           </Link>
           <Link
-            href={user ? "/dashboard" : "/auth"}
+            href={user ? "/dashboard" : "/auth?mode=signin"}
             className="rounded-full border border-[#eadfd6] bg-white px-4 py-2 text-sm font-semibold"
           >
             {user ? "Trips" : "Sign in"}

@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { ArrowRight, CheckCircle2, Mail, ShieldCheck, UserRound } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -12,6 +13,7 @@ type AuthMode = "signin" | "signup";
 type AccountRole = "guest" | "host";
 
 export function AuthPanel() {
+  const router = useRouter();
   const [mode, setMode] = useState<AuthMode>("signup");
   const [role, setRole] = useState<AccountRole>("guest");
   const [fullName, setFullName] = useState("");
@@ -75,8 +77,13 @@ export function AuthPanel() {
         return;
       }
 
-      const userRole = data.user?.user_metadata?.role;
-      window.location.href = userRole === "host" ? "/host" : "/dashboard";
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .maybeSingle();
+
+      router.replace(profile?.role === "host" ? "/host" : "/dashboard");
     } finally {
       setIsSubmitting(false);
     }
@@ -122,6 +129,7 @@ export function AuthPanel() {
           <div className="grid grid-cols-2 rounded-full bg-white p-1">
             {(["signup", "signin"] as AuthMode[]).map((item) => (
               <button
+                type="button"
                 key={item}
                 className={clsx(
                   "h-11 rounded-full text-sm font-semibold capitalize transition",

@@ -216,7 +216,10 @@ function ReservationRow({ reservation }: { reservation: Reservation }) {
         {reservation.status === "confirmed" && (
           <form action={cancelReservationAction}>
             <input type="hidden" name="reservationId" value={reservation.id} />
-            <button className="rounded-full border border-[#eadfd6] bg-white px-3 py-1 text-sm font-semibold hover:border-[#ff385c] hover:text-[#df2348]">
+            <button
+              type="submit"
+              className="rounded-full border border-[#eadfd6] bg-white px-3 py-1 text-sm font-semibold hover:border-[#ff385c] hover:text-[#df2348]"
+            >
               Cancel
             </button>
           </form>
@@ -238,7 +241,10 @@ function DashboardHeader({ email }: { email?: string }) {
         </Link>
         {email ? (
           <form action="/auth/signout" method="post">
-            <button className="rounded-full border border-[#eadfd6] bg-white px-4 py-2 text-sm font-semibold">
+            <button
+              type="submit"
+              className="rounded-full border border-[#eadfd6] bg-white px-4 py-2 text-sm font-semibold"
+            >
               Sign out
             </button>
           </form>

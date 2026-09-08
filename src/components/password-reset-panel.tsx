@@ -78,6 +78,7 @@ export function PasswordResetPanel() {
           )}
 
           <button
+            type="submit"
             disabled={isSubmitting}
             className="h-12 w-full rounded-full bg-[#ff385c] text-sm font-semibold text-white hover:bg-[#df2348] disabled:cursor-not-allowed disabled:opacity-70"
           >

@@ -66,6 +66,8 @@ export function SearchExperience({
   const router = useRouter();
   const [search, setSearch] = useState<SearchInput>(defaultSearch);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [showMapPanel, setShowMapPanel] = useState(false);
   const [savedIds, setSavedIds] = useState<string[]>(initialFavoriteIds);
   const [, startTransition] = useTransition();
 
@@ -130,11 +132,31 @@ export function SearchExperience({
     });
   }
 
+  function focusSearch() {
+    document.getElementById("search")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+
+  function focusResults() {
+    setSelectedId(rankedListings[0]?.id ?? null);
+    document.getElementById("results")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+
   return (
     <main className="min-h-screen bg-[#f7f3ee] text-[#201a18]">
       <header className="sticky top-0 z-20 border-b border-[#eadfd6] bg-[#fffaf5]/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <Link href="/" className="flex items-center gap-3" aria-label="StayWise home">
+          <Link
+            href="/"
+            className="flex items-center gap-3"
+            aria-label="StayWise home"
+            onClick={() => setIsAccountMenuOpen(false)}
+          >
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff385c] text-white shadow-sm">
               <Sparkles className="h-5 w-5" aria-hidden="true" />
             </span>
@@ -154,14 +176,72 @@ export function SearchExperience({
           </nav>
 
           <div className="flex items-center gap-2">
-            <Link className="hidden rounded-full px-4 py-2 text-sm font-semibold hover:bg-white md:block" href="/auth">
-              Sign in
+            <Link
+              className="hidden rounded-full px-4 py-2 text-sm font-semibold hover:bg-white md:block"
+              href={isSignedIn ? "/dashboard" : "/auth"}
+            >
+              {isSignedIn ? "Trips" : "Sign in"}
             </Link>
-            <button className="flex h-11 items-center gap-2 rounded-full border border-[#ddd0c6] bg-white px-3 text-sm shadow-sm">
-              <Menu className="h-4 w-4" aria-hidden="true" />
-              <UserRound className="h-5 w-5" aria-hidden="true" />
-              <span className="sr-only">Open account menu</span>
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                aria-expanded={isAccountMenuOpen}
+                aria-label="Open account menu"
+                className="flex h-11 items-center gap-2 rounded-full border border-[#ddd0c6] bg-white px-3 text-sm shadow-sm"
+                onClick={() => setIsAccountMenuOpen((current) => !current)}
+              >
+                <Menu className="h-4 w-4" aria-hidden="true" />
+                <UserRound className="h-5 w-5" aria-hidden="true" />
+              </button>
+
+              {isAccountMenuOpen && (
+                <div className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-2xl border border-[#eadfd6] bg-white py-2 text-sm font-semibold shadow-lg">
+                  {isSignedIn ? (
+                    <>
+                      <Link
+                        href="/dashboard"
+                        className="block px-4 py-3 hover:bg-[#fff3f5]"
+                        onClick={() => setIsAccountMenuOpen(false)}
+                      >
+                        My trips
+                      </Link>
+                      <Link
+                        href="/host"
+                        className="block px-4 py-3 hover:bg-[#fff3f5]"
+                        onClick={() => setIsAccountMenuOpen(false)}
+                      >
+                        Host dashboard
+                      </Link>
+                      <form action="/auth/signout" method="post">
+                        <button
+                          type="submit"
+                          className="w-full px-4 py-3 text-left font-semibold hover:bg-[#fff3f5]"
+                        >
+                          Sign out
+                        </button>
+                      </form>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/auth"
+                        className="block px-4 py-3 hover:bg-[#fff3f5]"
+                        onClick={() => setIsAccountMenuOpen(false)}
+                      >
+                        Sign in
+                      </Link>
+                      <Link
+                        href="/auth"
+                        className="block px-4 py-3 hover:bg-[#fff3f5]"
+                        onClick={() => setIsAccountMenuOpen(false)}
+                      >
+                        Create account
+                      </Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -198,6 +278,7 @@ export function SearchExperience({
               <div className="flex flex-wrap gap-2">
                 {destinations.map((destination) => (
                   <button
+                    type="button"
                     key={destination}
                     className="rounded-full border border-[#eadfd6] bg-white px-3 py-2 text-sm font-medium hover:border-[#ff385c]"
                     onClick={() => updateSearch("destination", destination)}
@@ -268,6 +349,7 @@ export function SearchExperience({
 
                     return (
                       <button
+                        type="button"
                         key={purpose}
                         aria-pressed={active}
                         className={clsx("choice-button", active && "choice-button-active")}
@@ -289,6 +371,7 @@ export function SearchExperience({
 
                     return (
                       <button
+                        type="button"
                         key={amenity}
                         aria-pressed={active}
                         className={clsx("amenity-chip", active && "amenity-chip-active")}
@@ -301,14 +384,18 @@ export function SearchExperience({
                 </div>
               </div>
 
-              <button className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#ff385c] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#df2348]">
+              <button
+                type="button"
+                onClick={focusResults}
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#ff385c] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#df2348]"
+              >
                 <Search className="h-4 w-4" aria-hidden="true" />
                 Search StayWise
               </button>
             </div>
           </aside>
 
-          <section className="min-w-0">
+          <section id="results" className="min-w-0 scroll-mt-24">
             <div className="flex flex-col gap-4 border-b border-[#eadfd6] pb-5 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="text-sm font-semibold text-[#786a60]">
@@ -320,11 +407,19 @@ export function SearchExperience({
               </div>
 
               <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                <button className="toolbar-button">
+                <button type="button" className="toolbar-button" onClick={focusSearch}>
                   <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
                   Filters
                 </button>
-                <button className="toolbar-button">
+                <button
+                  type="button"
+                  aria-pressed={showMapPanel}
+                  className={clsx(
+                    "toolbar-button",
+                    showMapPanel && "border-[#ff385c] text-[#df2348]",
+                  )}
+                  onClick={() => setShowMapPanel((current) => !current)}
+                >
                   <Map className="h-4 w-4" aria-hidden="true" />
                   Map view
                 </button>
@@ -345,6 +440,7 @@ export function SearchExperience({
                       )}
                     >
                       <button
+                        type="button"
                         className="block w-full text-left"
                         onClick={() => setSelectedId(listing.id)}
                       >
@@ -397,6 +493,7 @@ export function SearchExperience({
 
                       <div className="flex items-center justify-between border-t border-[#f0e7df] px-4 py-3">
                         <button
+                          type="button"
                           className="flex h-9 items-center gap-2 rounded-full px-3 text-sm font-semibold hover:bg-[#fff3f5]"
                           onClick={() => toggleSaved(listing.id)}
                           aria-pressed={savedIds.includes(listing.id)}
@@ -424,56 +521,11 @@ export function SearchExperience({
 
                 {selectedListing && (
                   <aside className="self-start rounded-[24px] border border-[#eadfd6] bg-white p-5 shadow-sm xl:sticky xl:top-24">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-sm font-semibold text-[#ff385c]">StayWise fit</p>
-                        <h3 className="mt-1 text-xl font-semibold">
-                          {selectedListing.title}
-                        </h3>
-                      </div>
-                      <span className="rounded-full bg-[#fff3f5] px-3 py-1 text-sm font-semibold text-[#bd1740]">
-                        {selectedListing.matchScore}%
-                      </span>
-                    </div>
-
-                    <p className="mt-4 text-sm leading-6 text-[#5f5148]">
-                      {selectedListing.description}
-                    </p>
-
-                    <div className="mt-5 space-y-3">
-                      {selectedListing.matchReasons.map((reason) => (
-                        <div key={reason} className="flex gap-3">
-                          <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#ff385c]" aria-hidden="true" />
-                          <p className="text-sm font-medium">{reason}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {selectedListing.tradeoffs.length > 0 && (
-                      <div className="mt-5 rounded-2xl bg-[#f7f3ee] p-4">
-                        <p className="text-sm font-semibold">Tradeoffs</p>
-                        <ul className="mt-2 space-y-2 text-sm text-[#5f5148]">
-                          {selectedListing.tradeoffs.map((tradeoff) => (
-                            <li key={tradeoff}>{tradeoff}</li>
-                          ))}
-                        </ul>
-                      </div>
+                    {showMapPanel ? (
+                      <ListingMapPanel listing={selectedListing} />
+                    ) : (
+                      <ListingFitPanel listing={selectedListing} />
                     )}
-
-                    <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-                      <Metric label="Host" value={selectedListing.host.name} />
-                      <Metric label="Response" value={selectedListing.host.responseTime} />
-                      <Metric label="Beds" value={`${selectedListing.bedrooms}`} />
-                      <Metric label="Baths" value={`${selectedListing.bathrooms}`} />
-                    </div>
-
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      {selectedListing.amenities.slice(0, 5).map((amenity) => (
-                        <span key={amenity} className="rounded-full bg-[#edf6f8] px-3 py-1 text-xs font-semibold text-[#23515a]">
-                          {amenity}
-                        </span>
-                      ))}
-                    </div>
                   </aside>
                 )}
               </div>
@@ -566,6 +618,110 @@ function Metric({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-semibold uppercase text-[#786a60]">{label}</p>
       <p className="mt-1 font-semibold">{value}</p>
     </div>
+  );
+}
+
+function ListingFitPanel({ listing }: { listing: ReturnType<typeof rankListings>[number] }) {
+  return (
+    <>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-[#ff385c]">StayWise fit</p>
+          <h3 className="mt-1 text-xl font-semibold">{listing.title}</h3>
+        </div>
+        <span className="rounded-full bg-[#fff3f5] px-3 py-1 text-sm font-semibold text-[#bd1740]">
+          {listing.matchScore}%
+        </span>
+      </div>
+
+      <p className="mt-4 text-sm leading-6 text-[#5f5148]">{listing.description}</p>
+
+      <div className="mt-5 space-y-3">
+        {listing.matchReasons.map((reason) => (
+          <div key={reason} className="flex gap-3">
+            <Sparkles
+              className="mt-0.5 h-4 w-4 shrink-0 text-[#ff385c]"
+              aria-hidden="true"
+            />
+            <p className="text-sm font-medium">{reason}</p>
+          </div>
+        ))}
+      </div>
+
+      {listing.tradeoffs.length > 0 && (
+        <div className="mt-5 rounded-2xl bg-[#f7f3ee] p-4">
+          <p className="text-sm font-semibold">Tradeoffs</p>
+          <ul className="mt-2 space-y-2 text-sm text-[#5f5148]">
+            {listing.tradeoffs.map((tradeoff) => (
+              <li key={tradeoff}>{tradeoff}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+        <Metric label="Host" value={listing.host.name} />
+        <Metric label="Response" value={listing.host.responseTime} />
+        <Metric label="Beds" value={`${listing.bedrooms}`} />
+        <Metric label="Baths" value={`${listing.bathrooms}`} />
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-2">
+        {listing.amenities.slice(0, 5).map((amenity) => (
+          <span
+            key={amenity}
+            className="rounded-full bg-[#edf6f8] px-3 py-1 text-xs font-semibold text-[#23515a]"
+          >
+            {amenity}
+          </span>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ListingMapPanel({ listing }: { listing: ReturnType<typeof rankListings>[number] }) {
+  return (
+    <>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-[#ff385c]">Location view</p>
+          <h3 className="mt-1 text-xl font-semibold">
+            {listing.neighborhood}, {listing.city}
+          </h3>
+        </div>
+        <MapPin className="h-5 w-5 shrink-0 text-[#ff385c]" aria-hidden="true" />
+      </div>
+
+      <div className="mt-5 overflow-hidden rounded-[22px] border border-[#eadfd6] bg-[#edf6f8]">
+        <div className="relative h-64">
+          <div className="absolute inset-x-0 top-1/3 h-3 bg-white/80" />
+          <div className="absolute inset-y-0 left-1/4 w-3 bg-white/80" />
+          <div className="absolute inset-y-0 right-1/4 w-3 bg-white/80" />
+          <div className="absolute inset-x-0 bottom-1/4 h-3 bg-white/80" />
+          <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#ff385c] p-3 text-white shadow-lg">
+            <Home className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <div className="absolute bottom-4 left-4 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-[#5f5148] shadow-sm">
+            Approximate area
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+        <Metric label="City" value={listing.city} />
+        <Metric label="State" value={listing.state} />
+        <Metric label="Latitude" value={listing.coordinates.lat.toFixed(3)} />
+        <Metric label="Longitude" value={listing.coordinates.lng.toFixed(3)} />
+      </div>
+
+      <Link
+        href={`/listings/${listing.id}`}
+        className="mt-5 flex h-11 items-center justify-center rounded-full bg-[#201a18] px-4 text-sm font-semibold text-white hover:bg-black"
+      >
+        Open listing
+      </Link>
+    </>
   );
 }
 

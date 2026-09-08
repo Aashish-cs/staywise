@@ -27,7 +27,6 @@ import {
 import { toggleFavoriteAction } from "@/app/favorites/actions";
 import {
   featuredAmenities,
-  popularDestinations,
   stayMonths,
   type Listing,
   tripPurposeLabels,
@@ -82,7 +81,9 @@ export function SearchExperience({
     rankedListings.find((listing) => listing.id === selectedId) ?? rankedListings[0];
   const destinations = useMemo(() => {
     const dbDestinations = initialListings.map((listing) => listing.city);
-    return Array.from(new Set([...popularDestinations, ...dbDestinations]));
+    return Array.from(new Set(dbDestinations)).sort((first, second) =>
+      first.localeCompare(second),
+    );
   }, [initialListings]);
   const listingDetailQuery = new URLSearchParams({
     guests: String(search.guests),
@@ -309,24 +310,26 @@ export function SearchExperience({
                   <input
                     value={search.destination}
                     onChange={(event) => updateSearch("destination", event.target.value)}
-                    placeholder="Try Dallas or Chicago"
+                    placeholder="Search by city or neighborhood"
                     className="field-input"
                   />
                 </span>
               </label>
 
-              <div className="flex flex-wrap gap-2">
-                {destinations.map((destination) => (
-                  <button
-                    type="button"
-                    key={destination}
-                    className="rounded-full border border-[#eadfd6] bg-white px-3 py-2 text-sm font-medium hover:border-[#ff385c]"
-                    onClick={() => updateSearch("destination", destination)}
-                  >
-                    {destination}
-                  </button>
-                ))}
-              </div>
+              {destinations.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {destinations.map((destination) => (
+                    <button
+                      type="button"
+                      key={destination}
+                      className="rounded-full border border-[#eadfd6] bg-white px-3 py-2 text-sm font-medium hover:border-[#ff385c]"
+                      onClick={() => updateSearch("destination", destination)}
+                    >
+                      {destination}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               <div className="grid gap-3 sm:grid-cols-3">
                 <label className="block">
@@ -579,8 +582,8 @@ export function SearchExperience({
               <div className="mt-6 rounded-[24px] border border-dashed border-[#d7c8bd] bg-white p-8 text-center">
                 <p className="text-lg font-semibold">No stays match this trip yet.</p>
                 <p className="mt-2 text-sm text-[#786a60]">
-                  Try a different city, a wider budget, or seed active listings in
-                  Supabase.
+                  Try a different city, a wider budget, or check back as new stays go
+                  live.
                 </p>
               </div>
             )}
@@ -598,7 +601,7 @@ export function SearchExperience({
           <ProductSignal
             icon={ShieldCheck}
             title="Verified account flow"
-            body="The project is wired for Supabase email confirmation, password reset, protected routes, and role-based access."
+            body="Email confirmation, password reset, protected routes, and role-based access keep each account separated."
           />
           <ProductSignal
             icon={Car}
@@ -638,7 +641,7 @@ export function SearchExperience({
               <HostRow
                 label="Active listings"
                 value={`${initialListings.length}`}
-                trend="Loaded from Supabase"
+                trend="Live inventory"
               />
               <HostRow
                 label="Search cities"

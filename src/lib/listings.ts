@@ -83,15 +83,6 @@ export const featuredAmenities = [
   "Self check-in",
 ] as const;
 
-export const popularDestinations = [
-  "Dallas",
-  "Austin",
-  "Chicago",
-  "Denver",
-  "Miami",
-  "New York",
-] as const;
-
 export const stayMonths = ["Sep", "Oct", "Nov", "Dec"] as const;
 
 export const fallbackListingImage =

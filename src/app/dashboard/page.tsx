@@ -121,7 +121,7 @@ export default async function DashboardPage() {
                 ))
               ) : (
                 <p className="col-span-full text-sm leading-6 text-[#5f5148]">
-                  Reserve a database listing and it will appear here immediately.
+                  Reserve a stay and it will appear here immediately.
                 </p>
               )}
             </div>
@@ -132,7 +132,7 @@ export default async function DashboardPage() {
               <div>
                 <p className="text-sm font-semibold text-[#ff385c]">AI recommendations</p>
                 <h2 className="mt-1 text-2xl font-semibold tracking-tight">
-                  Database matches for your next trip
+                  Smart matches for your next trip
                 </h2>
               </div>
               <Link className="hidden text-sm font-semibold text-[#5f5148] hover:text-[#ff385c] md:block" href="/">
@@ -172,7 +172,7 @@ export default async function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <EmptyState text="Seed Supabase listings to unlock recommendation cards here." />
+              <EmptyState text="Recommendations will appear after matching stays are live." />
             )}
           </section>
 

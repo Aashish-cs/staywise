@@ -79,7 +79,7 @@ export default async function HostPage() {
         {user && !isHost && (
           <GateMessage
             title="This account is a guest account"
-            body="Create a separate host account or update the role in Supabase for demo testing. Host listing writes are protected by RLS."
+            body="Use a host account to publish stays and manage reservations."
             action="Back to trips"
             href="/dashboard"
           />

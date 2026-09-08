@@ -2,12 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { fetchListingForReservation } from "@/lib/listing-data";
-import {
-  calculateReservationTotal,
-  countNights,
-  getTodayIso,
-} from "@/lib/reservation-utils";
+import { countNights, getTodayIso } from "@/lib/reservation-utils";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type ReservationActionState = {
@@ -78,56 +73,26 @@ export async function createReservationAction(
     };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (profile?.role !== "guest") {
-    return {
-      ok: false,
-      message: "Use a guest account to reserve stays. Host accounts manage listings.",
-    };
-  }
-
-  const listing = await fetchListingForReservation(supabase, listingId);
-
-  if (!listing) {
-    return {
-      ok: false,
-      message: "This listing is no longer available.",
-    };
-  }
-
-  if (guests > listing.capacity) {
-    return {
-      ok: false,
-      message: `This stay supports up to ${listing.capacity} guests.`,
-    };
-  }
-
-  const { total } = calculateReservationTotal(listing.price_per_night, nights);
-
-  const { data, error } = await supabase
-    .from("reservations")
-    .insert({
-      guest_id: user.id,
-      listing_id: listing.id,
-      start_date: checkIn,
-      end_date: checkOut,
-      guests,
-      nightly_rate: listing.price_per_night,
-      total_amount: total,
-      status: "confirmed",
-    })
-    .select("id")
-    .single();
+  const { data, error } = await supabase.rpc("create_reservation", {
+    requested_end_date: checkOut,
+    requested_guests: guests,
+    requested_listing_id: listingId,
+    requested_start_date: checkIn,
+  });
 
   if (error) {
     return {
       ok: false,
-      message: error.message,
+      message: getReservationErrorMessage(error.message),
+    };
+  }
+
+  const reservationId = typeof data === "string" ? data : null;
+
+  if (!reservationId) {
+    return {
+      ok: false,
+      message: "Reservation could not be completed. Please try again.",
     };
   }
 
@@ -137,6 +102,49 @@ export async function createReservationAction(
   return {
     ok: true,
     message: "Reservation confirmed. It now appears in your trips.",
-    reservationId: data.id as string,
+    reservationId,
   };
+}
+
+function getReservationErrorMessage(errorMessage: string) {
+  if (errorMessage.includes("guest_required")) {
+    return "Use a guest account to reserve stays. Host accounts manage listings.";
+  }
+
+  if (errorMessage.includes("check_in_in_past")) {
+    return "Choose a check-in date in the future.";
+  }
+
+  if (errorMessage.includes("invalid_date_range")) {
+    return "Check-out must be after check-in.";
+  }
+
+  if (errorMessage.includes("invalid_guest_count")) {
+    return "Choose at least one guest.";
+  }
+
+  if (errorMessage.includes("listing_unavailable")) {
+    return "This listing is no longer available.";
+  }
+
+  if (errorMessage.includes("host_cannot_book_own_listing")) {
+    return "Hosts cannot reserve their own listing.";
+  }
+
+  if (errorMessage.includes("guest_capacity_exceeded")) {
+    return "This stay does not support that many guests.";
+  }
+
+  if (
+    errorMessage.includes("reservation_conflict") ||
+    errorMessage.includes("reservations_no_active_overlap")
+  ) {
+    return "Those dates were just booked. Choose different dates.";
+  }
+
+  if (errorMessage.includes("create_reservation")) {
+    return "Reservation service is not ready yet. Run the latest Supabase migration.";
+  }
+
+  return "Reservation could not be completed. Please try again.";
 }

@@ -48,7 +48,12 @@ export type Listing = {
   description: string;
 };
 
-export type ReservationStatus = "pending" | "confirmed" | "cancelled" | "completed";
+export type ReservationStatus =
+  | "pending"
+  | "awaiting_payment"
+  | "confirmed"
+  | "cancelled"
+  | "completed";
 
 export type Reservation = {
   id: string;

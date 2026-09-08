@@ -103,6 +103,7 @@ export function AuthPanel({
           src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1800&q=80"
           alt="Modern short-term rental living space"
           fill
+          priority
           sizes="50vw"
           className="object-cover"
         />

@@ -6,10 +6,13 @@ import { ArrowRight, CalendarDays, CheckCircle2, ShieldCheck, Users } from "luci
 import { createReservationAction, type ReservationActionState } from "@/app/listings/[id]/actions";
 import type { Listing } from "@/lib/listings";
 import {
+  addDaysToIso,
   calculateReservationTotal,
   countNights,
   formatMoney,
   getFutureIso,
+  getTodayIso,
+  isValidIsoDate,
 } from "@/lib/reservation-utils";
 
 const initialState: ReservationActionState = {
@@ -21,13 +24,19 @@ export function ReservationPanel({
   listing,
   isSignedIn,
   initialGuests,
+  initialCheckIn,
+  initialCheckOut,
 }: {
   listing: Listing;
   isSignedIn: boolean;
   initialGuests: number;
+  initialCheckIn?: string;
+  initialCheckOut?: string;
 }) {
-  const [checkIn, setCheckIn] = useState(getFutureIso(7));
-  const [checkOut, setCheckOut] = useState(getFutureIso(10));
+  const resolvedCheckIn = resolveInitialCheckIn(initialCheckIn);
+  const resolvedCheckOut = resolveInitialCheckOut(resolvedCheckIn, initialCheckOut);
+  const [checkIn, setCheckIn] = useState(resolvedCheckIn);
+  const [checkOut, setCheckOut] = useState(resolvedCheckOut);
   const [guests, setGuests] = useState(
     Math.min(Math.max(initialGuests, 1), listing.capacity),
   );
@@ -69,8 +78,16 @@ export function ReservationPanel({
               <input
                 type="date"
                 name="checkIn"
+                min={getTodayIso()}
                 value={checkIn}
-                onChange={(event) => setCheckIn(event.target.value)}
+                onChange={(event) => {
+                  const nextCheckIn = event.target.value;
+                  setCheckIn(nextCheckIn);
+
+                  if (countNights(nextCheckIn, checkOut) < 1) {
+                    setCheckOut(addDaysToIso(nextCheckIn, 1));
+                  }
+                }}
                 className="field-input"
                 required
               />
@@ -84,6 +101,7 @@ export function ReservationPanel({
               <input
                 type="date"
                 name="checkOut"
+                min={addDaysToIso(checkIn, 1)}
                 value={checkOut}
                 onChange={(event) => setCheckOut(event.target.value)}
                 className="field-input"
@@ -164,6 +182,20 @@ export function ReservationPanel({
       </form>
     </aside>
   );
+}
+
+function resolveInitialCheckIn(value: string | undefined) {
+  return isValidIsoDate(value) ? value : getFutureIso(7);
+}
+
+function resolveInitialCheckOut(checkIn: string, value: string | undefined) {
+  if (isValidIsoDate(value) && countNights(checkIn, value) > 0) {
+    return value;
+  }
+
+  const fallback = getFutureIso(10);
+
+  return countNights(checkIn, fallback) > 0 ? fallback : addDaysToIso(checkIn, 3);
 }
 
 function PriceRow({

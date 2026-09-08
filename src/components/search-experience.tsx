@@ -32,7 +32,10 @@ import {
   tripPurposeLabels,
   type TripPurpose,
 } from "@/lib/listings";
-import { rankListings, type SearchInput } from "@/lib/recommendations";
+import { rankListings, searchSchema, type SearchInput } from "@/lib/recommendations";
+import { buildSearchQueryString } from "@/lib/search-url";
+
+type SortMode = "recommended" | "price-low" | "rating";
 
 const purposeIcons: Record<TripPurpose, typeof BriefcaseBusiness> = {
   business: BriefcaseBusiness,
@@ -46,6 +49,8 @@ const purposeIcons: Record<TripPurpose, typeof BriefcaseBusiness> = {
 
 const defaultSearch: SearchInput = {
   destination: "",
+  checkIn: "",
+  checkOut: "",
   guests: 2,
   maxNightlyBudget: 250,
   tripPurpose: "remote-work",
@@ -57,15 +62,22 @@ export function SearchExperience({
   accountRole,
   initialFavoriteIds,
   initialListings,
+  initialSearch,
   isSignedIn,
+  showProductSections = true,
 }: {
   accountRole: "guest" | "host" | null;
   initialFavoriteIds: string[];
   initialListings: Listing[];
+  initialSearch?: Partial<SearchInput>;
   isSignedIn: boolean;
+  showProductSections?: boolean;
 }) {
   const router = useRouter();
-  const [search, setSearch] = useState<SearchInput>(defaultSearch);
+  const [search, setSearch] = useState<SearchInput>(() =>
+    searchSchema.parse({ ...defaultSearch, ...initialSearch }),
+  );
+  const [sortMode, setSortMode] = useState<SortMode>("recommended");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [showMapPanel, setShowMapPanel] = useState(false);
@@ -77,20 +89,23 @@ export function SearchExperience({
     () => rankListings(search, initialListings),
     [initialListings, search],
   );
+  const displayedListings = useMemo(
+    () => sortListings(rankedListings, sortMode),
+    [rankedListings, sortMode],
+  );
   const selectedListing =
-    rankedListings.find((listing) => listing.id === selectedId) ?? rankedListings[0];
+    displayedListings.find((listing) => listing.id === selectedId) ??
+    displayedListings[0];
   const destinations = useMemo(() => {
     const dbDestinations = initialListings.map((listing) => listing.city);
     return Array.from(new Set(dbDestinations)).sort((first, second) =>
       first.localeCompare(second),
     );
   }, [initialListings]);
-  const listingDetailQuery = new URLSearchParams({
-    guests: String(search.guests),
-    budget: String(search.maxNightlyBudget),
-    month: search.month,
-    purpose: search.tripPurpose,
-  }).toString();
+  const listingDetailQuery = buildSearchQueryString(search);
+  const resultSummary = `${displayedListings.length} ${
+    displayedListings.length === 1 ? "match" : "matches"
+  }${search.destination ? ` near ${search.destination}` : ""} for ${search.month}`;
   const averageNightlyRate =
     initialListings.length > 0
       ? Math.round(
@@ -181,7 +196,9 @@ export function SearchExperience({
   }
 
   function focusResults() {
-    setSelectedId(rankedListings[0]?.id ?? null);
+    const query = buildSearchQueryString(search);
+    setSelectedId(displayedListings[0]?.id ?? null);
+    router.push(`/search${query ? `?${query}` : ""}`);
     document.getElementById("results")?.scrollIntoView({
       behavior: "smooth",
       block: "start",
@@ -205,9 +222,9 @@ export function SearchExperience({
           </Link>
 
           <nav className="hidden items-center gap-2 rounded-full border border-[#eadfd6] bg-white px-2 py-2 shadow-sm lg:flex">
-            <a className="nav-pill" href="#search">
+            <Link className="nav-pill" href="/search">
               Stays
-            </a>
+            </Link>
             <Link className="nav-pill" href="/dashboard">
               Trips
             </Link>
@@ -335,6 +352,34 @@ export function SearchExperience({
                 </div>
               )}
 
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="field-label">Check in</span>
+                  <span className="field-shell">
+                    <CalendarDays className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
+                    <input
+                      type="date"
+                      value={search.checkIn}
+                      onChange={(event) => updateSearch("checkIn", event.target.value)}
+                      className="field-input"
+                    />
+                  </span>
+                </label>
+
+                <label className="block">
+                  <span className="field-label">Check out</span>
+                  <span className="field-shell">
+                    <CalendarDays className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
+                    <input
+                      type="date"
+                      value={search.checkOut}
+                      onChange={(event) => updateSearch("checkOut", event.target.value)}
+                      className="field-input"
+                    />
+                  </span>
+                </label>
+              </div>
+
               <div className="grid gap-3 sm:grid-cols-3">
                 <label className="block">
                   <span className="field-label">Month</span>
@@ -452,7 +497,7 @@ export function SearchExperience({
             <div className="flex flex-col gap-4 border-b border-[#eadfd6] pb-5 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="text-sm font-semibold text-[#786a60]">
-                  {rankedListings.length} matches for {search.month}
+                  {resultSummary}
                 </p>
                 <h2 className="mt-1 text-2xl font-semibold tracking-tight">
                   Recommended stays
@@ -464,6 +509,19 @@ export function SearchExperience({
                   <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
                   Filters
                 </button>
+                <label className="toolbar-button">
+                  <span>Sort</span>
+                  <select
+                    aria-label="Sort results"
+                    value={sortMode}
+                    onChange={(event) => setSortMode(event.target.value as SortMode)}
+                    className="bg-transparent text-sm font-extrabold outline-none"
+                  >
+                    <option value="recommended">Recommended</option>
+                    <option value="price-low">Lowest price</option>
+                    <option value="rating">Top rated</option>
+                  </select>
+                </label>
                 <button
                   type="button"
                   aria-pressed={showMapPanel}
@@ -479,10 +537,10 @@ export function SearchExperience({
               </div>
             </div>
 
-            {rankedListings.length > 0 ? (
+            {displayedListings.length > 0 ? (
               <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <div className="grid gap-5 md:grid-cols-2">
-                  {rankedListings.map((listing) => (
+                  {displayedListings.map((listing) => (
                     <article
                       key={listing.id}
                       className={clsx(
@@ -562,7 +620,9 @@ export function SearchExperience({
                           Save
                         </button>
                         <Link
-                          href={`/listings/${listing.id}?${listingDetailQuery}`}
+                          href={`/listings/${listing.id}${
+                            listingDetailQuery ? `?${listingDetailQuery}` : ""
+                          }`}
                           className="rounded-full bg-[#201a18] px-4 py-2 text-sm font-semibold text-white hover:bg-black"
                         >
                           Reserve
@@ -575,7 +635,10 @@ export function SearchExperience({
                 {selectedListing && (
                   <aside className="self-start rounded-[24px] border border-[#eadfd6] bg-white p-5 shadow-sm xl:sticky xl:top-24">
                     {showMapPanel ? (
-                      <ListingMapPanel listing={selectedListing} />
+                      <ListingMapPanel
+                        listing={selectedListing}
+                        listingDetailQuery={listingDetailQuery}
+                      />
                     ) : (
                       <ListingFitPanel listing={selectedListing} />
                     )}
@@ -595,72 +658,76 @@ export function SearchExperience({
         </div>
       </section>
 
-      <section className="border-y border-[#eadfd6] bg-white">
-        <div className="mx-auto grid max-w-7xl gap-6 px-5 py-8 lg:grid-cols-3 lg:px-8">
-          <ProductSignal
-            icon={Sparkles}
-            title="Explainable ranking"
-            body="Each stay is scored against the current trip, with reasons and tradeoffs visible before booking."
-          />
-          <ProductSignal
-            icon={ShieldCheck}
-            title="Verified account flow"
-            body="Email confirmation, password reset, protected routes, and role-based access keep each account separated."
-          />
-          <ProductSignal
-            icon={Car}
-            title="Host-ready foundation"
-            body="Hosts can manage listings, pricing, availability, and reservations through the same product architecture."
-          />
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
-        <div className="grid gap-5 lg:grid-cols-[1fr_1fr]">
-          <div className="rounded-[24px] bg-[#201a18] p-6 text-white">
-            <p className="text-sm font-semibold text-[#ffb84d]">Guest journey</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight">
-              Search, compare, save, reserve.
-            </h2>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {["Create trip", "Rank stays", "Save favorites", "Confirm booking"].map(
-                (item, index) => (
-                  <div key={item} className="rounded-2xl bg-white/10 p-4">
-                    <span className="text-sm font-semibold text-[#ffb84d]">
-                      0{index + 1}
-                    </span>
-                    <p className="mt-2 font-semibold">{item}</p>
-                  </div>
-                ),
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-[24px] border border-[#eadfd6] bg-[#fffaf5] p-6">
-            <p className="text-sm font-semibold text-[#315d3b]">Host console</p>
-            <h2 className="mt-2 text-2xl font-semibold tracking-tight">
-              Listings stay connected to demand.
-            </h2>
-            <div className="mt-5 space-y-3">
-              <HostRow
-                label="Active listings"
-                value={`${initialListings.length}`}
-                trend="Live inventory"
+      {showProductSections && (
+        <>
+          <section className="border-y border-[#eadfd6] bg-white">
+            <div className="mx-auto grid max-w-7xl gap-6 px-5 py-8 lg:grid-cols-3 lg:px-8">
+              <ProductSignal
+                icon={Sparkles}
+                title="Explainable ranking"
+                body="Each stay is scored against the current trip, with reasons and tradeoffs visible before booking."
               />
-              <HostRow
-                label="Search cities"
-                value={`${destinations.length}`}
-                trend="Filtered live by trip"
+              <ProductSignal
+                icon={ShieldCheck}
+                title="Verified account flow"
+                body="Email confirmation, password reset, protected routes, and role-based access keep each account separated."
               />
-              <HostRow
-                label="Average nightly"
-                value={averageNightlyRate ? `$${averageNightlyRate}` : "$0"}
-                trend="Computed from listings"
+              <ProductSignal
+                icon={Car}
+                title="Host-ready foundation"
+                body="Hosts can manage listings, pricing, availability, and reservations through the same product architecture."
               />
             </div>
-          </div>
-        </div>
-      </section>
+          </section>
+
+          <section className="mx-auto max-w-7xl px-5 py-10 lg:px-8">
+            <div className="grid gap-5 lg:grid-cols-[1fr_1fr]">
+              <div className="rounded-[24px] bg-[#201a18] p-6 text-white">
+                <p className="text-sm font-semibold text-[#ffb84d]">Guest journey</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight">
+                  Search, compare, save, reserve.
+                </h2>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  {["Create trip", "Rank stays", "Save favorites", "Confirm booking"].map(
+                    (item, index) => (
+                      <div key={item} className="rounded-2xl bg-white/10 p-4">
+                        <span className="text-sm font-semibold text-[#ffb84d]">
+                          0{index + 1}
+                        </span>
+                        <p className="mt-2 font-semibold">{item}</p>
+                      </div>
+                    ),
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-[24px] border border-[#eadfd6] bg-[#fffaf5] p-6">
+                <p className="text-sm font-semibold text-[#315d3b]">Host console</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight">
+                  Listings stay connected to demand.
+                </h2>
+                <div className="mt-5 space-y-3">
+                  <HostRow
+                    label="Active listings"
+                    value={`${initialListings.length}`}
+                    trend="Live inventory"
+                  />
+                  <HostRow
+                    label="Search cities"
+                    value={`${destinations.length}`}
+                    trend="Filtered live by trip"
+                  />
+                  <HostRow
+                    label="Average nightly"
+                    value={averageNightlyRate ? `$${averageNightlyRate}` : "$0"}
+                    trend="Computed from listings"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+        </>
+      )}
     </main>
   );
 }
@@ -733,7 +800,13 @@ function ListingFitPanel({ listing }: { listing: ReturnType<typeof rankListings>
   );
 }
 
-function ListingMapPanel({ listing }: { listing: ReturnType<typeof rankListings>[number] }) {
+function ListingMapPanel({
+  listing,
+  listingDetailQuery,
+}: {
+  listing: ReturnType<typeof rankListings>[number];
+  listingDetailQuery: string;
+}) {
   return (
     <>
       <div className="flex items-start justify-between gap-4">
@@ -769,7 +842,9 @@ function ListingMapPanel({ listing }: { listing: ReturnType<typeof rankListings>
       </div>
 
       <Link
-        href={`/listings/${listing.id}`}
+        href={`/listings/${listing.id}${
+          listingDetailQuery ? `?${listingDetailQuery}` : ""
+        }`}
         className="mt-5 flex h-11 items-center justify-center rounded-full bg-[#201a18] px-4 text-sm font-semibold text-white hover:bg-black"
       >
         Open listing
@@ -818,4 +893,30 @@ function HostRow({
       <span className="text-2xl font-semibold tracking-tight">{value}</span>
     </div>
   );
+}
+
+function sortListings(
+  listings: ReturnType<typeof rankListings>,
+  sortMode: SortMode,
+) {
+  const sorted = [...listings];
+
+  if (sortMode === "price-low") {
+    return sorted.sort(
+      (first, second) =>
+        first.pricePerNight - second.pricePerNight ||
+        second.matchScore - first.matchScore,
+    );
+  }
+
+  if (sortMode === "rating") {
+    return sorted.sort(
+      (first, second) =>
+        second.rating - first.rating ||
+        second.reviewCount - first.reviewCount ||
+        second.matchScore - first.matchScore,
+    );
+  }
+
+  return sorted;
 }

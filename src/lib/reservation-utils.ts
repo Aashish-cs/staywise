@@ -10,6 +10,17 @@ export function getFutureIso(daysFromToday: number) {
   return toIsoDate(date);
 }
 
+export function addDaysToIso(value: string, days: number) {
+  const date = parseIsoDate(value) ?? new Date();
+  date.setDate(date.getDate() + days);
+
+  return toIsoDate(date);
+}
+
+export function isValidIsoDate(value: string | null | undefined): value is string {
+  return Boolean(value && parseIsoDate(value));
+}
+
 export function countNights(startDate: string, endDate: string) {
   const start = parseIsoDate(startDate);
   const end = parseIsoDate(endDate);

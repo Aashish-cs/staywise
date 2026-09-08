@@ -15,8 +15,13 @@ import {
 } from "lucide-react";
 import { ReservationPanel } from "@/components/reservation-panel";
 import { getCurrentUserProfile, getListingById } from "@/lib/listing-data";
-import { featuredAmenities, type TripPurpose } from "@/lib/listings";
+import { featuredAmenities } from "@/lib/listings";
 import { rankListings } from "@/lib/recommendations";
+import {
+  buildSearchQueryString,
+  firstParam,
+  parseSearchParams,
+} from "@/lib/search-url";
 
 export const dynamic = "force-dynamic";
 
@@ -60,19 +65,30 @@ export default async function ListingPage({
     notFound();
   }
 
-  const initialGuests = parseNumberParam(query.guests, 2);
-  const tripPurpose = parseTripPurpose(query.purpose);
-  const maxNightlyBudget = parseNumberParam(query.budget, listing.pricePerNight + 75);
+  const search = parseSearchParams(query);
+  const hasBudgetQuery = Boolean(
+    firstParam(query.budget) ?? firstParam(query.maxNightlyBudget),
+  );
+  const maxNightlyBudget = hasBudgetQuery
+    ? search.maxNightlyBudget
+    : listing.pricePerNight + 75;
+  const backToSearchQuery = buildSearchQueryString({
+    ...search,
+    destination: search.destination || listing.city,
+    maxNightlyBudget,
+  });
   const fit = rankListings(
     {
       destination: listing.city,
-      guests: initialGuests,
+      checkIn: search.checkIn,
+      checkOut: search.checkOut,
+      guests: search.guests,
       maxNightlyBudget,
-      tripPurpose,
+      tripPurpose: search.tripPurpose,
       amenities: listing.amenities.filter((amenity) =>
         featuredAmenities.includes(amenity as (typeof featuredAmenities)[number]),
       ),
-      month: firstParam(query.month) ?? "Sep",
+      month: search.month,
     },
     [listing],
   )[0];
@@ -99,7 +115,7 @@ export default async function ListingPage({
 
       <section className="mx-auto max-w-7xl px-5 py-7 lg:px-8">
         <Link
-          href="/"
+          href={`/search?${backToSearchQuery}`}
           className="inline-flex items-center gap-2 text-sm font-semibold text-[#5f5148] hover:text-[#df2348]"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -206,7 +222,9 @@ export default async function ListingPage({
           <ReservationPanel
             listing={listing}
             isSignedIn={Boolean(user)}
-            initialGuests={initialGuests}
+            initialGuests={search.guests}
+            initialCheckIn={search.checkIn || undefined}
+            initialCheckOut={search.checkOut || undefined}
           />
         </div>
       </section>
@@ -230,31 +248,4 @@ function Fact({
       <p className="mt-1 font-semibold">{value}</p>
     </div>
   );
-}
-
-function parseNumberParam(value: string | string[] | undefined, fallback: number) {
-  const numeric = Number(firstParam(value));
-
-  return Number.isFinite(numeric) ? numeric : fallback;
-}
-
-function parseTripPurpose(value: string | string[] | undefined): TripPurpose {
-  const rawValue = firstParam(value);
-  const allowed: TripPurpose[] = [
-    "business",
-    "family",
-    "remote-work",
-    "romantic",
-    "solo",
-    "group",
-    "outdoor",
-  ];
-
-  return allowed.includes(rawValue as TripPurpose)
-    ? (rawValue as TripPurpose)
-    : "remote-work";
-}
-
-function firstParam(value: string | string[] | undefined) {
-  return Array.isArray(value) ? value[0] : value;
 }

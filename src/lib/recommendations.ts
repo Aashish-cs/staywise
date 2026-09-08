@@ -6,9 +6,18 @@ import {
 } from "@/lib/listings";
 
 const amenityValues = [...featuredAmenities] as [string, ...string[]];
+const optionalIsoDate = z
+  .string()
+  .trim()
+  .refine((value) => value === "" || /^\d{4}-\d{2}-\d{2}$/.test(value), {
+    message: "Use YYYY-MM-DD dates",
+  })
+  .default("");
 
 export const searchSchema = z.object({
   destination: z.string().trim().min(0).default(""),
+  checkIn: optionalIsoDate,
+  checkOut: optionalIsoDate,
   guests: z.coerce.number().int().min(1).max(16).default(2),
   maxNightlyBudget: z.coerce.number().int().min(50).max(1200).default(250),
   tripPurpose: z

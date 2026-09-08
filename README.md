@@ -1,5 +1,7 @@
 # StayWise
 
+Smart Stays, Better Days.
+
 StayWise is a senior design project for an AI-assisted short-term rental marketplace. Guests can search real database listings, save places, reserve stays, and receive explainable recommendations. Hosts can publish listings and view reservation demand.
 
 ## Tech Stack

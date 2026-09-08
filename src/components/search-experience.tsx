@@ -294,8 +294,12 @@ export function SearchExperience({
               <div>
                 <p className="text-sm font-semibold text-[#ff385c]">AI-ranked stays</p>
                 <h1 className="mt-2 text-3xl font-semibold leading-tight tracking-tight">
-                  Find the stay that fits the trip.
+                  Smart Stays, Better Days.
                 </h1>
+                <p className="mt-3 text-sm leading-6 text-[#5f5148]">
+                  Find the stay that fits the trip with live inventory and clear AI
+                  match reasons.
+                </p>
               </div>
               <span className="rounded-full bg-[#e7f2e4] px-3 py-1 text-sm font-semibold text-[#315d3b]">
                 Beta

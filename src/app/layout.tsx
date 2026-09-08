@@ -18,11 +18,11 @@ export const metadata: Metadata = {
     template: "%s | StayWise",
   },
   description:
-    "AI-ranked short-term stays for guests and production-ready host workflows.",
+    "Smart Stays, Better Days. AI-ranked short-term stays for guests and production-ready host workflows.",
   openGraph: {
-    title: "StayWise",
+    title: "StayWise: Smart Stays, Better Days.",
     description:
-      "AI-ranked short-term stays for guests and production-ready host workflows.",
+      "Smart Stays, Better Days. AI-ranked short-term stays for guests and production-ready host workflows.",
     siteName: "StayWise",
     type: "website",
   },

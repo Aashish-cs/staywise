@@ -83,6 +83,10 @@ export function SearchExperience({
   const [showMapPanel, setShowMapPanel] = useState(false);
   const [savedIds, setSavedIds] = useState<string[]>(initialFavoriteIds);
   const [notice, setNotice] = useState<string | null>(null);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiMessage, setAiMessage] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [isAiSearching, setIsAiSearching] = useState(false);
   const [, startTransition] = useTransition();
 
   const rankedListings = useMemo(
@@ -138,6 +142,57 @@ export function SearchExperience({
 
       return { ...current, amenities };
     });
+  }
+
+  async function applyAiSearch() {
+    const prompt = aiPrompt.trim();
+
+    if (!prompt) {
+      setAiError("Describe the stay you want first.");
+      setAiMessage(null);
+      return;
+    }
+
+    setIsAiSearching(true);
+    setAiError(null);
+    setAiMessage(null);
+
+    try {
+      const response = await fetch("/api/ai-search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentSearch: search,
+          prompt,
+        }),
+      });
+      const result = (await response.json().catch(() => null)) as
+        | { error?: string; search?: Partial<SearchInput>; summary?: string }
+        | null;
+
+      if (!response.ok || !result?.search) {
+        throw new Error(result?.error ?? "StayWise could not read that request.");
+      }
+
+      const nextSearch = searchSchema.parse(result.search);
+      const query = buildSearchQueryString(nextSearch);
+
+      setSearch(nextSearch);
+      setSelectedId(null);
+      setNotice(null);
+      setAiMessage(result.summary ?? "I updated the search from your request.");
+      router.push(`/search${query ? `?${query}` : ""}`);
+    } catch (error) {
+      setAiError(
+        error instanceof Error
+          ? error.message
+          : "StayWise could not read that request.",
+      );
+    } finally {
+      setIsAiSearching(false);
+    }
   }
 
   function toggleSaved(id: string) {
@@ -329,6 +384,45 @@ export function SearchExperience({
             </div>
 
             <div className="mt-6 space-y-5">
+              <form
+                className="space-y-3 rounded-3xl bg-white/75 p-3 shadow-[inset_0_0_0_1px_#eadfd6]"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void applyAiSearch();
+                }}
+              >
+                <label className="block">
+                  <span className="field-label">AI trip request</span>
+                  <textarea
+                    value={aiPrompt}
+                    onChange={(event) => setAiPrompt(event.target.value)}
+                    placeholder="Quiet Dallas stay under $250 for 2 people with Wi-Fi"
+                    className="field-textarea min-h-24 resize-none"
+                  />
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={isAiSearching}
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#201a18] px-5 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:bg-[#a79a91]"
+                >
+                  <Sparkles className="h-4 w-4" aria-hidden="true" />
+                  {isAiSearching ? "Reading request" : "Search with AI"}
+                </button>
+
+                {aiMessage && (
+                  <p className="rounded-2xl bg-[#e7f2e4] p-3 text-sm font-semibold text-[#315d3b]">
+                    {aiMessage}
+                  </p>
+                )}
+
+                {aiError && (
+                  <p className="rounded-2xl bg-[#fff3f5] p-3 text-sm font-semibold text-[#bd1740]">
+                    {aiError}
+                  </p>
+                )}
+              </form>
+
               <label className="block">
                 <span className="field-label">Destination</span>
                 <span className="field-shell">

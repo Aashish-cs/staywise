@@ -1,6 +1,6 @@
 # StayWise Production Audit
 
-Status: Phase 1 audit and first Phase 2 stabilization pass.
+Status: Reservation integrity and availability-aware search are now implemented.
 
 Brand source of truth: StayWise uses the slogan "Smart Stays, Better Days."
 
@@ -15,23 +15,21 @@ Brand source of truth: StayWise uses the slogan "Smart Stays, Better Days."
 
 ## B. Problems Found
 
-- Search is still contained on the homepage instead of a shareable `/search?...` route.
 - Browser geolocation and nearby discovery are not implemented yet.
-- AI natural-language search is not implemented yet; current AI value is deterministic recommendation scoring.
-- Booking had the largest integrity gap: direct reservation creation could confirm dates without database-level overlap protection.
 - Stripe, payment statuses, webhook verification, and confirmation email are not implemented.
 - Host listing creation is a single form, not a multi-step wizard, and it stores image URLs instead of Supabase Storage uploads.
 - Ratings and review counts are currently derived placeholders; real reviews and aggregate ratings are not implemented.
 - Messages, admin tools, and account settings are not implemented and should not be shown as navigation until real.
-- Property detail pages need richer production sections: rules, cancellation policy, availability calendar, map, reviews, and favorite/share behavior.
+- Property detail pages need richer production sections: rules, cancellation policy, full availability calendar, reviews, and favorite/share behavior.
 
 ## C. Working Features To Preserve
 
 - Supabase email/password signup, login, logout, email confirmation callback, and password reset pages.
 - Role-aware guest and host routing.
 - Supabase-backed listing reads with no hardcoded listing cards in the UI.
+- Natural-language AI search translates trip requests into real search filters.
 - Favorites persisted per guest account with duplicate prevention through the primary key.
-- Reservation records connected to the guest dashboard and host reservation feed.
+- Date-aware reservation records connected to the guest dashboard and host reservation feed.
 - Host-owned listing creation protected by role checks and RLS.
 - Explainable recommendation scoring with clear reasons and tradeoffs.
 - Current visual identity, slogan, responsive layout, and polished empty states.
@@ -59,6 +57,7 @@ Brand source of truth: StayWise uses the slogan "Smart Stays, Better Days."
 - Add reservation status support for `awaiting_payment`.
 - Add a database-level exclusion constraint to prevent overlapping active reservations for the same listing.
 - Add `public.create_reservation(...)` so reservation creation validates user role, listing availability, host ownership, date range, capacity, overlap, and server-calculated totals.
+- Add public availability helper RPCs so search can remove booked stays without exposing guest reservation details.
 - Future schema phases should add listing availability windows, reviews, conversations, payment records, and storage metadata.
 
 ## G. Security Issues
@@ -74,17 +73,20 @@ Brand source of truth: StayWise uses the slogan "Smart Stays, Better Days."
 
 1. Stabilize build, lint, typecheck, auth navigation, and reservation integrity.
 2. Run the Phase 3 booking integrity migration in Supabase.
-3. Add `/search` with URL state, filters, result count, loading state, empty state, and reusable property cards.
-4. Seed or create real active listings so Dallas and reservation flows can be tested end to end.
-5. Add location-aware discovery with browser geolocation fallback and manual search preserved.
-6. Improve listing details and booking validation UX.
-7. Add Stripe test-mode payment records, checkout session creation, webhook verification, and confirmation page.
-8. Upgrade host listing creation to a multi-step wizard with Supabase Storage uploads.
-9. Add AI natural-language search through a provider abstraction, using only real database listings.
-10. Add reviews, messages, admin, and observability after the marketplace and booking foundation are stable.
+3. Add location-aware discovery with browser geolocation fallback and manual search preserved.
+4. Improve listing details with richer rules, cancellation policy, and favorite/share behavior.
+5. Add Stripe test-mode payment records, checkout session creation, webhook verification, and confirmation page.
+6. Upgrade host listing creation to a multi-step wizard with Supabase Storage uploads.
+7. Add reviews, messages, admin, and observability after the marketplace and booking foundation are stable.
 
 ## Phase 2 Stabilization Completed In This Pass
 
 - Reservation creation now calls a database RPC instead of inserting directly from the server action.
 - The canonical schema includes `awaiting_payment`, active-reservation overlap protection, and host-own-listing reservation prevention.
 - A one-time `supabase/phase3_booking_integrity.sql` migration was added for the existing Supabase project.
+
+## Phase 4 Availability Completed In This Pass
+
+- Search, recommendations, and listing pages now check selected date ranges against live reservation data.
+- Supabase has availability RPCs that reveal only open listing IDs or a yes/no availability result.
+- The reservation card disables the submit button when selected dates are already booked and still relies on the server RPC for final validation.

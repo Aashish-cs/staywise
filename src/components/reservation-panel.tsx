@@ -1,8 +1,15 @@
 "use client";
 
-import { useMemo, useState, useActionState } from "react";
+import { useEffect, useMemo, useState, useActionState } from "react";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, CheckCircle2, ShieldCheck, Users } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  ShieldAlert,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import { createReservationAction, type ReservationActionState } from "@/app/listings/[id]/actions";
 import type { Listing } from "@/lib/listings";
 import {
@@ -18,6 +25,12 @@ import {
 const initialState: ReservationActionState = {
   ok: false,
   message: "",
+};
+
+type AvailabilityState = {
+  key: string;
+  message: string;
+  status: "idle" | "checking" | "available" | "unavailable" | "unknown";
 };
 
 export function ReservationPanel({
@@ -42,6 +55,11 @@ export function ReservationPanel({
   const [guests, setGuests] = useState(
     Math.min(Math.max(initialGuests, 1), listing.capacity),
   );
+  const [availability, setAvailability] = useState<AvailabilityState>({
+    key: "",
+    message: "",
+    status: "idle",
+  });
   const [state, formAction, isPending] = useActionState(
     createReservationAction,
     initialState,
@@ -51,6 +69,92 @@ export function ReservationPanel({
     () => calculateReservationTotal(listing.pricePerNight, nights),
     [listing.pricePerNight, nights],
   );
+  const shouldCheckSelectedDates =
+    nights >= 1 && isValidIsoDate(checkIn) && isValidIsoDate(checkOut);
+  const availabilityKey = `${listing.id}:${checkIn}:${checkOut}`;
+  const displayedAvailability: AvailabilityState = shouldCheckSelectedDates
+    ? availability.key === availabilityKey
+      ? availability
+      : {
+          key: availabilityKey,
+          message: "Checking availability",
+          status: "checking",
+        }
+    : {
+        key: "",
+        message: "",
+        status: "idle",
+      };
+  const reserveDisabled =
+    isPending ||
+    state.ok ||
+    nights < 1 ||
+    displayedAvailability.status === "checking" ||
+    displayedAvailability.status === "unavailable";
+
+  useEffect(() => {
+    if (!shouldCheckSelectedDates) {
+      return;
+    }
+
+    let isActive = true;
+    const controller = new AbortController();
+
+    const params = new URLSearchParams({
+      checkIn,
+      checkOut,
+    });
+
+    void fetch(`/api/listings/${listing.id}/availability?${params.toString()}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const result = (await response.json().catch(() => null)) as
+          | { message?: string; status?: AvailabilityState["status"] }
+          | null;
+
+        if (!isActive) {
+          return;
+        }
+
+        if (!response.ok || !result?.status) {
+          setAvailability({
+            key: availabilityKey,
+            message: "Availability will be confirmed when you reserve.",
+            status: "unknown",
+          });
+          return;
+        }
+
+        setAvailability({
+          key: availabilityKey,
+          message: result.message ?? "Availability will be confirmed when you reserve.",
+          status:
+            result.status === "available" ||
+            result.status === "unavailable" ||
+            result.status === "unknown"
+              ? result.status
+              : "unknown",
+        });
+      })
+      .catch((error: unknown) => {
+        if (!isActive || (error instanceof DOMException && error.name === "AbortError")) {
+          return;
+        }
+
+        setAvailability({
+          key: availabilityKey,
+          message: "Availability will be confirmed when you reserve.",
+          status: "unknown",
+        });
+      });
+
+    return () => {
+      isActive = false;
+      controller.abort();
+    };
+  }, [availabilityKey, checkIn, checkOut, listing.id, shouldCheckSelectedDates]);
 
   return (
     <aside className="self-start rounded-[24px] border border-[#eadfd6] bg-white p-5 shadow-sm lg:sticky lg:top-24">
@@ -141,6 +245,25 @@ export function ReservationPanel({
           </div>
         </div>
 
+        {displayedAvailability.status !== "idle" && (
+          <p
+            className={`rounded-2xl p-3 text-sm font-semibold ${
+              displayedAvailability.status === "available"
+                ? "bg-[#e7f2e4] text-[#315d3b]"
+                : displayedAvailability.status === "unavailable"
+                  ? "bg-[#fff3f5] text-[#bd1740]"
+                  : "bg-[#edf6f8] text-[#23515a]"
+            }`}
+          >
+            {displayedAvailability.status === "available" ? (
+              <CheckCircle2 className="mr-2 inline h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ShieldAlert className="mr-2 inline h-4 w-4" aria-hidden="true" />
+            )}
+            {displayedAvailability.message}
+          </p>
+        )}
+
         {state.message && (
           <p
             className={`rounded-2xl p-3 text-sm font-semibold ${
@@ -157,10 +280,10 @@ export function ReservationPanel({
         {isSignedIn ? (
           <button
             type="submit"
-            disabled={isPending || nights < 1}
+            disabled={reserveDisabled}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#ff385c] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#df2348] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isPending ? "Reserving" : "Reserve this stay"}
+            {state.ok ? "Reserved" : isPending ? "Reserving" : "Reserve this stay"}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </button>
         ) : (

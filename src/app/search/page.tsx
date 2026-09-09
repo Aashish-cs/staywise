@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SearchExperience } from "@/components/search-experience";
 import {
+  filterListingsByAvailability,
   getCurrentUserProfile,
   getFavoriteListingIds,
   getPublicListings,
@@ -25,7 +26,12 @@ type SearchPageProps = {
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const query = await searchParams;
   const search = parseSearchParams(query);
-  const listings = await getPublicListings();
+  const publicListings = await getPublicListings();
+  const listings = await filterListingsByAvailability(
+    publicListings,
+    search.checkIn,
+    search.checkOut,
+  );
   const { user, profile } = await getCurrentUserProfile();
   const favoriteIds = user ? await getFavoriteListingIds(user.id) : [];
   const accountRole =

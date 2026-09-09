@@ -97,6 +97,8 @@ export async function createReservationAction(
   }
 
   revalidatePath("/dashboard");
+  revalidatePath("/host");
+  revalidatePath("/search");
   revalidatePath(`/listings/${listingId}`);
 
   return {

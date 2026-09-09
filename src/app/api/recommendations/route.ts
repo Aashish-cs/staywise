@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { getPublicListings } from "@/lib/listing-data";
+import {
+  filterListingsByAvailability,
+  getPublicListings,
+} from "@/lib/listing-data";
 import { rankListings, searchSchema } from "@/lib/recommendations";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +21,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const listings = await getPublicListings();
+  const publicListings = await getPublicListings();
+  const listings = await filterListingsByAvailability(
+    publicListings,
+    parsed.data.checkIn,
+    parsed.data.checkOut,
+  );
 
   return NextResponse.json({
     listings: rankListings(parsed.data, listings),

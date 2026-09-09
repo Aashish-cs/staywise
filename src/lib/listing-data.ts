@@ -1,5 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
+  countNights,
+  getTodayIso,
+  isValidIsoDate,
+} from "@/lib/reservation-utils";
+import {
   fallbackListingImage,
   type Listing,
   type PropertyType,
@@ -53,6 +58,16 @@ type ReservationRow = {
   listing?: ListingRow | ListingRow[] | null;
 };
 
+type AvailableListingIdRow = {
+  listing_id: string;
+};
+
+export type ListingAvailabilityStatus = {
+  available: boolean | null;
+  message: string;
+  status: "available" | "unavailable" | "unknown";
+};
+
 const listingSelect = `
   id,
   host_id,
@@ -103,6 +118,84 @@ export async function getPublicListings() {
   return ((data ?? []) as ListingRow[]).map(mapListingRow);
 }
 
+export async function getPublicListingsForDates(
+  checkIn: string,
+  checkOut: string,
+) {
+  const listings = await getPublicListings();
+
+  return filterListingsByAvailability(listings, checkIn, checkOut);
+}
+
+export async function filterListingsByAvailability(
+  listings: Listing[],
+  checkIn: string,
+  checkOut: string,
+) {
+  if (!shouldCheckAvailability(checkIn, checkOut)) {
+    return listings;
+  }
+
+  const availableIds = await getAvailableListingIds(checkIn, checkOut);
+
+  if (!availableIds) {
+    return listings;
+  }
+
+  return listings.filter((listing) => availableIds.has(listing.id));
+}
+
+export async function checkListingAvailability(
+  listingId: string,
+  checkIn: string,
+  checkOut: string,
+): Promise<ListingAvailabilityStatus> {
+  if (!shouldCheckAvailability(checkIn, checkOut)) {
+    return {
+      available: null,
+      message: "Choose valid dates to check availability.",
+      status: "unknown",
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return {
+      available: null,
+      message: "Availability will be confirmed when you reserve.",
+      status: "unknown",
+    };
+  }
+
+  const { data, error } = await supabase.rpc("check_listing_availability", {
+    requested_end_date: checkOut,
+    requested_listing_id: listingId,
+    requested_start_date: checkIn,
+  });
+
+  if (error) {
+    console.error("Unable to check listing availability", error);
+    return {
+      available: null,
+      message: "Availability will be confirmed when you reserve.",
+      status: "unknown",
+    };
+  }
+
+  return data
+    ? {
+        available: true,
+        message: "These dates are available.",
+        status: "available",
+      }
+    : {
+        available: false,
+        message: "Those dates are already booked. Choose different dates.",
+        status: "unavailable",
+      };
+}
+
 export async function getListingById(id: string) {
   const supabase = await createSupabaseServerClient();
 
@@ -122,6 +215,39 @@ export async function getListingById(id: string) {
   }
 
   return mapListingRow(data as ListingRow);
+}
+
+async function getAvailableListingIds(checkIn: string, checkOut: string) {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase.rpc("get_available_listing_ids", {
+    requested_end_date: checkOut,
+    requested_start_date: checkIn,
+  });
+
+  if (error) {
+    console.error("Unable to load available listings", error);
+    return null;
+  }
+
+  return new Set(
+    ((data ?? []) as AvailableListingIdRow[])
+      .map((row) => row.listing_id)
+      .filter(Boolean),
+  );
+}
+
+function shouldCheckAvailability(checkIn: string, checkOut: string) {
+  return (
+    isValidIsoDate(checkIn) &&
+    isValidIsoDate(checkOut) &&
+    checkIn >= getTodayIso() &&
+    countNights(checkIn, checkOut) > 0
+  );
 }
 
 export async function getGuestReservations(userId: string) {

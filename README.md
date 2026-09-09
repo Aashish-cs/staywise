@@ -40,9 +40,10 @@ Resend is configured inside Supabase as a custom SMTP provider. Do not put the R
 2. Run `supabase/schema.sql` in the SQL editor.
 3. Run `supabase/phase2_seed.sql` to add synthetic marketplace listings for demo search and reservations.
 4. Run `supabase/phase3_booking_integrity.sql` to add server-side reservation validation and double-booking protection.
-5. Turn on email confirmation in Supabase Auth settings.
-6. Configure custom SMTP with Resend.
-7. Add `http://localhost:3000/auth/callback` and the Vercel production callback URL to Supabase redirect URLs.
+5. Run `supabase/phase4_availability.sql` to let search and listing pages check booked dates.
+6. Turn on email confirmation in Supabase Auth settings.
+7. Configure custom SMTP with Resend.
+8. Add `http://localhost:3000/auth/callback` and the Vercel production callback URL to Supabase redirect URLs.
 
 The seed listings are synthetic StayWise data with public stock imagery. Do not scrape Airbnb or copy private marketplace content into this database.
 
@@ -61,4 +62,4 @@ Use GitHub as the source repository and import it into Vercel. Add the same envi
 
 ## Project Scope
 
-The current implementation covers authentication, Supabase-backed listing search, explainable AI ranking, guest reservations, persisted favorites, and a host listing dashboard. Payment processing, guest-host messaging, reviews, advanced adaptive learning, native mobile apps, and calendar sync remain future items per the SRS.
+The current implementation covers authentication, Supabase-backed listing search, natural-language AI search, explainable AI ranking, date-aware guest reservations, persisted favorites, and a host listing dashboard. Payment processing, guest-host messaging, reviews, advanced adaptive learning, native mobile apps, and calendar sync remain future items per the SRS.

@@ -36,4 +36,6 @@ export async function cancelReservationAction(formData: FormData) {
   });
 
   revalidatePath("/dashboard");
+  revalidatePath("/host");
+  revalidatePath("/search");
 }

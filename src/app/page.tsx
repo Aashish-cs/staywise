@@ -1,4 +1,4 @@
-import { SearchExperience } from "@/components/search-experience";
+import { MarketplaceHome } from "@/components/marketplace-home";
 import {
   getCurrentUserProfile,
   getFavoriteListingIds,
@@ -15,7 +15,7 @@ export default async function Home() {
     profile?.role === "host" ? "host" : profile?.role === "guest" ? "guest" : null;
 
   return (
-    <SearchExperience
+    <MarketplaceHome
       accountRole={accountRole}
       initialFavoriteIds={favoriteIds}
       initialListings={listings}

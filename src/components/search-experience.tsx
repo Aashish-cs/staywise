@@ -58,6 +58,39 @@ const defaultSearch: SearchInput = {
   month: "Sep",
 };
 
+const searchCategoryLinks = [
+  {
+    href: "/search",
+    icon: Home,
+    label: "All stays",
+  },
+  {
+    href: makeSearchHref({
+      amenities: ["Fast Wi-Fi", "Workspace"],
+      tripPurpose: "remote-work",
+    }),
+    icon: Wifi,
+    label: "Work-ready",
+  },
+  {
+    href: makeSearchHref({
+      amenities: ["Kitchen", "Parking", "Washer"],
+      guests: 5,
+      tripPurpose: "family",
+    }),
+    icon: Users,
+    label: "Family trips",
+  },
+  {
+    href: makeSearchHref({
+      amenities: ["Parking", "Pet friendly"],
+      tripPurpose: "outdoor",
+    }),
+    icon: Trees,
+    label: "Outdoors",
+  },
+];
+
 export function SearchExperience({
   accountRole,
   initialFavoriteIds,
@@ -263,8 +296,8 @@ export function SearchExperience({
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f3ee] text-[#201a18]">
-      <header className="sticky top-0 z-20 border-b border-[#eadfd6] bg-[#fffaf5]/95 backdrop-blur">
+    <main className="min-h-screen bg-white text-[#201a18]">
+      <header className="sticky top-0 z-20 border-b border-[#ebe3dd] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
           <Link
             href={isSignedIn ? accountHref : "/"}
@@ -362,9 +395,33 @@ export function SearchExperience({
             </div>
           </div>
         </div>
+
+        <div className="border-t border-[#f3ede8]">
+          <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-5 py-3 lg:px-8">
+            {searchCategoryLinks.map((item, index) => {
+              const Icon = item.icon;
+
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={clsx(
+                    "flex min-w-fit items-center gap-2 rounded-full border px-3 py-2 text-sm font-extrabold transition hover:border-[#ff385c] hover:text-[#df2348]",
+                    index === 0
+                      ? "border-[#201a18] bg-[#201a18] text-white hover:text-white"
+                      : "border-[#eadfd6] bg-white text-[#5f5148]",
+                  )}
+                >
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       </header>
 
-      <section className="mx-auto max-w-7xl px-5 py-8 lg:px-8">
+      <section className="mx-auto max-w-7xl px-5 py-7 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[410px_1fr]">
           <aside id="search" className="self-start rounded-[28px] border border-[#eadfd6] bg-[#fffaf5] p-5 shadow-sm lg:sticky lg:top-24">
             <div className="flex items-start justify-between gap-4">
@@ -1024,4 +1081,13 @@ function sortListings(
   }
 
   return sorted;
+}
+
+function makeSearchHref(input: Partial<SearchInput>) {
+  const query = buildSearchQueryString({
+    ...defaultSearch,
+    ...input,
+  });
+
+  return `/search${query ? `?${query}` : ""}`;
 }

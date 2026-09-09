@@ -142,7 +142,9 @@ export function SearchExperience({
 
   function toggleSaved(id: string) {
     if (!isSignedIn) {
-      router.push("/auth?mode=signin");
+      const query = buildSearchQueryString(search);
+      const next = `/search${query ? `?${query}` : ""}`;
+      router.push(`/auth?mode=signin&next=${encodeURIComponent(next)}`);
       return;
     }
 
@@ -210,7 +212,7 @@ export function SearchExperience({
       <header className="sticky top-0 z-20 border-b border-[#eadfd6] bg-[#fffaf5]/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
           <Link
-            href="/"
+            href={isSignedIn ? accountHref : "/"}
             className="flex items-center gap-3"
             aria-label="StayWise home"
             onClick={() => setIsAccountMenuOpen(false)}
@@ -225,7 +227,10 @@ export function SearchExperience({
             <Link className="nav-pill" href="/search">
               Stays
             </Link>
-            <Link className="nav-pill" href="/dashboard">
+            <Link
+              className="nav-pill"
+              href={isSignedIn ? "/dashboard" : "/auth?mode=signin"}
+            >
               Trips
             </Link>
             <Link className="nav-pill" href="/host">
@@ -540,7 +545,7 @@ export function SearchExperience({
             {displayedListings.length > 0 ? (
               <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
                 <div className="grid gap-5 md:grid-cols-2">
-                  {displayedListings.map((listing) => (
+                  {displayedListings.map((listing, index) => (
                     <article
                       key={listing.id}
                       className={clsx(
@@ -553,6 +558,7 @@ export function SearchExperience({
                       <button
                         type="button"
                         className="block w-full text-left"
+                        aria-label={`View details for ${listing.title}`}
                         onClick={() => setSelectedId(listing.id)}
                       >
                         <div className="relative aspect-[4/3] overflow-hidden bg-[#e8dfd6]">
@@ -560,6 +566,7 @@ export function SearchExperience({
                             src={listing.imageUrl}
                             alt={listing.imageAlt}
                             fill
+                            priority={index === 0}
                             sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
                             className="object-cover transition duration-500 group-hover:scale-105"
                           />
@@ -607,6 +614,9 @@ export function SearchExperience({
                           type="button"
                           className="flex h-9 items-center gap-2 rounded-full px-3 text-sm font-semibold hover:bg-[#fff3f5]"
                           onClick={() => toggleSaved(listing.id)}
+                          aria-label={`${
+                            savedIds.includes(listing.id) ? "Remove saved" : "Save"
+                          } ${listing.title}`}
                           aria-pressed={savedIds.includes(listing.id)}
                         >
                           <Heart
@@ -623,6 +633,7 @@ export function SearchExperience({
                           href={`/listings/${listing.id}${
                             listingDetailQuery ? `?${listingDetailQuery}` : ""
                           }`}
+                          aria-label={`Reserve ${listing.title}`}
                           className="rounded-full bg-[#201a18] px-4 py-2 text-sm font-semibold text-white hover:bg-black"
                         >
                           Reserve

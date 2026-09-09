@@ -36,18 +36,29 @@ export default async function HostPage() {
     <main className="min-h-screen bg-[#f7f3ee] text-[#201a18]">
       <header className="border-b border-[#eadfd6] bg-[#fffaf5]">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <Link href="/" className="flex items-center gap-3">
+          <Link href={user ? (isHost ? "/host" : "/dashboard") : "/"} className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff385c] text-white">
               <Sparkles className="h-5 w-5" aria-hidden="true" />
             </span>
             <span className="text-xl font-semibold">StayWise</span>
           </Link>
-          <Link
-            href={user ? "/dashboard" : "/auth?mode=signin&role=host"}
-            className="rounded-full bg-[#201a18] px-4 py-2 text-sm font-semibold text-white"
-          >
-            {user ? "Guest trips" : "Host sign in"}
-          </Link>
+          {user ? (
+            <form action="/auth/signout" method="post">
+              <button
+                type="submit"
+                className="rounded-full bg-[#201a18] px-4 py-2 text-sm font-semibold text-white"
+              >
+                Sign out
+              </button>
+            </form>
+          ) : (
+            <Link
+              href="/auth?mode=signin&role=host"
+              className="rounded-full bg-[#201a18] px-4 py-2 text-sm font-semibold text-white"
+            >
+              Host sign in
+            </Link>
+          )}
         </div>
       </header>
 
@@ -59,12 +70,18 @@ export default async function HostPage() {
               Manage listings, availability, and guest demand.
             </h1>
           </div>
-          <Link
-            href="/auth?mode=signup&role=host"
-            className="inline-flex h-12 items-center justify-center rounded-full border border-[#eadfd6] bg-white px-5 text-sm font-semibold hover:border-[#ff385c]"
-          >
-            {isHost ? user?.email : "Create host account"}
-          </Link>
+          {isHost ? (
+            <span className="inline-flex h-12 items-center justify-center rounded-full border border-[#eadfd6] bg-white px-5 text-sm font-semibold">
+              {user?.email}
+            </span>
+          ) : (
+            <Link
+              href="/auth?mode=signup&role=host"
+              className="inline-flex h-12 items-center justify-center rounded-full border border-[#eadfd6] bg-white px-5 text-sm font-semibold hover:border-[#ff385c]"
+            >
+              Create host account
+            </Link>
+          )}
         </div>
 
         {!user && (

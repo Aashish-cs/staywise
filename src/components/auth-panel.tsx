@@ -14,9 +14,11 @@ type AccountRole = "guest" | "host";
 
 export function AuthPanel({
   initialMode = "signup",
+  initialNext,
   initialRole = "guest",
 }: {
   initialMode?: AuthMode;
+  initialNext?: string | null;
   initialRole?: AccountRole;
 }) {
   const router = useRouter();
@@ -54,9 +56,9 @@ export function AuthPanel({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${
-              role === "host" ? "/host" : "/dashboard"
-            }`,
+            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+              initialNext ?? (role === "host" ? "/host" : "/dashboard"),
+            )}`,
             data: {
               full_name: fullName,
               role,
@@ -90,7 +92,7 @@ export function AuthPanel({
         .maybeSingle();
 
       const roleFromProfile = profile?.role ?? data.user.user_metadata?.role;
-      router.replace(roleFromProfile === "host" ? "/host" : "/dashboard");
+      router.replace(initialNext ?? (roleFromProfile === "host" ? "/host" : "/dashboard"));
     } finally {
       setIsSubmitting(false);
     }

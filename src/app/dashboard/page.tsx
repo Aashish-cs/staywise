@@ -69,7 +69,7 @@ export default async function DashboardPage() {
               : "Create a verified guest account to reserve places and keep a private trip history."}
           </p>
           <Link
-            href={user ? "/" : "/auth?mode=signin"}
+            href={user ? "/search" : "/auth?mode=signin"}
             className="mt-5 inline-flex h-11 items-center justify-center rounded-full bg-[#ff385c] px-5 text-sm font-semibold text-white hover:bg-[#df2348]"
           >
             {user ? "Find another stay" : "Sign in"}
@@ -135,14 +135,14 @@ export default async function DashboardPage() {
                   Smart matches for your next trip
                 </h2>
               </div>
-              <Link className="hidden text-sm font-semibold text-[#5f5148] hover:text-[#ff385c] md:block" href="/">
+              <Link className="hidden text-sm font-semibold text-[#5f5148] hover:text-[#ff385c] md:block" href="/search">
                 Adjust search
               </Link>
             </div>
 
             {recommendations.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-3">
-                {recommendations.map((listing) => (
+                {recommendations.map((listing, index) => (
                   <article key={listing.id} className="overflow-hidden rounded-[22px] border border-[#eadfd6] bg-white shadow-sm">
                     <Link href={`/listings/${listing.id}`}>
                       <div className="relative aspect-[4/3] bg-[#e8dfd6]">
@@ -150,6 +150,7 @@ export default async function DashboardPage() {
                           src={listing.imageUrl}
                           alt={listing.imageAlt}
                           fill
+                          priority={index === 0}
                           sizes="(min-width: 768px) 33vw, 100vw"
                           className="object-cover"
                         />
@@ -233,7 +234,7 @@ function DashboardHeader({ email }: { email?: string }) {
   return (
     <header className="border-b border-[#eadfd6] bg-[#fffaf5]">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-        <Link href="/" className="flex items-center gap-3">
+        <Link href={email ? "/dashboard" : "/"} className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff385c] text-white">
             <Sparkles className="h-5 w-5" aria-hidden="true" />
           </span>

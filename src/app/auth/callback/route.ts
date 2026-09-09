@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const next = requestUrl.searchParams.get("next") ?? "/dashboard";
+  const next = parseSafeNext(requestUrl.searchParams.get("next")) ?? "/dashboard";
 
   if (code) {
     const supabase = await createSupabaseServerClient();
@@ -12,4 +12,12 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.redirect(new URL(next, requestUrl.origin));
+}
+
+function parseSafeNext(value: string | null) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return null;
+  }
+
+  return value;
 }

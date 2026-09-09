@@ -26,12 +26,14 @@ export function ReservationPanel({
   initialGuests,
   initialCheckIn,
   initialCheckOut,
+  signInHref = "/auth?mode=signin",
 }: {
   listing: Listing;
   isSignedIn: boolean;
   initialGuests: number;
   initialCheckIn?: string;
   initialCheckOut?: string;
+  signInHref?: string;
 }) {
   const resolvedCheckIn = resolveInitialCheckIn(initialCheckIn);
   const resolvedCheckOut = resolveInitialCheckOut(resolvedCheckIn, initialCheckOut);
@@ -163,7 +165,7 @@ export function ReservationPanel({
           </button>
         ) : (
           <Link
-            href="/auth?mode=signin"
+            href={signInHref}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#ff385c] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#df2348]"
           >
             Sign in to reserve

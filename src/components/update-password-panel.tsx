@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
@@ -73,6 +74,15 @@ export function UpdatePasswordPanel() {
             <p className="rounded-2xl bg-[#e7f2e4] p-3 text-sm font-semibold text-[#315d3b]">
               {message}
             </p>
+          )}
+
+          {message && (
+            <Link
+              href="/auth?mode=signin"
+              className="flex h-11 w-full items-center justify-center rounded-full border border-[#eadfd6] bg-white text-sm font-semibold hover:border-[#ff385c] hover:text-[#df2348]"
+            >
+              Back to sign in
+            </Link>
           )}
 
           <button

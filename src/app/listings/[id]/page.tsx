@@ -77,6 +77,8 @@ export default async function ListingPage({
     destination: search.destination || listing.city,
     maxNightlyBudget,
   });
+  const currentListingPath = `/listings/${listing.id}?${backToSearchQuery}`;
+  const signInHref = `/auth?mode=signin&next=${encodeURIComponent(currentListingPath)}`;
   const fit = rankListings(
     {
       destination: listing.city,
@@ -92,13 +94,15 @@ export default async function ListingPage({
     },
     [listing],
   )[0];
-  const { user } = await getCurrentUserProfile();
+  const { user, profile } = await getCurrentUserProfile();
+  const homeHref =
+    profile?.role === "host" ? "/host" : user ? "/dashboard" : "/";
 
   return (
     <main className="min-h-screen bg-[#f7f3ee] text-[#201a18]">
       <header className="border-b border-[#eadfd6] bg-[#fffaf5]">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-          <Link href="/" className="flex items-center gap-3">
+          <Link href={homeHref} className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff385c] text-white">
               <Sparkles className="h-5 w-5" aria-hidden="true" />
             </span>
@@ -225,6 +229,7 @@ export default async function ListingPage({
             initialGuests={search.guests}
             initialCheckIn={search.checkIn || undefined}
             initialCheckOut={search.checkOut || undefined}
+            signInHref={signInHref}
           />
         </div>
       </section>

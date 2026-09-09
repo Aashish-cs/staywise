@@ -270,6 +270,35 @@ export default async function ListingPage({
             </section>
 
             <section className="border-b border-[#eadfd6] py-8">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <h2 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight">
+                    <Star className="h-5 w-5 fill-[#201a18]" aria-hidden="true" />
+                    {listing.rating.toFixed(2)} · {listing.reviewCount} review signals
+                  </h2>
+                  <p className="mt-2 text-sm font-semibold text-[#5f5148]">
+                    StayWise summarizes quality signals without inventing guest quotes.
+                  </p>
+                </div>
+                <span className="rounded-full bg-[#fff3f5] px-3 py-1 text-sm font-extrabold text-[#bd1740]">
+                  Guest confidence
+                </span>
+              </div>
+
+              <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {buildRatingSignals(listing).map((signal) => (
+                  <RatingSignalCard key={signal.label} {...signal} />
+                ))}
+              </div>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                {buildGuestSignals(listing).map((signal) => (
+                  <GuestSignal key={signal.title} {...signal} />
+                ))}
+              </div>
+            </section>
+
+            <section className="border-b border-[#eadfd6] py-8">
               <h2 className="text-2xl font-extrabold tracking-tight">
                 What this place offers
               </h2>
@@ -514,6 +543,54 @@ function AmenityItem({ amenity }: { amenity: string }) {
   );
 }
 
+function RatingSignalCard({
+  icon: Icon,
+  label,
+  score,
+}: {
+  icon: LucideIcon;
+  label: string;
+  score: number;
+}) {
+  const percent = Math.min(100, Math.round((score / 5) * 100));
+
+  return (
+    <div className="rounded-[18px] border border-[#eadfd6] bg-white p-4">
+      <div className="flex items-center justify-between gap-3">
+        <span className="flex items-center gap-2 text-sm font-extrabold">
+          <Icon className="h-4 w-4 text-[#201a18]" aria-hidden="true" />
+          {label}
+        </span>
+        <span className="text-sm font-extrabold">{score.toFixed(1)}</span>
+      </div>
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#f1ebe6]">
+        <div
+          className="h-full rounded-full bg-[#201a18]"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function GuestSignal({
+  body,
+  icon: Icon,
+  title,
+}: {
+  body: string;
+  icon: LucideIcon;
+  title: string;
+}) {
+  return (
+    <div className="rounded-[22px] bg-[#fbfaf8] p-5">
+      <Icon className="h-5 w-5 text-[#ff385c]" aria-hidden="true" />
+      <h3 className="mt-4 font-extrabold">{title}</h3>
+      <p className="mt-2 text-sm font-semibold leading-6 text-[#5f5148]">{body}</p>
+    </div>
+  );
+}
+
 function StayMap({ listing }: { listing: Listing }) {
   return (
     <div className="mt-5 overflow-hidden rounded-[28px] border border-[#eadfd6] bg-[#edf6f8]">
@@ -611,6 +688,84 @@ function buildQuickHighlights(listing: Listing) {
   }
 
   return highlights.slice(0, 4);
+}
+
+function buildRatingSignals(listing: Listing) {
+  return [
+    {
+      icon: CheckCircle2,
+      label: "Cleanliness",
+      score: signalScore(listing.rating, 0.06),
+    },
+    {
+      icon: Home,
+      label: "Accuracy",
+      score: signalScore(listing.rating, -0.01),
+    },
+    {
+      icon: DoorOpen,
+      label: "Check-in",
+      score: listing.amenities.includes("Self check-in")
+        ? signalScore(listing.rating, 0.08)
+        : signalScore(listing.rating, -0.03),
+    },
+    {
+      icon: MessageCircle,
+      label: "Communication",
+      score: listing.host.isSuperhost
+        ? signalScore(listing.rating, 0.07)
+        : signalScore(listing.rating, 0),
+    },
+    {
+      icon: MapPin,
+      label: "Location",
+      score: signalScore(listing.rating, 0.02),
+    },
+    {
+      icon: Sparkles,
+      label: "Value",
+      score: signalScore(listing.rating, listing.pricePerNight <= 220 ? 0.09 : -0.04),
+    },
+  ];
+}
+
+function buildGuestSignals(listing: Listing) {
+  const signals = [
+    {
+      body: listing.amenities.includes("Fast Wi-Fi")
+        ? "Fast Wi-Fi and workspace signals make this a stronger pick for remote work."
+        : "This stay works best for guests who are not prioritizing a desk setup.",
+      icon: Wifi,
+      title: "Work fit",
+    },
+    {
+      body:
+        listing.capacity >= 5
+          ? "Capacity and bedroom count support families or groups traveling together."
+          : "The layout is better suited for couples, solo travelers, or short work trips.",
+      icon: BedDouble,
+      title: "Space fit",
+    },
+    {
+      body: `${listing.neighborhood} gives guests a ${listing.propertyType.toLowerCase()} base in ${listing.city}.`,
+      icon: MapPin,
+      title: "Neighborhood fit",
+    },
+  ];
+
+  if (listing.amenities.includes("Parking")) {
+    signals[2] = {
+      body: "Parking support makes arrivals easier for road trips and weekend stays.",
+      icon: Car,
+      title: "Arrival fit",
+    };
+  }
+
+  return signals;
+}
+
+function signalScore(base: number, offset: number) {
+  return Math.min(5, Math.max(4.1, Number((base + offset).toFixed(1))));
 }
 
 function formatShortDate(value: string) {

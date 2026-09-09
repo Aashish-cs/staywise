@@ -120,7 +120,7 @@ function scoreListing(listing: Listing, input: SearchInput): RankedListing {
 
   if (listing.host.isSuperhost) {
     score += 5;
-    reasons.push("Hosted by a Superhost");
+    reasons.push("Hosted by a top StayWise host");
   }
 
   score += Math.round((listing.rating - 4.7) * 18);

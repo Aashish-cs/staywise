@@ -300,7 +300,7 @@ export function SearchExperience({
       <header className="sticky top-0 z-20 border-b border-[#ebe3dd] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
           <Link
-            href={isSignedIn ? accountHref : "/"}
+            href="/"
             className="flex items-center gap-3"
             aria-label="StayWise home"
             onClick={() => setIsAccountMenuOpen(false)}

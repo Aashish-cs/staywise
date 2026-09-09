@@ -436,6 +436,18 @@ function mapListingRow(row: ListingRow): Listing {
     (a, b) => a.sort_order - b.sort_order,
   );
   const image = images[0];
+  const galleryImages =
+    images.length > 0
+      ? images.map((item) => ({
+          alt: item.alt_text || row.title,
+          url: item.image_url,
+        }))
+      : [
+          {
+            alt: row.title,
+            url: fallbackListingImage,
+          },
+        ];
   const amenities = (row.listing_amenities ?? [])
     .map((item) => item.amenity)
     .filter(Boolean)
@@ -451,6 +463,7 @@ function mapListingRow(row: ListingRow): Listing {
     state: row.state,
     country: row.country,
     neighborhood: row.neighborhood ?? "Central",
+    images: galleryImages,
     imageUrl: image?.image_url ?? fallbackListingImage,
     imageAlt: image?.alt_text ?? row.title,
     pricePerNight: row.price_per_night,

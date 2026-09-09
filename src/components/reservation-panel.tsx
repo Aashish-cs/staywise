@@ -4,8 +4,12 @@ import { useEffect, useMemo, useState, useActionState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
+  BadgeCheck,
   CalendarDays,
   CheckCircle2,
+  Minus,
+  Plus,
+  ReceiptText,
   ShieldAlert,
   ShieldCheck,
   Users,
@@ -157,7 +161,7 @@ export function ReservationPanel({
   }, [availabilityKey, checkIn, checkOut, listing.id, shouldCheckSelectedDates]);
 
   return (
-    <aside className="self-start rounded-[24px] border border-[#eadfd6] bg-white p-5 shadow-sm lg:sticky lg:top-24">
+    <aside className="self-start rounded-[28px] border border-[#eadfd6] bg-white p-5 shadow-[0_18px_55px_rgba(32,26,24,0.14)] lg:sticky lg:top-24">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-2xl font-semibold tracking-tight">
@@ -165,10 +169,11 @@ export function ReservationPanel({
             <span className="text-sm font-semibold text-[#5f5148]"> night</span>
           </p>
           <p className="mt-1 text-sm font-semibold text-[#5f5148]">
-            No payment collected in senior project MVP
+            Reserve now, pay later in the MVP
           </p>
         </div>
-        <span className="rounded-full bg-[#fff3f5] px-3 py-1 text-sm font-semibold text-[#bd1740]">
+        <span className="inline-flex items-center gap-1 rounded-full bg-[#fff3f5] px-3 py-1 text-sm font-semibold text-[#bd1740]">
+          <BadgeCheck className="h-4 w-4" aria-hidden="true" />
           {listing.rating.toFixed(2)}
         </span>
       </div>
@@ -217,22 +222,43 @@ export function ReservationPanel({
           </label>
         </div>
 
-        <label className="block">
+        <div>
           <span className="field-label">Guests</span>
-          <span className="field-shell">
-            <Users className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-            <input
-              type="number"
-              name="guests"
-              min="1"
-              max={listing.capacity}
-              value={guests}
-              onChange={(event) => setGuests(Number(event.target.value))}
-              className="field-input"
-              required
-            />
-          </span>
-        </label>
+          <div className="field-shell justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <Users className="h-4 w-4 shrink-0 text-[#786a60]" aria-hidden="true" />
+              <span className="min-w-0">
+                <span className="block text-sm font-extrabold">{guests} guests</span>
+                <span className="block text-xs font-semibold text-[#786a60]">
+                  {listing.capacity} max
+                </span>
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                aria-label="Decrease guests"
+                disabled={guests <= 1}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d8cbc1] text-[#201a18] disabled:cursor-not-allowed disabled:opacity-40"
+                onClick={() => setGuests((current) => Math.max(1, current - 1))}
+              >
+                <Minus className="h-4 w-4" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                aria-label="Increase guests"
+                disabled={guests >= listing.capacity}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d8cbc1] text-[#201a18] disabled:cursor-not-allowed disabled:opacity-40"
+                onClick={() =>
+                  setGuests((current) => Math.min(listing.capacity, current + 1))
+                }
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
+            <input type="hidden" name="guests" value={guests} />
+          </div>
+        </div>
 
         <div className="space-y-3 rounded-2xl bg-[#f7f3ee] p-4 text-sm">
           <PriceRow
@@ -296,6 +322,21 @@ export function ReservationPanel({
           </Link>
         )}
 
+        <div className="space-y-3 rounded-2xl border border-[#eadfd6] bg-white p-4 text-sm">
+          <TrustLine
+            icon={ShieldCheck}
+            text="Verified account required before booking."
+          />
+          <TrustLine
+            icon={CalendarDays}
+            text="Dates are checked against existing reservations."
+          />
+          <TrustLine
+            icon={ReceiptText}
+            text="Server calculates the final reservation total."
+          />
+        </div>
+
         {state.ok && (
           <Link
             href="/dashboard"
@@ -306,6 +347,21 @@ export function ReservationPanel({
         )}
       </form>
     </aside>
+  );
+}
+
+function TrustLine({
+  icon: Icon,
+  text,
+}: {
+  icon: typeof ShieldCheck;
+  text: string;
+}) {
+  return (
+    <p className="flex gap-3 font-semibold leading-6 text-[#5f5148]">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#315d3b]" aria-hidden="true" />
+      {text}
+    </p>
   );
 }
 

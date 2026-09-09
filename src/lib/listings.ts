@@ -23,6 +23,10 @@ export type Listing = {
   state: string;
   country: string;
   neighborhood: string;
+  images: {
+    alt: string;
+    url: string;
+  }[];
   imageUrl: string;
   imageAlt: string;
   pricePerNight: number;

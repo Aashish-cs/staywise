@@ -238,7 +238,7 @@ export function MarketplaceHome({
       <header className="sticky top-0 z-30 border-b border-[#ebe3dd] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-[1536px] items-center justify-between gap-5 px-5 py-4 lg:px-8">
           <Link
-            href={isSignedIn ? accountHref : "/"}
+            href="/"
             className="flex shrink-0 items-center gap-3"
             aria-label="StayWise home"
             onClick={() => setIsAccountMenuOpen(false)}

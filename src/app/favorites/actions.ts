@@ -84,6 +84,8 @@ export async function toggleFavoriteAction(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath("/dashboard");
+  revalidatePath("/search");
+  revalidatePath(`/listings/${parsed.data.listingId}`);
 
   return {
     ok: true,

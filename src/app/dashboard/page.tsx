@@ -4,10 +4,14 @@ import Link from "next/link";
 import {
   BriefcaseBusiness,
   CalendarDays,
+  CheckCircle2,
   Heart,
   Home,
+  MapPin,
+  ReceiptText,
   Sparkles,
   Star,
+  Timer,
 } from "lucide-react";
 import { cancelReservationAction } from "@/app/dashboard/actions";
 import {
@@ -52,32 +56,52 @@ export default async function DashboardPage() {
   const upcomingReservations = reservations.filter(
     (reservation) => reservation.status === "confirmed" && reservation.endDate >= today,
   );
+  const nextTrip = upcomingReservations[0];
+  const savedListings = publicListings.filter((listing) => favoriteIds.includes(listing.id));
+  const completedReservations = reservations.filter(
+    (reservation) => reservation.status === "completed",
+  );
+  const cancelledReservations = reservations.filter(
+    (reservation) => reservation.status === "cancelled",
+  );
+  const activeTripSpend = upcomingReservations.reduce(
+    (total, reservation) => total + reservation.totalAmount,
+    0,
+  );
 
   return (
-    <main className="min-h-screen bg-[#f7f3ee] text-[#201a18]">
+    <main className="min-h-screen bg-white text-[#201a18]">
       <DashboardHeader email={user?.email} />
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-5 py-8 lg:grid-cols-[280px_1fr] lg:px-8">
-        <aside className="self-start rounded-[24px] border border-[#eadfd6] bg-[#fffaf5] p-5 shadow-sm lg:sticky lg:top-8">
-          <p className="text-sm font-semibold text-[#ff385c]">Guest workspace</p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight">
+      <section className="border-b border-[#ebe3dd] bg-[#fbfaf8]">
+        <div className="mx-auto grid max-w-[1536px] gap-6 px-5 py-8 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
+          <div>
+            <p className="text-sm font-extrabold text-[#ff385c]">Guest workspace</p>
+            <h1 className="mt-2 max-w-2xl text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
             {user ? "Your StayWise trips" : "Sign in to view trips"}
-          </h1>
-          <p className="mt-3 text-sm leading-6 text-[#5f5148]">
-            {user
-              ? "Reservations, saved places, and AI recommendations are tied to your verified account."
-              : "Create a verified guest account to reserve places and keep a private trip history."}
-          </p>
-          <Link
-            href={user ? "/search" : "/auth?mode=signin"}
-            className="mt-5 inline-flex h-11 items-center justify-center rounded-full bg-[#ff385c] px-5 text-sm font-semibold text-white hover:bg-[#df2348]"
-          >
-            {user ? "Find another stay" : "Sign in"}
-          </Link>
-        </aside>
+            </h1>
+            <p className="mt-4 max-w-xl text-base font-semibold leading-7 text-[#5f5148]">
+              {user
+                ? "Track upcoming stays, saved places, cancellation state, and AI recommendations from one verified account."
+                : "Create a verified guest account to reserve stays and keep a private trip history."}
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href={user ? "/search" : "/auth?mode=signin"}
+                className="inline-flex h-12 items-center justify-center rounded-full bg-[#ff385c] px-5 text-sm font-extrabold text-white hover:bg-[#df2348]"
+              >
+                {user ? "Find another stay" : "Sign in"}
+              </Link>
+              <Link
+                href="/"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-[#eadfd6] bg-white px-5 text-sm font-extrabold hover:border-[#ff385c]"
+              >
+                Explore StayWise
+              </Link>
+            </div>
+          </div>
 
-        <div className="space-y-6">
-          <section className="grid gap-4 md:grid-cols-3">
+          <section className="grid gap-3 sm:grid-cols-2">
             <DashboardMetric
               icon={BriefcaseBusiness}
               label="Reservations"
@@ -89,43 +113,126 @@ export default async function DashboardPage() {
               label="Upcoming"
               value={`${upcomingReservations.length}`}
             />
+            <DashboardMetric
+              icon={ReceiptText}
+              label="Active trip value"
+              value={formatMoney(activeTripSpend)}
+            />
           </section>
+        </div>
+      </section>
 
-          <section className="rounded-[24px] border border-[#eadfd6] bg-white p-5 shadow-sm">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-[#315d3b]">Current trip</p>
-                <h2 className="mt-1 text-2xl font-semibold tracking-tight">
-                  {upcomingReservations[0]?.listing?.title ?? "No upcoming stay yet"}
-                </h2>
-              </div>
-              {upcomingReservations[0] && (
-                <span className="rounded-full bg-[#e7f2e4] px-3 py-1 text-sm font-semibold text-[#315d3b]">
-                  {formatStayDate(upcomingReservations[0].startDate)}-
-                  {formatStayDate(upcomingReservations[0].endDate)}
-                </span>
-              )}
-            </div>
-
-            <div className="mt-5 grid gap-3 md:grid-cols-4">
-              {upcomingReservations[0] ? (
-                [
-                  `${upcomingReservations[0].guests} guests`,
-                  `${formatMoney(upcomingReservations[0].nightlyRate)}/night`,
-                  upcomingReservations[0].listing?.city ?? "StayWise",
-                  upcomingReservations[0].status,
-                ].map((item) => (
-                  <div key={item} className="rounded-2xl bg-[#f7f3ee] p-4 text-sm font-semibold capitalize">
-                    {item}
+      <section className="mx-auto max-w-[1536px] space-y-8 px-5 py-8 lg:px-8">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+          <section className="overflow-hidden rounded-[28px] border border-[#eadfd6] bg-white shadow-sm">
+            <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
+              <div className="relative min-h-[280px] bg-[#e8dfd6]">
+                {nextTrip?.listing ? (
+                  <Image
+                    src={nextTrip.listing.imageUrl}
+                    alt={nextTrip.listing.imageAlt}
+                    fill
+                    priority
+                    sizes="(min-width: 1024px) 45vw, 100vw"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center bg-[#201a18] text-white">
+                    <Sparkles className="h-12 w-12" aria-hidden="true" />
                   </div>
-                ))
-              ) : (
-                <p className="col-span-full text-sm leading-6 text-[#5f5148]">
-                  Reserve a stay and it will appear here immediately.
-                </p>
-              )}
+                )}
+              </div>
+              <div className="p-6 md:p-8">
+                <p className="text-sm font-extrabold text-[#315d3b]">Current trip</p>
+                <h2 className="mt-2 text-3xl font-extrabold tracking-tight">
+                  {nextTrip?.listing?.title ?? "No upcoming stay yet"}
+                </h2>
+                {nextTrip ? (
+                  <>
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                      <TripFact
+                        icon={CalendarDays}
+                        label="Dates"
+                        value={`${formatStayDate(nextTrip.startDate)} - ${formatStayDate(
+                          nextTrip.endDate,
+                        )}`}
+                      />
+                      <TripFact
+                        icon={Home}
+                        label="Stay"
+                        value={nextTrip.listing?.city ?? "StayWise"}
+                      />
+                      <TripFact
+                        icon={Sparkles}
+                        label="Status"
+                        value={nextTrip.status}
+                      />
+                      <TripFact
+                        icon={ReceiptText}
+                        label="Total"
+                        value={formatMoney(nextTrip.totalAmount)}
+                      />
+                    </div>
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      {nextTrip.listing && (
+                        <Link
+                          href={`/listings/${nextTrip.listing.id}`}
+                          className="inline-flex h-11 items-center justify-center rounded-full bg-[#201a18] px-5 text-sm font-extrabold text-white hover:bg-black"
+                        >
+                          Open stay
+                        </Link>
+                      )}
+                      <Link
+                        href="/search"
+                        className="inline-flex h-11 items-center justify-center rounded-full border border-[#eadfd6] px-5 text-sm font-extrabold hover:border-[#ff385c]"
+                      >
+                        Plan another trip
+                      </Link>
+                    </div>
+                  </>
+                ) : (
+                  <p className="mt-4 text-sm font-semibold leading-7 text-[#5f5148]">
+                    Reserve a stay and the trip timeline, totals, and status controls will
+                    appear here immediately.
+                  </p>
+                )}
+              </div>
             </div>
           </section>
+
+          <aside className="rounded-[28px] border border-[#eadfd6] bg-[#fbfaf8] p-5 shadow-sm">
+            <p className="text-sm font-extrabold text-[#ff385c]">Trip readiness</p>
+            <h2 className="mt-2 text-2xl font-extrabold tracking-tight">
+              Production flow status
+            </h2>
+            <div className="mt-5 space-y-3">
+              <ReadinessItem
+                done={Boolean(user)}
+                text={user ? "Verified account active" : "Sign in to verify account"}
+              />
+              <ReadinessItem
+                done={upcomingReservations.length > 0}
+                text={
+                  upcomingReservations.length > 0
+                    ? "Upcoming reservation confirmed"
+                    : "Reserve a stay to test booking"
+                }
+              />
+              <ReadinessItem
+                done={favoriteIds.length > 0}
+                text={
+                  favoriteIds.length > 0
+                    ? "Saved stays ready for comparison"
+                    : "Save stays to compare later"
+                }
+              />
+              <ReadinessItem
+                done={cancelledReservations.length + completedReservations.length > 0}
+                text="History tracks completed and cancelled trips"
+              />
+            </div>
+          </aside>
+        </div>
 
           <section>
             <div className="mb-4 flex items-center justify-between">
@@ -177,6 +284,69 @@ export default async function DashboardPage() {
             )}
           </section>
 
+          <section>
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-extrabold text-[#ff385c]">Saved stays</p>
+                <h2 className="mt-1 text-2xl font-extrabold tracking-tight">
+                  Places you are comparing
+                </h2>
+              </div>
+              <Link
+                className="hidden text-sm font-extrabold text-[#5f5148] hover:text-[#ff385c] md:block"
+                href="/search"
+              >
+                Find more
+              </Link>
+            </div>
+
+            {savedListings.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {savedListings.slice(0, 4).map((listing) => (
+                  <article
+                    key={listing.id}
+                    className="overflow-hidden rounded-[22px] border border-[#eadfd6] bg-white shadow-sm"
+                  >
+                    <Link href={`/listings/${listing.id}`}>
+                      <div className="relative aspect-[4/3] bg-[#e8dfd6]">
+                        <Image
+                          src={listing.imageUrl}
+                          alt={listing.imageAlt}
+                          fill
+                          sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <h3 className="line-clamp-2 text-sm font-extrabold">
+                            {listing.title}
+                          </h3>
+                          <span className="flex shrink-0 items-center gap-1 text-sm font-extrabold">
+                            <Star className="h-4 w-4 fill-[#201a18]" aria-hidden="true" />
+                            {listing.rating.toFixed(2)}
+                          </span>
+                        </div>
+                        <p className="mt-2 flex items-center gap-1 text-sm font-semibold text-[#5f5148]">
+                          <MapPin className="h-4 w-4 text-[#ff385c]" aria-hidden="true" />
+                          {listing.city}, {listing.state}
+                        </p>
+                        <p className="mt-3 text-sm">
+                          <span className="font-extrabold">
+                            {formatMoney(listing.pricePerNight)}
+                          </span>{" "}
+                          night
+                        </p>
+                      </div>
+                    </Link>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <EmptyState text="Saved stays will appear here after you tap Save on a listing." />
+            )}
+          </section>
+
           <section className="rounded-[24px] border border-[#eadfd6] bg-[#fffaf5] p-5 shadow-sm">
             <h2 className="text-2xl font-semibold tracking-tight">Reservation history</h2>
             <div className="mt-4 divide-y divide-[#eadfd6]">
@@ -189,7 +359,6 @@ export default async function DashboardPage() {
               )}
             </div>
           </section>
-        </div>
       </section>
     </main>
   );
@@ -232,30 +401,89 @@ function ReservationRow({ reservation }: { reservation: Reservation }) {
 
 function DashboardHeader({ email }: { email?: string }) {
   return (
-    <header className="border-b border-[#eadfd6] bg-[#fffaf5]">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
-        <Link href={email ? "/dashboard" : "/"} className="flex items-center gap-3">
+    <header className="sticky top-0 z-30 border-b border-[#ebe3dd] bg-white/95 backdrop-blur">
+      <div className="mx-auto flex max-w-[1536px] items-center justify-between px-5 py-4 lg:px-8">
+        <Link href="/" className="flex items-center gap-3" aria-label="StayWise home">
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff385c] text-white">
             <Sparkles className="h-5 w-5" aria-hidden="true" />
           </span>
-          <span className="text-xl font-semibold">StayWise</span>
+          <span>
+            <span className="block text-xl font-extrabold tracking-tight">StayWise</span>
+            <span className="hidden text-xs font-semibold text-[#786a60] sm:block">
+              Smart Stays, Better Days.
+            </span>
+          </span>
         </Link>
-        {email ? (
-          <form action="/auth/signout" method="post">
-            <button
-              type="submit"
-              className="rounded-full border border-[#eadfd6] bg-white px-4 py-2 text-sm font-semibold"
-            >
-              Sign out
-            </button>
-          </form>
-        ) : (
-          <Link href="/auth?mode=signin" className="rounded-full border border-[#eadfd6] bg-white px-4 py-2 text-sm font-semibold">
-            Sign in
+        <div className="flex items-center gap-2">
+          <Link
+            href="/search"
+            className="hidden rounded-full px-4 py-2 text-sm font-extrabold hover:bg-[#f7f3ee] sm:block"
+          >
+            Search
           </Link>
-        )}
+          <Link
+            href="/host"
+            className="hidden rounded-full px-4 py-2 text-sm font-extrabold hover:bg-[#f7f3ee] sm:block"
+          >
+            Host
+          </Link>
+          {email ? (
+            <form action="/auth/signout" method="post">
+              <button
+                type="submit"
+                className="rounded-full border border-[#eadfd6] bg-white px-4 py-2 text-sm font-extrabold"
+              >
+                Sign out
+              </button>
+            </form>
+          ) : (
+            <Link
+              href="/auth?mode=signin"
+              className="rounded-full border border-[#eadfd6] bg-white px-4 py-2 text-sm font-extrabold"
+            >
+              Sign in
+            </Link>
+          )}
+        </div>
       </div>
     </header>
+  );
+}
+
+function TripFact({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Home;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-2xl bg-[#f7f3ee] p-4">
+      <Icon className="h-5 w-5 text-[#ff385c]" aria-hidden="true" />
+      <p className="mt-3 text-xs font-extrabold uppercase text-[#786a60]">{label}</p>
+      <p className="mt-1 text-sm font-extrabold capitalize">{value}</p>
+    </div>
+  );
+}
+
+function ReadinessItem({ done, text }: { done: boolean; text: string }) {
+  return (
+    <div className="flex gap-3 rounded-2xl bg-white p-4 shadow-sm">
+      <span
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+          done ? "bg-[#e7f2e4] text-[#315d3b]" : "bg-[#f7f3ee] text-[#786a60]"
+        }`}
+      >
+        {done ? (
+          <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+        ) : (
+          <Timer className="h-5 w-5" aria-hidden="true" />
+        )}
+      </span>
+      <p className="text-sm font-extrabold leading-6">{text}</p>
+    </div>
   );
 }
 

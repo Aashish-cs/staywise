@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type HostListingActionState = {
+  listingId?: string;
   ok: boolean;
   message: string;
 };
@@ -20,7 +21,7 @@ const listingSchema = z.object({
   capacity: z.coerce.number().int().min(1).max(16),
   bedrooms: z.coerce.number().int().min(0).max(12),
   bathrooms: z.coerce.number().min(0.5).max(12),
-  imageUrl: z.string().url(),
+  imageUrls: z.string().trim().min(10),
   amenities: z.string().trim().min(3),
 });
 
@@ -39,7 +40,7 @@ export async function createHostListingAction(
     capacity: formData.get("capacity"),
     bedrooms: formData.get("bedrooms"),
     bathrooms: formData.get("bathrooms"),
-    imageUrl: formData.get("imageUrl"),
+    imageUrls: formData.get("imageUrls"),
     amenities: formData.get("amenities"),
   });
 
@@ -84,6 +85,19 @@ export async function createHostListingAction(
   }
 
   const values = parsed.data;
+  const imageUrls = parseImageUrls(values.imageUrls);
+  const amenities = values.amenities
+    .split(",")
+    .map((amenity) => amenity.trim())
+    .filter(Boolean);
+
+  if (imageUrls.length === 0) {
+    return {
+      ok: false,
+      message: "Add at least one valid image URL.",
+    };
+  }
+
   const { data: listing, error } = await supabase
     .from("listings")
     .insert({
@@ -112,32 +126,65 @@ export async function createHostListingAction(
   }
 
   const listingId = listing.id as string;
-  const amenities = values.amenities
-    .split(",")
-    .map((amenity) => amenity.trim())
-    .filter(Boolean);
 
-  await supabase.from("listing_images").insert({
-    listing_id: listingId,
-    image_url: values.imageUrl,
-    alt_text: values.title,
-    sort_order: 0,
-  });
+  const { error: imageError } = await supabase.from("listing_images").insert(
+    imageUrls.map((imageUrl, index) => ({
+      listing_id: listingId,
+      image_url: imageUrl,
+      alt_text: `${values.title} photo ${index + 1}`,
+      sort_order: index,
+    })),
+  );
+
+  if (imageError) {
+    await supabase.from("listings").delete().eq("id", listingId);
+
+    return {
+      ok: false,
+      message: imageError.message,
+    };
+  }
 
   if (amenities.length > 0) {
-    await supabase.from("listing_amenities").insert(
+    const { error: amenityError } = await supabase.from("listing_amenities").insert(
       amenities.map((amenity) => ({
         listing_id: listingId,
         amenity,
       })),
     );
+
+    if (amenityError) {
+      await supabase.from("listings").delete().eq("id", listingId);
+
+      return {
+        ok: false,
+        message: amenityError.message,
+      };
+    }
   }
 
   revalidatePath("/");
   revalidatePath("/host");
+  revalidatePath(`/listings/${listingId}`);
 
   return {
+    listingId,
     ok: true,
     message: "Listing published. It is now searchable on StayWise.",
   };
+}
+
+function parseImageUrls(value: string) {
+  return value
+    .split(/[\n,]/)
+    .map((item) => item.trim())
+    .filter((item) => {
+      try {
+        const url = new URL(item);
+        return url.protocol === "https:" || url.protocol === "http:";
+      } catch {
+        return false;
+      }
+    })
+    .slice(0, 6);
 }

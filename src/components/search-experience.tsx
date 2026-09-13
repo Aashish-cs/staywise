@@ -27,6 +27,7 @@ import {
 import { toggleFavoriteAction } from "@/app/favorites/actions";
 import {
   featuredAmenities,
+  type PropertyType,
   stayMonths,
   type Listing,
   tripPurposeLabels,
@@ -36,6 +37,7 @@ import { rankListings, searchSchema, type SearchInput } from "@/lib/recommendati
 import { buildSearchQueryString } from "@/lib/search-url";
 
 type SortMode = "recommended" | "price-low" | "rating";
+type RankedListing = ReturnType<typeof rankListings>[number];
 
 const purposeIcons: Record<TripPurpose, typeof BriefcaseBusiness> = {
   business: BriefcaseBusiness,
@@ -53,10 +55,23 @@ const defaultSearch: SearchInput = {
   checkOut: "",
   guests: 2,
   maxNightlyBudget: 250,
+  minBathrooms: 0,
+  minBedrooms: 0,
+  minRating: 0,
+  propertyTypes: [],
   tripPurpose: "remote-work",
   amenities: ["Fast Wi-Fi", "Workspace"],
   month: "Sep",
 };
+
+const propertyTypes: PropertyType[] = [
+  "Apartment",
+  "House",
+  "Cabin",
+  "Loft",
+  "Townhome",
+  "Villa",
+];
 
 const searchCategoryLinks = [
   {
@@ -143,6 +158,7 @@ export function SearchExperience({
   const resultSummary = `${displayedListings.length} ${
     displayedListings.length === 1 ? "match" : "matches"
   }${search.destination ? ` near ${search.destination}` : ""} for ${search.month}`;
+  const activeFilterLabels = getActiveFilterLabels(search);
   const averageNightlyRate =
     initialListings.length > 0
       ? Math.round(
@@ -162,6 +178,17 @@ export function SearchExperience({
       ? "Host"
       : "Trips"
     : "Sign in";
+  const activeFilterCount =
+    search.amenities.length +
+    search.propertyTypes.length +
+    (search.minBedrooms > 0 ? 1 : 0) +
+    (search.minBathrooms > 0 ? 1 : 0) +
+    (search.minRating > 0 ? 1 : 0) +
+    (search.maxNightlyBudget !== defaultSearch.maxNightlyBudget ? 1 : 0);
+  const selectedPropertyTypeLabel =
+    search.propertyTypes.length > 0
+      ? search.propertyTypes.join(", ")
+      : "Any property type";
 
   function updateSearch<K extends keyof SearchInput>(key: K, value: SearchInput[K]) {
     setSearch((current) => ({ ...current, [key]: value }));
@@ -175,6 +202,28 @@ export function SearchExperience({
 
       return { ...current, amenities };
     });
+  }
+
+  function togglePropertyType(propertyType: PropertyType) {
+    setSearch((current) => {
+      const propertyTypes = current.propertyTypes.includes(propertyType)
+        ? current.propertyTypes.filter((item) => item !== propertyType)
+        : [...current.propertyTypes, propertyType];
+
+      return { ...current, propertyTypes };
+    });
+  }
+
+  function clearAdvancedFilters() {
+    setSearch((current) => ({
+      ...current,
+      amenities: [],
+      maxNightlyBudget: defaultSearch.maxNightlyBudget,
+      minBathrooms: 0,
+      minBedrooms: 0,
+      minRating: 0,
+      propertyTypes: [],
+    }));
   }
 
   async function applyAiSearch() {
@@ -588,6 +637,101 @@ export function SearchExperience({
                 </label>
               </div>
 
+              <div className="rounded-3xl border border-[#eadfd6] bg-white p-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <span className="field-label">Advanced filters</span>
+                    <p className="text-sm font-extrabold">{selectedPropertyTypeLabel}</p>
+                  </div>
+                  {activeFilterCount > 0 && (
+                    <button
+                      type="button"
+                      className="rounded-full bg-[#f7f3ee] px-3 py-1 text-xs font-extrabold text-[#5f5148] hover:text-[#df2348]"
+                      onClick={clearAdvancedFilters}
+                    >
+                      Clear {activeFilterCount}
+                    </button>
+                  )}
+                </div>
+
+                <div className="mt-4">
+                  <span className="field-label">Property type</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {propertyTypes.map((propertyType) => {
+                      const active = search.propertyTypes.includes(propertyType);
+
+                      return (
+                        <button
+                          type="button"
+                          key={propertyType}
+                          aria-pressed={active}
+                          className={clsx("choice-button", active && "choice-button-active")}
+                          onClick={() => togglePropertyType(propertyType)}
+                        >
+                          {propertyType}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <label className="block">
+                    <span className="field-label">Bedrooms</span>
+                    <span className="field-shell">
+                      <Home className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
+                      <input
+                        type="number"
+                        min="0"
+                        max="12"
+                        value={search.minBedrooms}
+                        onChange={(event) =>
+                          updateSearch("minBedrooms", Number(event.target.value))
+                        }
+                        className="field-input"
+                      />
+                    </span>
+                  </label>
+
+                  <label className="block">
+                    <span className="field-label">Bathrooms</span>
+                    <span className="field-shell">
+                      <Home className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
+                      <input
+                        type="number"
+                        min="0"
+                        max="12"
+                        step="0.5"
+                        value={search.minBathrooms}
+                        onChange={(event) =>
+                          updateSearch("minBathrooms", Number(event.target.value))
+                        }
+                        className="field-input"
+                      />
+                    </span>
+                  </label>
+
+                  <label className="block">
+                    <span className="field-label">Rating</span>
+                    <span className="field-shell">
+                      <Star className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
+                      <select
+                        value={search.minRating}
+                        onChange={(event) =>
+                          updateSearch("minRating", Number(event.target.value))
+                        }
+                        className="field-input"
+                      >
+                        <option value={0}>Any</option>
+                        <option value={4.5}>4.5+</option>
+                        <option value={4.7}>4.7+</option>
+                        <option value={4.85}>4.85+</option>
+                      </select>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
               <div>
                 <span className="field-label">Trip style</span>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -658,12 +802,16 @@ export function SearchExperience({
                 <h2 className="mt-1 text-2xl font-semibold tracking-tight">
                   Recommended stays
                 </h2>
+                <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#5f5148]">
+                  Smart sort weighs budget, trip style, guest count, amenities, rating,
+                  and the filters in your shareable search URL.
+                </p>
               </div>
 
               <div className="flex items-center gap-2 overflow-x-auto pb-1">
                 <button type="button" className="toolbar-button" onClick={focusSearch}>
                   <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-                  Filters
+                  Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
                 </button>
                 <label className="toolbar-button">
                   <span>Sort</span>
@@ -692,6 +840,19 @@ export function SearchExperience({
                 </button>
               </div>
             </div>
+
+            {activeFilterLabels.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {activeFilterLabels.map((label) => (
+                  <span
+                    key={label}
+                    className="rounded-full bg-[#f7f3ee] px-3 py-1 text-xs font-extrabold text-[#5f5148]"
+                  >
+                    {label}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {displayedListings.length > 0 ? (
               <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -798,8 +959,10 @@ export function SearchExperience({
                   <aside className="self-start rounded-[24px] border border-[#eadfd6] bg-white p-5 shadow-sm xl:sticky xl:top-24">
                     {showMapPanel ? (
                       <ListingMapPanel
+                        listings={displayedListings}
                         listing={selectedListing}
                         listingDetailQuery={listingDetailQuery}
+                        onSelectListing={setSelectedId}
                       />
                     ) : (
                       <ListingFitPanel listing={selectedListing} />
@@ -809,11 +972,28 @@ export function SearchExperience({
               </div>
             ) : (
               <div className="mt-6 rounded-[24px] border border-dashed border-[#d7c8bd] bg-white p-8 text-center">
-                <p className="text-lg font-semibold">No stays match this trip yet.</p>
-                <p className="mt-2 text-sm text-[#786a60]">
-                  Try a different city, a wider budget, or check back as new stays go
-                  live.
+                <Sparkles className="mx-auto h-8 w-8 text-[#ff385c]" aria-hidden="true" />
+                <p className="mt-4 text-lg font-semibold">No stays match this trip yet.</p>
+                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#786a60]">
+                  StayWise can loosen the filters, widen the budget, or use AI search to
+                  translate the trip into a better set of matches.
                 </p>
+                <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-[#201a18] px-5 text-sm font-extrabold text-white hover:bg-black"
+                    onClick={clearAdvancedFilters}
+                  >
+                    Clear advanced filters
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-[#eadfd6] px-5 text-sm font-extrabold hover:border-[#ff385c] hover:text-[#df2348]"
+                    onClick={focusSearch}
+                  >
+                    Try AI search
+                  </button>
+                </div>
               </div>
             )}
           </section>
@@ -903,7 +1083,7 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ListingFitPanel({ listing }: { listing: ReturnType<typeof rankListings>[number] }) {
+function ListingFitPanel({ listing }: { listing: RankedListing }) {
   return (
     <>
       <div className="flex items-start justify-between gap-4">
@@ -963,19 +1143,25 @@ function ListingFitPanel({ listing }: { listing: ReturnType<typeof rankListings>
 }
 
 function ListingMapPanel({
+  listings,
   listing,
   listingDetailQuery,
+  onSelectListing,
 }: {
-  listing: ReturnType<typeof rankListings>[number];
+  listings: RankedListing[];
+  listing: RankedListing;
   listingDetailQuery: string;
+  onSelectListing: (id: string) => void;
 }) {
+  const pins = buildMapPins(listings);
+
   return (
     <>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold text-[#ff385c]">Location view</p>
+          <p className="text-sm font-semibold text-[#ff385c]">Map search</p>
           <h3 className="mt-1 text-xl font-semibold">
-            {listing.neighborhood}, {listing.city}
+            {listings.length} stays near {listing.city}
           </h3>
         </div>
         <MapPin className="h-5 w-5 shrink-0 text-[#ff385c]" aria-hidden="true" />
@@ -983,24 +1169,67 @@ function ListingMapPanel({
 
       <div className="mt-5 overflow-hidden rounded-[22px] border border-[#eadfd6] bg-[#edf6f8]">
         <div className="relative h-64">
-          <div className="absolute inset-x-0 top-1/3 h-3 bg-white/80" />
-          <div className="absolute inset-y-0 left-1/4 w-3 bg-white/80" />
+          <div className="absolute inset-x-0 top-1/4 h-3 bg-white/80" />
+          <div className="absolute inset-x-0 bottom-1/3 h-3 bg-white/80" />
+          <div className="absolute inset-y-0 left-1/5 w-3 bg-white/80" />
           <div className="absolute inset-y-0 right-1/4 w-3 bg-white/80" />
-          <div className="absolute inset-x-0 bottom-1/4 h-3 bg-white/80" />
-          <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#ff385c] p-3 text-white shadow-lg">
-            <Home className="h-5 w-5" aria-hidden="true" />
-          </div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,0.8),transparent_18%),radial-gradient(circle_at_70%_60%,rgba(255,255,255,0.75),transparent_16%)]" />
+          {pins.map((pin) => {
+            const active = pin.listing.id === listing.id;
+
+            return (
+              <button
+                key={pin.listing.id}
+                type="button"
+                aria-label={`Select ${pin.listing.title}`}
+                className={clsx(
+                  "absolute -translate-x-1/2 -translate-y-1/2 rounded-full px-3 py-1 text-xs font-extrabold shadow-lg transition hover:scale-105",
+                  active
+                    ? "z-20 bg-[#ff385c] text-white"
+                    : "z-10 bg-white text-[#201a18]",
+                )}
+                style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
+                onClick={() => onSelectListing(pin.listing.id)}
+              >
+                ${pin.listing.pricePerNight}
+              </button>
+            );
+          })}
           <div className="absolute bottom-4 left-4 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-[#5f5148] shadow-sm">
-            Approximate area
+            Approximate map
           </div>
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-        <Metric label="City" value={listing.city} />
-        <Metric label="State" value={listing.state} />
-        <Metric label="Latitude" value={listing.coordinates.lat.toFixed(3)} />
-        <Metric label="Longitude" value={listing.coordinates.lng.toFixed(3)} />
+      <div className="mt-5 max-h-[310px] space-y-3 overflow-y-auto pr-1">
+        {listings.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={clsx(
+              "w-full rounded-2xl border p-3 text-left transition hover:border-[#ff385c]",
+              item.id === listing.id
+                ? "border-[#ff385c] bg-[#fff3f5]"
+                : "border-[#eadfd6] bg-white",
+            )}
+            onClick={() => onSelectListing(item.id)}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="line-clamp-1 text-sm font-extrabold">{item.title}</p>
+                <p className="mt-1 text-xs font-semibold text-[#786a60]">
+                  {item.neighborhood}, {item.city}
+                </p>
+              </div>
+              <span className="shrink-0 text-sm font-extrabold">
+                ${item.pricePerNight}
+              </span>
+            </div>
+            <p className="mt-2 text-xs font-semibold text-[#315d3b]">
+              {item.matchScore}% match · {item.matchReasons[0]}
+            </p>
+          </button>
+        ))}
       </div>
 
       <Link
@@ -1013,6 +1242,39 @@ function ListingMapPanel({
       </Link>
     </>
   );
+}
+
+function buildMapPins(listings: RankedListing[]) {
+  const validListings = listings.filter(
+    (listing) =>
+      Number.isFinite(listing.coordinates.lat) &&
+      Number.isFinite(listing.coordinates.lng) &&
+      (listing.coordinates.lat !== 0 || listing.coordinates.lng !== 0),
+  );
+  const source = validListings.length > 0 ? validListings : listings;
+  const latitudes = source.map((listing) => listing.coordinates.lat || 32.78);
+  const longitudes = source.map((listing) => listing.coordinates.lng || -96.8);
+  const minLat = Math.min(...latitudes);
+  const maxLat = Math.max(...latitudes);
+  const minLng = Math.min(...longitudes);
+  const maxLng = Math.max(...longitudes);
+  const latSpan = Math.max(0.001, maxLat - minLat);
+  const lngSpan = Math.max(0.001, maxLng - minLng);
+
+  return source.slice(0, 18).map((listing, index) => {
+    const lat = listing.coordinates.lat || 32.78 + index * 0.01;
+    const lng = listing.coordinates.lng || -96.8 - index * 0.01;
+
+    return {
+      listing,
+      x: clampMapPosition(12 + ((lng - minLng) / lngSpan) * 76),
+      y: clampMapPosition(88 - ((lat - minLat) / latSpan) * 76),
+    };
+  });
+}
+
+function clampMapPosition(value: number) {
+  return Math.max(10, Math.min(90, value));
 }
 
 function ProductSignal({
@@ -1081,6 +1343,21 @@ function sortListings(
   }
 
   return sorted;
+}
+
+function getActiveFilterLabels(search: SearchInput) {
+  const labels: string[] = [];
+
+  if (search.destination) labels.push(search.destination);
+  if (search.guests > 1) labels.push(`${search.guests} guests`);
+  if (search.maxNightlyBudget) labels.push(`Up to $${search.maxNightlyBudget}`);
+  if (search.minBedrooms > 0) labels.push(`${search.minBedrooms}+ bedrooms`);
+  if (search.minBathrooms > 0) labels.push(`${search.minBathrooms}+ baths`);
+  if (search.minRating > 0) labels.push(`${search.minRating}+ rating`);
+  labels.push(...search.propertyTypes);
+  labels.push(...search.amenities);
+
+  return labels.slice(0, 10);
 }
 
 function makeSearchHref(input: Partial<SearchInput>) {

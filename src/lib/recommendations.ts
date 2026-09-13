@@ -2,10 +2,19 @@ import { z } from "zod";
 import {
   featuredAmenities,
   type Listing,
+  type PropertyType,
   type TripPurpose,
 } from "@/lib/listings";
 
 const amenityValues = [...featuredAmenities] as [string, ...string[]];
+const propertyTypeValues = [
+  "Apartment",
+  "House",
+  "Cabin",
+  "Loft",
+  "Townhome",
+  "Villa",
+] as [PropertyType, ...PropertyType[]];
 const optionalIsoDate = z
   .string()
   .trim()
@@ -20,6 +29,10 @@ export const searchSchema = z.object({
   checkOut: optionalIsoDate,
   guests: z.coerce.number().int().min(1).max(16).default(2),
   maxNightlyBudget: z.coerce.number().int().min(50).max(1200).default(250),
+  minBathrooms: z.coerce.number().min(0).max(12).default(0),
+  minBedrooms: z.coerce.number().int().min(0).max(12).default(0),
+  minRating: z.coerce.number().min(0).max(5).default(0),
+  propertyTypes: z.array(z.enum(propertyTypeValues)).default([]),
   tripPurpose: z
     .enum(["business", "family", "remote-work", "romantic", "solo", "group", "outdoor"])
     .default("remote-work"),
@@ -61,8 +74,22 @@ export function rankListings(
           .includes(destination);
       const hasCapacity = listing.capacity >= input.guests;
       const isAvailable = !input.month || listing.availableMonths.includes(input.month);
+      const matchesPropertyType =
+        input.propertyTypes.length === 0 ||
+        input.propertyTypes.includes(listing.propertyType);
+      const hasBedrooms = listing.bedrooms >= input.minBedrooms;
+      const hasBathrooms = listing.bathrooms >= input.minBathrooms;
+      const hasRating = listing.rating >= input.minRating;
 
-      return matchesDestination && hasCapacity && isAvailable;
+      return (
+        matchesDestination &&
+        hasCapacity &&
+        isAvailable &&
+        matchesPropertyType &&
+        hasBedrooms &&
+        hasBathrooms &&
+        hasRating
+      );
     })
     .map((listing) => scoreListing(listing, input))
     .sort((a, b) => b.matchScore - a.matchScore);

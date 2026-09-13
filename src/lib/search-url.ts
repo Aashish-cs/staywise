@@ -1,5 +1,6 @@
 import {
   featuredAmenities,
+  type PropertyType,
   stayMonths,
   tripPurposeLabels,
   type TripPurpose,
@@ -14,6 +15,7 @@ export function parseSearchParams(params: RawSearchParams): SearchInput {
   );
   const month = parseMonth(firstParam(params.month));
   const amenities = allParams(params.amenities).filter(isFeaturedAmenity);
+  const propertyTypes = allParams(params.propertyTypes).filter(isPropertyType);
 
   return searchSchema.parse({
     destination: firstParam(params.destination) ?? "",
@@ -26,6 +28,15 @@ export function parseSearchParams(params: RawSearchParams): SearchInput {
       50,
       1200,
     ),
+    minBathrooms: clampNumberParam(firstParam(params.minBathrooms), 0, 0, 12),
+    minBedrooms: clampNumberParam(
+      firstParam(params.minBedrooms) ?? firstParam(params.bedrooms),
+      0,
+      0,
+      12,
+    ),
+    minRating: clampNumberParam(firstParam(params.minRating), 0, 0, 5),
+    propertyTypes,
     tripPurpose,
     amenities,
     month,
@@ -50,6 +61,23 @@ export function buildSearchQueryString(input: Partial<SearchInput>) {
 
   params.set("guests", String(parsed.guests));
   params.set("budget", String(parsed.maxNightlyBudget));
+
+  if (parsed.minBedrooms > 0) {
+    params.set("minBedrooms", String(parsed.minBedrooms));
+  }
+
+  if (parsed.minBathrooms > 0) {
+    params.set("minBathrooms", String(parsed.minBathrooms));
+  }
+
+  if (parsed.minRating > 0) {
+    params.set("minRating", String(parsed.minRating));
+  }
+
+  parsed.propertyTypes.forEach((propertyType) => {
+    params.append("propertyTypes", propertyType);
+  });
+
   params.set("purpose", parsed.tripPurpose);
   params.set("month", parsed.month);
 
@@ -113,4 +141,10 @@ function isFeaturedAmenity(
   value: string,
 ): value is (typeof featuredAmenities)[number] {
   return (featuredAmenities as readonly string[]).includes(value);
+}
+
+function isPropertyType(value: string): value is PropertyType {
+  return (
+    ["Apartment", "House", "Cabin", "Loft", "Townhome", "Villa"] as readonly string[]
+  ).includes(value);
 }

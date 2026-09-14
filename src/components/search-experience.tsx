@@ -34,7 +34,18 @@ import {
   tripPurposeLabels,
   type TripPurpose,
 } from "@/lib/listings";
-import { rankListings, searchSchema, type SearchInput } from "@/lib/recommendations";
+import {
+  type RankedListing,
+  rankListings,
+  searchSchema,
+  type SearchInput,
+} from "@/lib/recommendations";
+import {
+  getActiveSearchFilterLabels,
+  getSearchResultSummary,
+  sortRankedListings,
+  type SortMode,
+} from "@/lib/search-results";
 import {
   defaultSearchInput,
   familySearchPreset,
@@ -43,9 +54,6 @@ import {
   workReadySearchPreset,
 } from "@/lib/search-presets";
 import { buildSearchQueryString } from "@/lib/search-url";
-
-type SortMode = "recommended" | "price-low" | "space";
-type RankedListing = ReturnType<typeof rankListings>[number];
 
 const purposeIcons: Record<TripPurpose, typeof BriefcaseBusiness> = {
   business: BriefcaseBusiness,
@@ -115,7 +123,7 @@ export function SearchExperience({
     [initialListings, search],
   );
   const displayedListings = useMemo(
-    () => sortListings(rankedListings, sortMode),
+    () => sortRankedListings(rankedListings, sortMode),
     [rankedListings, sortMode],
   );
   const selectedListing =
@@ -128,10 +136,8 @@ export function SearchExperience({
     );
   }, [initialListings]);
   const listingDetailQuery = buildSearchQueryString(search);
-  const resultSummary = `${displayedListings.length} ${
-    displayedListings.length === 1 ? "match" : "matches"
-  }${search.destination ? ` near ${search.destination}` : ""}`;
-  const activeFilterLabels = getActiveFilterLabels(search);
+  const resultSummary = getSearchResultSummary(displayedListings, search);
+  const activeFilterLabels = getActiveSearchFilterLabels(search);
   const averageNightlyRate =
     initialListings.length > 0
       ? Math.round(
@@ -1163,46 +1169,6 @@ function HostRow({
       <span className="text-2xl font-semibold tracking-tight">{value}</span>
     </div>
   );
-}
-
-function sortListings(
-  listings: ReturnType<typeof rankListings>,
-  sortMode: SortMode,
-) {
-  const sorted = [...listings];
-
-  if (sortMode === "price-low") {
-    return sorted.sort(
-      (first, second) =>
-        first.pricePerNight - second.pricePerNight ||
-        second.matchScore - first.matchScore,
-    );
-  }
-
-  if (sortMode === "space") {
-    return sorted.sort(
-      (first, second) =>
-        second.bedrooms - first.bedrooms ||
-        second.capacity - first.capacity ||
-        second.matchScore - first.matchScore,
-    );
-  }
-
-  return sorted;
-}
-
-function getActiveFilterLabels(search: SearchInput) {
-  const labels: string[] = [];
-
-  if (search.destination) labels.push(search.destination);
-  if (search.guests > 1) labels.push(`${search.guests} guests`);
-  if (search.maxNightlyBudget) labels.push(`Up to $${search.maxNightlyBudget}`);
-  if (search.minBedrooms > 0) labels.push(`${search.minBedrooms}+ bedrooms`);
-  if (search.minBathrooms > 0) labels.push(`${search.minBathrooms}+ baths`);
-  labels.push(...search.propertyTypes);
-  labels.push(...search.amenities);
-
-  return labels.slice(0, 10);
 }
 
 function makeSearchHref(input: Partial<SearchInput>) {

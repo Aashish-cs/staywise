@@ -12,9 +12,11 @@ Last updated: 2026-09-14
 - Updated home, search, listing detail, dashboard, and host pages to reuse the shared header shell while preserving page-specific nav/actions.
 - Added `src/components/listing-card-primitives.tsx` with shared listing image/link media and save-button primitives.
 - Updated home cards, search result cards, dashboard recommendation/saved cards, and host listing rows to reuse shared listing-card media behavior.
+- Added `src/lib/search-results.ts` for search result sorting, summary text, and active filter labels.
+- Updated search results UI to consume shared pure helpers instead of keeping result logic inside JSX-heavy component code.
 - Kept visual behavior unchanged while reducing duplication in the largest components.
 
 ## Next Phase 2 Extraction Targets
 
-- Move recommendation/result summary helpers out of large client components.
+- Continue extracting small pure helpers before changing database/location/map behavior.
 - Keep each extraction small, verified, and deployed before adding new location/map/provider features.

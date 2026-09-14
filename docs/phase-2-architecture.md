@@ -14,9 +14,11 @@ Last updated: 2026-09-14
 - Updated home cards, search result cards, dashboard recommendation/saved cards, and host listing rows to reuse shared listing-card media behavior.
 - Added `src/lib/search-results.ts` for search result sorting, summary text, and active filter labels.
 - Updated search results UI to consume shared pure helpers instead of keeping result logic inside JSX-heavy component code.
+- Added `src/lib/listing-map.ts` as the shared source for listing coordinate fallback plus OpenStreetMap embed and external map URLs.
+- Updated search map preview and listing detail map sections to use shared map helpers instead of duplicating provider URL logic.
 - Kept visual behavior unchanged while reducing duplication in the largest components.
 
 ## Next Phase 2 Extraction Targets
 
-- Continue extracting small pure helpers before changing database/location/map behavior.
-- Keep each extraction small, verified, and deployed before adding new location/map/provider features.
+- Continue extracting small pure helpers before changing database/location/search behavior.
+- Keep each extraction small, verified, and deployed before adding new provider-backed search or map features.

@@ -31,6 +31,7 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Current pass: shared StayWise header/account primitives extracted into `src/components/staywise-header.tsx`.
   - Current pass: shared listing-card media/save primitives extracted into `src/components/listing-card-primitives.tsx`.
   - Current pass: search result sorting/summary/filter helpers extracted into `src/lib/search-results.ts`.
+  - Current pass: listing coordinate fallback and OpenStreetMap URL helpers extracted into `src/lib/listing-map.ts`.
 
 - [ ] Phase 3: Database design
   - Audit current Supabase schema.

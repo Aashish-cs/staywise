@@ -35,6 +35,10 @@ import {
   type TripPurpose,
 } from "@/lib/listings";
 import {
+  getOpenStreetMapEmbedUrl,
+  getOpenStreetMapUrl,
+} from "@/lib/listing-map";
+import {
   type RankedListing,
   rankListings,
   searchSchema,
@@ -1091,42 +1095,6 @@ function ListingMapPanel({
       </Link>
     </>
   );
-}
-
-function getOpenStreetMapEmbedUrl(listing: RankedListing) {
-  const { lat, lng } = getListingCoordinates(listing);
-  const latOffset = 0.018;
-  const lngOffset = 0.024;
-  const bbox = [
-    lng - lngOffset,
-    lat - latOffset,
-    lng + lngOffset,
-    lat + latOffset,
-  ].join(",");
-
-  return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(
-    bbox,
-  )}&layer=mapnik&marker=${encodeURIComponent(`${lat},${lng}`)}`;
-}
-
-function getOpenStreetMapUrl(listing: RankedListing) {
-  const { lat, lng } = getListingCoordinates(listing);
-
-  return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}`;
-}
-
-function getListingCoordinates(listing: RankedListing) {
-  const lat = Number.isFinite(listing.coordinates.lat)
-    ? listing.coordinates.lat
-    : 32.7767;
-  const lng = Number.isFinite(listing.coordinates.lng)
-    ? listing.coordinates.lng
-    : -96.797;
-
-  return {
-    lat: lat || 32.7767,
-    lng: lng || -96.797,
-  };
 }
 
 function ProductSignal({

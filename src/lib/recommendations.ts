@@ -5,6 +5,12 @@ import {
   type PropertyType,
   type TripPurpose,
 } from "@/lib/listings";
+import {
+  calculateDistanceMiles,
+  formatDistanceMiles,
+  hasSearchCoordinates,
+  nearbySearchRadiusMiles,
+} from "@/lib/location-distance";
 
 const amenityValues = [...featuredAmenities] as [string, ...string[]];
 const propertyTypeValues = [
@@ -22,6 +28,18 @@ const optionalIsoDate = z
     message: "Use YYYY-MM-DD dates",
   })
   .default("");
+const optionalLatitude = z
+  .preprocess(
+    normalizeOptionalNumber,
+    z.coerce.number().min(-90).max(90).nullable(),
+  )
+  .default(null);
+const optionalLongitude = z
+  .preprocess(
+    normalizeOptionalNumber,
+    z.coerce.number().min(-180).max(180).nullable(),
+  )
+  .default(null);
 
 export const searchSchema = z.object({
   destination: z.string().trim().min(0).default(""),
@@ -36,11 +54,14 @@ export const searchSchema = z.object({
     .enum(["business", "family", "remote-work", "romantic", "solo", "group", "outdoor"])
     .default("remote-work"),
   amenities: z.array(z.enum(amenityValues)).default([]),
+  nearLat: optionalLatitude,
+  nearLng: optionalLongitude,
 });
 
 export type SearchInput = z.infer<typeof searchSchema>;
 
 export type RankedListing = Listing & {
+  distanceMiles: number | null;
   matchScore: number;
   matchReasons: string[];
   tradeoffs: string[];
@@ -61,15 +82,32 @@ export function rankListings(
   listings: Listing[] = [],
 ): RankedListing[] {
   const input = searchSchema.parse(rawInput);
-  const destination = input.destination.toLowerCase();
+  const destination = normalizeSearchText(input.destination);
+  const hasNearMeSearch = hasSearchCoordinates(input);
+  const origin = hasNearMeSearch
+    ? {
+        lat: input.nearLat,
+        lng: input.nearLng,
+      }
+    : null;
 
   return listings
-    .filter((listing) => {
+    .map((listing) => ({
+      distanceMiles: origin
+        ? calculateDistanceMiles(origin, listing.coordinates)
+        : null,
+      listing,
+    }))
+    .filter(({ distanceMiles, listing }) => {
       const matchesDestination =
+        hasNearMeSearch ||
         !destination ||
-        `${listing.city} ${listing.state} ${listing.neighborhood}`
-          .toLowerCase()
-          .includes(destination);
+        normalizeSearchText(
+          `${listing.city} ${listing.state} ${listing.neighborhood}`,
+        ).includes(destination);
+      const matchesNearby =
+        !hasNearMeSearch ||
+        (distanceMiles !== null && distanceMiles <= nearbySearchRadiusMiles);
       const hasCapacity = listing.capacity >= input.guests;
       const matchesPropertyType =
         input.propertyTypes.length === 0 ||
@@ -79,20 +117,40 @@ export function rankListings(
 
       return (
         matchesDestination &&
+        matchesNearby &&
         hasCapacity &&
         matchesPropertyType &&
         hasBedrooms &&
         hasBathrooms
       );
     })
-    .map((listing) => scoreListing(listing, input))
+    .map(({ distanceMiles, listing }) => scoreListing(listing, input, distanceMiles))
     .sort((a, b) => b.matchScore - a.matchScore);
 }
 
-function scoreListing(listing: Listing, input: SearchInput): RankedListing {
+function scoreListing(
+  listing: Listing,
+  input: SearchInput,
+  distanceMiles: number | null,
+): RankedListing {
   let score = 36;
   const reasons: string[] = [];
   const tradeoffs: string[] = [];
+
+  if (distanceMiles !== null) {
+    const distanceLabel = formatDistanceMiles(distanceMiles);
+
+    if (distanceMiles <= 10) {
+      score += 22;
+      reasons.push(`${distanceLabel} from your location`);
+    } else if (distanceMiles <= 35) {
+      score += 16;
+      reasons.push(`${distanceLabel} from your location`);
+    } else {
+      score += Math.max(2, 14 - Math.round(distanceMiles / 10));
+      tradeoffs.push(`${distanceLabel} from your current location`);
+    }
+  }
 
   const budgetDelta = input.maxNightlyBudget - listing.pricePerNight;
   if (budgetDelta >= 0) {
@@ -145,6 +203,7 @@ function scoreListing(listing: Listing, input: SearchInput): RankedListing {
 
   return {
     ...listing,
+    distanceMiles,
     matchScore: clamp(score, 1, 99),
     matchReasons: reasons.slice(0, 3),
     tradeoffs: tradeoffs.slice(0, 2),
@@ -165,4 +224,15 @@ function formatList(items: string[]) {
   }
 
   return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+}
+
+function normalizeOptionalNumber(value: unknown) {
+  return value === "" || value === null || value === undefined ? null : value;
+}
+
+function normalizeSearchText(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }

@@ -57,6 +57,4 @@ The migration adds provider and bounds constraints plus indexes for provider ids
 ## What This Does Not Do Yet
 
 - It does not call Nominatim on every keystroke.
-- It does not implement browser geolocation or near-me search yet.
-- It does not reverse geocode current user coordinates yet.
 - It does not replace the Phase 8 server-side listing search work.

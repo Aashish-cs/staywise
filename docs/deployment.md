@@ -40,6 +40,7 @@ Use Resend as the SMTP provider for Supabase Auth emails:
    - `NEXT_PUBLIC_SITE_URL`
    - `NOMINATIM_EMAIL` (optional but recommended)
    - `NOMINATIM_BASE_URL` (optional, defaults to OpenStreetMap Nominatim)
+   - `NOMINATIM_REVERSE_BASE_URL` (optional, defaults to OpenStreetMap Nominatim reverse geocoding)
 3. Deploy from `main`.
 4. Copy the deployment URL back into Supabase Auth redirect settings.
 
@@ -54,7 +55,7 @@ Use Resend as the SMTP provider for Supabase Auth emails:
 - `supabase/phase4_availability.sql` run for availability-aware search.
 - `supabase/phase5_marketplace_foundation.sql` run for production support entities.
 - `supabase/phase6_location_foundation.sql` run for provider-backed location columns.
-- OpenStreetMap/Nominatim attribution remains visible anywhere verified destination data appears.
+- OpenStreetMap/Nominatim attribution remains visible anywhere verified destination or current-location data appears.
 - No `.env.local` or API secrets committed.
 - `pnpm lint`, `pnpm typecheck`, and `pnpm build` pass.
 - Demo accounts prepared for guest and host roles.

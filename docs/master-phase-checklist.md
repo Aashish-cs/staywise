@@ -60,12 +60,13 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Avoid fake city objects as the main architecture.
   - Current pass: added server-side OpenStreetMap/Nominatim lookup, explicit location search API, submitted-destination verification with attribution, provider metadata listing columns, `supabase/phase6_location_foundation.sql`, and `docs/phase-6-location-system.md`.
 
-- [~] Phase 7: Current location / near me
+- [x] Phase 7: Current location / near me
   - Implement browser geolocation with accepted, denied, unsupported, timeout, unavailable, loading, and retry states.
   - Reverse geocode returned coordinates and search nearby listings without hardcoding the user city.
   - Show distance when appropriate.
+  - Current pass: added browser current-location flow, server-side reverse geocoding, URL-persisted coordinates, distance-aware ranking/filtering, distance labels, and `docs/phase-7-current-location.md`.
 
-- [ ] Phase 8: Real listing search
+- [~] Phase 8: Real listing search
   - Query Supabase server-side instead of downloading unbounded listings and filtering everything in the browser.
   - Support location, dates, guests, price, property type, bedrooms, beds, bathrooms, amenities, and rating only after real reviews exist.
   - Preserve refresh-safe, shareable URL state with pagination/cursor loading.

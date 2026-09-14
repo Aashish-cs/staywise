@@ -32,11 +32,12 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NOMINATIM_EMAIL=
 NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org/search
+NOMINATIM_REVERSE_BASE_URL=https://nominatim.openstreetmap.org/reverse
 ```
 
 Resend is configured inside Supabase as a custom SMTP provider. Do not put the Resend API key in browser-visible environment variables.
 
-`NOMINATIM_EMAIL` is optional but recommended so OpenStreetMap operators can identify StayWise traffic. Location lookups are server-side, user-triggered, cached, and attributed.
+`NOMINATIM_EMAIL` is optional but recommended so OpenStreetMap operators can identify StayWise traffic. Location and reverse-geocoding lookups are server-side, user-triggered, cached, and attributed.
 
 ## Supabase Setup
 
@@ -68,12 +69,12 @@ Use GitHub as the source repository and import it into Vercel. Add the same envi
 
 ## Current Scope
 
-The current implementation covers authentication, Supabase-backed listing search, server-side OpenStreetMap destination lookup, natural-language search parsing, explainable AI-style ranking, date-aware guest reservations, persisted favorites, recommendation event logging, payment-record architecture, and a host listing dashboard. Ratings/reviews are intentionally not displayed until the real review UI is implemented.
+The current implementation covers authentication, Supabase-backed listing search, server-side OpenStreetMap destination lookup, browser current-location search with reverse geocoding, distance-aware ranking, natural-language search parsing, explainable AI-style ranking, date-aware guest reservations, persisted favorites, recommendation event logging, payment-record architecture, and a host listing dashboard. Ratings/reviews are intentionally not displayed until the real review UI is implemented.
 
 ## Known Limitations
 
 - Listings can come from host-created rows or the provided synthetic seed data; production should not silently fall back to hardcoded listing arrays.
-- Location search now verifies submitted destinations through a server-side OpenStreetMap/Nominatim lookup. Browser geolocation, reverse geocoding, and near-me search are planned next.
+- Location search verifies submitted destinations and supports current-location searches through server-side OpenStreetMap/Nominatim lookup and reverse geocoding. The next search phase is moving listing filtering fully server-side with pagination.
 - Maps currently use OpenStreetMap embeds. A synchronized interactive marker map is planned for later phases.
 - Guest-host messaging, review UI, Supabase Storage image uploads, profile settings UI, real payment provider checkout/webhooks, and automated browser tests are still roadmap items.
 - Any Supabase key that was shared during setup should be rotated before final presentation.

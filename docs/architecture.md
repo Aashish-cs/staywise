@@ -31,6 +31,7 @@ The first AI feature is explainable ranking. Listings are scored against a trip 
 - trip purpose
 - requested amenities
 - purpose-specific amenity signals
+- current-location distance when the user chooses near-me search
 - verified host profile availability
 
 Recommendation events are stored when users search, use AI-style prompt parsing, save listings, and confirm reservations. These events give later phases real signals for popularity, personalization, and evaluation without fabricating ratings or reviews.
@@ -39,7 +40,9 @@ This is intentionally explainable for a senior design demo. It can be evaluated 
 
 ## Location System
 
-StayWise uses a server-side location abstraction for submitted destinations. The current provider is OpenStreetMap/Nominatim, called only from server code for user-triggered searches. Results are cached, attributed, and normalized into provider id, display address, city, region, country, coordinates, and bounds. The app avoids client-side autocomplete against the public Nominatim API.
+StayWise uses a server-side location abstraction for submitted destinations and browser current-location searches. The current provider is OpenStreetMap/Nominatim, called only from server code for user-triggered searches and reverse geocoding. Results are cached, attributed, and normalized into provider id, display address, city, region, country, coordinates, and bounds.
+
+The client uses the browser Geolocation API only after a user clicks the current-location control. Accepted, denied, unsupported, timeout, unavailable, loading, and retry states are handled in the search panel. Near-me searches carry coordinates in the URL, filter listings by a real radius, and show distance labels in search cards and fit panels. The app avoids client-side autocomplete against the public Nominatim API.
 
 ## Future AI Layer
 

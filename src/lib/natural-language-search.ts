@@ -148,6 +148,8 @@ export function parseNaturalLanguageSearch(
   const destination = inferDestination(cleanPrompt, listings);
   if (destination) {
     next.destination = destination;
+    next.nearLat = null;
+    next.nearLng = null;
     detected.push(destination);
   }
 

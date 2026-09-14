@@ -46,6 +46,9 @@ type NominatimSearchRow = {
 
 const nominatimEndpoint =
   process.env.NOMINATIM_BASE_URL ?? "https://nominatim.openstreetmap.org/search";
+const nominatimReverseEndpoint =
+  process.env.NOMINATIM_REVERSE_BASE_URL ??
+  "https://nominatim.openstreetmap.org/reverse";
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://staywise-tau.vercel.app";
 const contactEmail = process.env.NOMINATIM_EMAIL;
 const cacheTtlMs = 1000 * 60 * 60 * 24 * 30;
@@ -54,6 +57,13 @@ const memoryCache = new Map<
   {
     expiresAt: number;
     results: LocationLookupResult[];
+  }
+>();
+const reverseCache = new Map<
+  string,
+  {
+    expiresAt: number;
+    result: LocationLookupResult | null;
   }
 >();
 
@@ -119,9 +129,75 @@ export async function searchLocations(query: string, limit = 5) {
   return results;
 }
 
-function mapNominatimRow(query: string, row: NominatimSearchRow) {
-  const lat = Number(row.lat);
-  const lng = Number(row.lon);
+export async function reverseGeocodeLocation(lat: number, lng: number) {
+  if (!isValidLatitude(lat) || !isValidLongitude(lng)) {
+    return null;
+  }
+
+  const safeLat = Number(lat.toFixed(6));
+  const safeLng = Number(lng.toFixed(6));
+  const cacheKey = `${safeLat},${safeLng}`;
+  const cached = reverseCache.get(cacheKey);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.result;
+  }
+
+  const url = new URL(nominatimReverseEndpoint);
+  url.searchParams.set("lat", String(safeLat));
+  url.searchParams.set("lon", String(safeLng));
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("addressdetails", "1");
+  url.searchParams.set("zoom", "10");
+  url.searchParams.set("layer", "address");
+
+  if (contactEmail) {
+    url.searchParams.set("email", contactEmail);
+  }
+
+  const response = await fetch(url, {
+    headers: {
+      "Accept-Language": "en-US,en;q=0.9",
+      Referer: siteUrl,
+      "User-Agent": `StayWiseSeniorDesign/1.0 (${siteUrl})`,
+    },
+    next: {
+      revalidate: Math.floor(cacheTtlMs / 1000),
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Reverse location lookup failed with ${response.status}.`);
+  }
+
+  const row = (await response.json()) as NominatimSearchRow & {
+    error?: string;
+  };
+  const result = row.error
+    ? null
+    : mapNominatimRow(cacheKey, row, {
+        lat: safeLat,
+        lng: safeLng,
+      });
+
+  reverseCache.set(cacheKey, {
+    expiresAt: Date.now() + cacheTtlMs,
+    result,
+  });
+
+  return result;
+}
+
+function mapNominatimRow(
+  query: string,
+  row: NominatimSearchRow,
+  coordinatesOverride?: {
+    lat: number;
+    lng: number;
+  },
+) {
+  const lat = coordinatesOverride?.lat ?? Number(row.lat);
+  const lng = coordinatesOverride?.lng ?? Number(row.lon);
 
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
     return null;
@@ -182,4 +258,12 @@ function normalizeLocationQuery(query: string) {
   const normalized = query.trim().replace(/\s+/g, " ");
 
   return normalized.length >= 2 ? normalized : "";
+}
+
+function isValidLatitude(value: number) {
+  return Number.isFinite(value) && value >= -90 && value <= 90;
+}
+
+function isValidLongitude(value: number) {
+  return Number.isFinite(value) && value >= -180 && value <= 180;
 }

@@ -51,6 +51,8 @@ export function createSearchInput(overrides: Partial<SearchInput> = {}): SearchI
     maxNightlyBudget: 250,
     minBathrooms: 0,
     minBedrooms: 0,
+    nearLat: null,
+    nearLng: null,
     propertyTypes: [],
     tripPurpose: "remote-work",
     amenities: ["Fast Wi-Fi", "Workspace"],

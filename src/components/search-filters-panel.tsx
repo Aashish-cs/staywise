@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import clsx from "clsx";
 import {
   BriefcaseBusiness,
   CalendarDays,
   Heart,
   Home,
+  Loader2,
+  LocateFixed,
   MapPin,
   Search,
   Sparkles,
@@ -20,6 +23,7 @@ import {
   tripPurposeLabels,
   type TripPurpose,
 } from "@/lib/listings";
+import { hasSearchCoordinates } from "@/lib/location-distance";
 import type { LocationLookupResult } from "@/lib/location-service";
 import type { SearchInput } from "@/lib/recommendations";
 import { propertyTypeOptions } from "@/lib/search-presets";
@@ -28,6 +32,23 @@ type SearchInputUpdater = <K extends keyof SearchInput>(
   key: K,
   value: SearchInput[K],
 ) => void;
+
+type CurrentLocationPayload = {
+  destination: string;
+  location: LocationLookupResult | null;
+  nearLat: number;
+  nearLng: number;
+};
+
+type CurrentLocationState =
+  | "idle"
+  | "loading"
+  | "accepted"
+  | "denied"
+  | "unsupported"
+  | "timeout"
+  | "unavailable"
+  | "error";
 
 type SearchFiltersPanelProps = {
   activeFilterCount: number;
@@ -41,10 +62,12 @@ type SearchFiltersPanelProps = {
   onAiPromptChange: (value: string) => void;
   onApplyAiSearch: () => void;
   onClearAdvancedFilters: () => void;
+  onDestinationChange: (value: string) => void;
   onFocusResults: () => void;
   onToggleAmenity: (amenity: string) => void;
   onTogglePropertyType: (propertyType: PropertyType) => void;
   onUpdateSearch: SearchInputUpdater;
+  onUseCurrentLocation: (payload: CurrentLocationPayload) => void;
   search: SearchInput;
 };
 
@@ -70,19 +93,72 @@ export function SearchFiltersPanel({
   onAiPromptChange,
   onApplyAiSearch,
   onClearAdvancedFilters,
+  onDestinationChange,
   onFocusResults,
   onToggleAmenity,
   onTogglePropertyType,
   onUpdateSearch,
+  onUseCurrentLocation,
   search,
 }: SearchFiltersPanelProps) {
+  const [currentLocationState, setCurrentLocationState] =
+    useState<CurrentLocationState>(
+      hasSearchCoordinates(search) ? "accepted" : "idle",
+    );
+  const [currentLocationMessage, setCurrentLocationMessage] = useState<string | null>(
+    null,
+  );
   const selectedPropertyTypeLabel =
     search.propertyTypes.length > 0
       ? search.propertyTypes.join(", ")
       : "Any property type";
-  const verifiedLocation = isSameLocationQuery(search.destination, location)
-    ? location
-    : null;
+  const usesCurrentLocation = hasSearchCoordinates(search);
+  const verifiedLocation =
+    usesCurrentLocation || isSameLocationQuery(search.destination, location)
+      ? location
+      : null;
+  const locationStatusMessage =
+    currentLocationMessage ??
+    getCurrentLocationStatusMessage(currentLocationState, usesCurrentLocation);
+  const showLocationStatus =
+    currentLocationState !== "idle" || usesCurrentLocation;
+
+  async function handleBrowserLocation() {
+    if (!("geolocation" in navigator)) {
+      setCurrentLocationState("unsupported");
+      setCurrentLocationMessage(null);
+      return;
+    }
+
+    setCurrentLocationState("loading");
+    setCurrentLocationMessage(null);
+
+    try {
+      const position = await getBrowserPosition();
+      const nearLat = Number(position.coords.latitude.toFixed(6));
+      const nearLng = Number(position.coords.longitude.toFixed(6));
+      const reverseLocation = await fetchReverseLocation(nearLat, nearLng);
+      const destination =
+        reverseLocation ? formatCurrentLocationDestination(reverseLocation) : "Current location";
+
+      onUseCurrentLocation({
+        destination,
+        location: reverseLocation,
+        nearLat,
+        nearLng,
+      });
+      setCurrentLocationState("accepted");
+      setCurrentLocationMessage(
+        reverseLocation
+          ? `Showing stays near ${formatVerifiedPlace(reverseLocation)}.`
+          : "Showing stays near your current location. Place name lookup is unavailable right now.",
+      );
+    } catch (error) {
+      const nextState = getLocationFailureState(error);
+      setCurrentLocationState(nextState);
+      setCurrentLocationMessage(null);
+    }
+  }
 
   return (
     <aside
@@ -151,12 +227,54 @@ export function SearchFiltersPanel({
             <MapPin className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
             <input
               value={search.destination}
-              onChange={(event) => onUpdateSearch("destination", event.target.value)}
+              onChange={(event) => {
+                setCurrentLocationMessage(null);
+                setCurrentLocationState("idle");
+                onDestinationChange(event.target.value);
+              }}
               placeholder="Search by city or neighborhood"
               className="field-input"
             />
           </span>
         </label>
+
+        <div>
+          <button
+            type="button"
+            disabled={currentLocationState === "loading"}
+            className={clsx(
+              "flex h-11 w-full items-center justify-center gap-2 rounded-full border px-4 text-sm font-extrabold transition",
+              usesCurrentLocation
+                ? "border-[#315d3b] bg-[#e7f2e4] text-[#315d3b]"
+                : "border-[#eadfd6] bg-white text-[#201a18] hover:border-[#ff385c] hover:text-[#df2348]",
+              currentLocationState === "loading" &&
+                "cursor-not-allowed border-[#eadfd6] text-[#8b7d74]",
+            )}
+            onClick={() => {
+              void handleBrowserLocation();
+            }}
+          >
+            {currentLocationState === "loading" ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <LocateFixed className="h-4 w-4" aria-hidden="true" />
+            )}
+            {getCurrentLocationButtonLabel(currentLocationState, usesCurrentLocation)}
+          </button>
+
+          {showLocationStatus && (
+            <p
+              className={clsx(
+                "mt-2 rounded-2xl p-3 text-xs font-semibold leading-5",
+                currentLocationState === "accepted" || usesCurrentLocation
+                  ? "bg-[#e7f2e4] text-[#315d3b]"
+                  : "bg-[#fff3f5] text-[#bd1740]",
+              )}
+            >
+              {locationStatusMessage}
+            </p>
+          )}
+        </div>
 
         {search.destination && (
           <div className="rounded-2xl border border-[#eadfd6] bg-[#fbfaf8] p-3 text-xs font-semibold leading-5 text-[#5f5148]">
@@ -187,7 +305,11 @@ export function SearchFiltersPanel({
                 type="button"
                 key={destination}
                 className="rounded-full border border-[#eadfd6] bg-white px-3 py-2 text-sm font-medium hover:border-[#ff385c]"
-                onClick={() => onUpdateSearch("destination", destination)}
+                onClick={() => {
+                  setCurrentLocationMessage(null);
+                  setCurrentLocationState("idle");
+                  onDestinationChange(destination);
+                }}
               >
                 {destination}
               </button>
@@ -410,4 +532,102 @@ function formatVerifiedPlace(location: LocationLookupResult) {
   return [location.city ?? location.name, location.region, location.country]
     .filter(Boolean)
     .join(", ");
+}
+
+function formatCurrentLocationDestination(location: LocationLookupResult) {
+  return (
+    [location.city ?? location.name, location.region].filter(Boolean).join(", ") ||
+    "Current location"
+  );
+}
+
+function getBrowserPosition() {
+  return new Promise<GeolocationPosition>((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: false,
+      maximumAge: 1000 * 60 * 5,
+      timeout: 10000,
+    });
+  });
+}
+
+async function fetchReverseLocation(lat: number, lng: number) {
+  try {
+    const response = await fetch(
+      `/api/locations/reverse?lat=${encodeURIComponent(lat)}&lng=${encodeURIComponent(lng)}`,
+    );
+    const result = (await response.json().catch(() => null)) as
+      | {
+          location?: LocationLookupResult | null;
+        }
+      | null;
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return result?.location ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function getLocationFailureState(error: unknown): CurrentLocationState {
+  if (isGeolocationPositionError(error)) {
+    if (error.code === error.PERMISSION_DENIED) {
+      return "denied";
+    }
+
+    if (error.code === error.TIMEOUT) {
+      return "timeout";
+    }
+
+    return "unavailable";
+  }
+
+  return "error";
+}
+
+function isGeolocationPositionError(
+  error: unknown,
+): error is GeolocationPositionError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof (error as { code?: unknown }).code === "number"
+  );
+}
+
+function getCurrentLocationButtonLabel(
+  state: CurrentLocationState,
+  usesCurrentLocation: boolean,
+) {
+  if (state === "loading") return "Finding your location";
+  if (usesCurrentLocation) return "Current location on";
+  if (
+    state === "denied" ||
+    state === "timeout" ||
+    state === "unavailable" ||
+    state === "error"
+  ) {
+    return "Retry current location";
+  }
+
+  return "Use current location";
+}
+
+function getCurrentLocationStatusMessage(
+  state: CurrentLocationState,
+  usesCurrentLocation: boolean,
+) {
+  if (state === "loading") return "Requesting location permission.";
+  if (state === "denied") return "Location permission was denied. Enable it in the browser and retry.";
+  if (state === "unsupported") return "This browser does not support current-location search.";
+  if (state === "timeout") return "Location lookup timed out. Retry when the signal is stronger.";
+  if (state === "unavailable") return "Your location is unavailable right now. Retry or type a destination.";
+  if (state === "error") return "Current-location search failed. Retry or type a destination.";
+  if (usesCurrentLocation) return "Showing nearby stays from your browser location.";
+
+  return null;
 }

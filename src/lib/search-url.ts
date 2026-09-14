@@ -4,6 +4,10 @@ import {
   tripPurposeLabels,
   type TripPurpose,
 } from "@/lib/listings";
+import {
+  formatCoordinateForUrl,
+  hasSearchCoordinates,
+} from "@/lib/location-distance";
 import { searchSchema, type SearchInput } from "@/lib/recommendations";
 
 export type RawSearchParams = Record<string, string | string[] | undefined>;
@@ -36,6 +40,8 @@ export function parseSearchParams(params: RawSearchParams): SearchInput {
     propertyTypes,
     tripPurpose,
     amenities,
+    nearLat: parseCoordinateParam(firstParam(params.nearLat), -90, 90),
+    nearLng: parseCoordinateParam(firstParam(params.nearLng), -180, 180),
   });
 }
 
@@ -76,6 +82,11 @@ export function buildSearchQueryString(input: Partial<SearchInput>) {
     params.append("amenities", amenity);
   });
 
+  if (hasSearchCoordinates(parsed)) {
+    params.set("nearLat", formatCoordinateForUrl(parsed.nearLat as number));
+    params.set("nearLng", formatCoordinateForUrl(parsed.nearLng as number));
+  }
+
   return params.toString();
 }
 
@@ -114,6 +125,20 @@ function parseDateParam(value: string | undefined) {
   const date = new Date(`${value}T00:00:00`);
 
   return Number.isNaN(date.getTime()) ? "" : value;
+}
+
+function parseCoordinateParam(
+  value: string | undefined,
+  min: number,
+  max: number,
+) {
+  const numeric = Number(value);
+
+  if (!Number.isFinite(numeric) || numeric < min || numeric > max) {
+    return null;
+  }
+
+  return numeric;
 }
 
 function parseTripPurpose(value: string | undefined): TripPurpose {

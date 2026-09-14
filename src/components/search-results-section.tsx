@@ -11,6 +11,7 @@ import {
   getOpenStreetMapEmbedUrl,
   getOpenStreetMapUrl,
 } from "@/lib/listing-map";
+import { formatDistanceMiles } from "@/lib/location-distance";
 import type { RankedListing } from "@/lib/recommendations";
 import type { SortMode } from "@/lib/search-results";
 
@@ -149,6 +150,9 @@ export function SearchResultsSection({
                         </h3>
                         <p className="mt-1 text-sm text-[#786a60]">
                           {listing.neighborhood}, {listing.city}
+                          {listing.distanceMiles !== null
+                            ? ` · ${formatDistanceMiles(listing.distanceMiles)} away`
+                            : ""}
                         </p>
                       </div>
                       <span className="shrink-0 rounded-full bg-[#f7f3ee] px-3 py-1 text-xs font-extrabold text-[#5f5148]">
@@ -292,6 +296,12 @@ function ListingFitPanel({ listing }: { listing: RankedListing }) {
       <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
         <Metric label="Host" value={listing.host.name} />
         <Metric label="Status" value="Verified" />
+        {listing.distanceMiles !== null && (
+          <Metric
+            label="Distance"
+            value={`${formatDistanceMiles(listing.distanceMiles)} away`}
+          />
+        )}
         <Metric label="Beds" value={`${listing.bedrooms}`} />
         <Metric label="Baths" value={`${listing.bathrooms}`} />
       </div>
@@ -378,6 +388,9 @@ function ListingMapPanel({
                 <p className="line-clamp-1 text-sm font-extrabold">{item.title}</p>
                 <p className="mt-1 text-xs font-semibold text-[#786a60]">
                   {item.neighborhood}, {item.city}
+                  {item.distanceMiles !== null
+                    ? ` · ${formatDistanceMiles(item.distanceMiles)} away`
+                    : ""}
                 </p>
               </div>
               <span className="shrink-0 text-sm font-extrabold">

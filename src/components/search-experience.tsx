@@ -88,6 +88,8 @@ export function SearchExperience({
   const [search, setSearch] = useState<SearchInput>(() =>
     searchSchema.parse({ ...defaultSearchInput, ...initialSearch }),
   );
+  const [resolvedLocation, setResolvedLocation] =
+    useState<LocationLookupResult | null>(initialLocation ?? null);
   const [sortMode, setSortMode] = useState<SortMode>("recommended");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showMapPanel, setShowMapPanel] = useState(false);
@@ -128,6 +130,7 @@ export function SearchExperience({
     getCurrentSearch: () => search,
     onSearchApplied(nextSearch) {
       setSearch(nextSearch);
+      setResolvedLocation(null);
       setSelectedId(null);
       setNotice(null);
     },
@@ -162,6 +165,38 @@ export function SearchExperience({
 
   function updateSearch<K extends keyof SearchInput>(key: K, value: SearchInput[K]) {
     setSearch((current) => ({ ...current, [key]: value }));
+  }
+
+  function updateDestination(destination: string) {
+    setResolvedLocation(null);
+    setSearch((current) => ({
+      ...current,
+      destination,
+      nearLat: null,
+      nearLng: null,
+    }));
+  }
+
+  function useCurrentLocation({
+    destination,
+    location,
+    nearLat,
+    nearLng,
+  }: {
+    destination: string;
+    location: LocationLookupResult | null;
+    nearLat: number;
+    nearLng: number;
+  }) {
+    setResolvedLocation(location);
+    setSelectedId(null);
+    setNotice(null);
+    setSearch((current) => ({
+      ...current,
+      destination,
+      nearLat,
+      nearLng,
+    }));
   }
 
   function toggleAmenity(amenity: string) {
@@ -278,17 +313,19 @@ export function SearchExperience({
             aiPrompt={aiPrompt}
             destinations={destinations}
             isAiSearching={isAiSearching}
-            location={initialLocation ?? null}
+            location={resolvedLocation}
             notice={notice}
             onAiPromptChange={setAiPrompt}
             onApplyAiSearch={() => {
               void applyAiSearch();
             }}
             onClearAdvancedFilters={clearAdvancedFilters}
+            onDestinationChange={updateDestination}
             onFocusResults={focusResults}
             onToggleAmenity={toggleAmenity}
             onTogglePropertyType={togglePropertyType}
             onUpdateSearch={updateSearch}
+            onUseCurrentLocation={useCurrentLocation}
             search={search}
           />
 

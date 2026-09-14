@@ -10,7 +10,6 @@ import {
   MapPin,
   ReceiptText,
   Sparkles,
-  Star,
   Timer,
 } from "lucide-react";
 import { cancelReservationAction } from "@/app/dashboard/actions";
@@ -322,9 +321,8 @@ export default async function DashboardPage() {
                           <h3 className="line-clamp-2 text-sm font-extrabold">
                             {listing.title}
                           </h3>
-                          <span className="flex shrink-0 items-center gap-1 text-sm font-extrabold">
-                            <Star className="h-4 w-4 fill-[#201a18]" aria-hidden="true" />
-                            {listing.rating.toFixed(2)}
+                          <span className="shrink-0 rounded-full bg-[#f7f3ee] px-3 py-1 text-xs font-extrabold text-[#5f5148]">
+                            {listing.capacity} guests
                           </span>
                         </div>
                         <p className="mt-2 flex items-center gap-1 text-sm font-semibold text-[#5f5148]">
@@ -492,7 +490,7 @@ function DashboardMetric({
   label,
   value,
 }: {
-  icon: typeof Star;
+  icon: typeof Sparkles;
   label: string;
   value: string;
 }) {

@@ -174,7 +174,7 @@ export function ReservationPanel({
         </div>
         <span className="inline-flex items-center gap-1 rounded-full bg-[#fff3f5] px-3 py-1 text-sm font-semibold text-[#bd1740]">
           <BadgeCheck className="h-4 w-4" aria-hidden="true" />
-          {listing.rating.toFixed(2)}
+          Live
         </span>
       </div>
 

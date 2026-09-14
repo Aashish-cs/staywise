@@ -17,7 +17,6 @@ import {
   MessageCircle,
   PawPrint,
   Sparkles,
-  Star,
   Utensils,
   WashingMachine,
   Waves,
@@ -206,10 +205,9 @@ export default async function ListingPage({
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm font-extrabold">
               <span className="inline-flex items-center gap-1">
-                <Star className="h-4 w-4 fill-[#201a18]" aria-hidden="true" />
-                {listing.rating.toFixed(2)}
+                <CheckCircle2 className="h-4 w-4 text-[#315d3b]" aria-hidden="true" />
+                Live StayWise listing
               </span>
-              <span>{listing.reviewCount} review signals</span>
               <span className="inline-flex items-center gap-1 text-[#5f5148]">
                 <MapPin className="h-4 w-4 text-[#ff385c]" aria-hidden="true" />
                 {listing.neighborhood}, {listing.city}, {listing.state}
@@ -273,21 +271,22 @@ export default async function ListingPage({
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <h2 className="flex items-center gap-2 text-2xl font-extrabold tracking-tight">
-                    <Star className="h-5 w-5 fill-[#201a18]" aria-hidden="true" />
-                    {listing.rating.toFixed(2)} · {listing.reviewCount} review signals
+                    <CheckCircle2 className="h-5 w-5 text-[#315d3b]" aria-hidden="true" />
+                    StayWise fit signals
                   </h2>
                   <p className="mt-2 text-sm font-semibold text-[#5f5148]">
-                    StayWise summarizes quality signals without inventing guest quotes.
+                    These are derived from listing details, amenities, and availability.
+                    Real guest reviews are planned for a later sprint.
                   </p>
                 </div>
                 <span className="rounded-full bg-[#fff3f5] px-3 py-1 text-sm font-extrabold text-[#bd1740]">
-                  Guest confidence
+                  Verified data only
                 </span>
               </div>
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {buildRatingSignals(listing).map((signal) => (
-                  <RatingSignalCard key={signal.label} {...signal} />
+                {buildListingSignals(listing).map((signal) => (
+                  <ListingSignalCard key={signal.label} {...signal} />
                 ))}
               </div>
 
@@ -543,17 +542,15 @@ function AmenityItem({ amenity }: { amenity: string }) {
   );
 }
 
-function RatingSignalCard({
+function ListingSignalCard({
   icon: Icon,
   label,
-  score,
+  value,
 }: {
   icon: LucideIcon;
   label: string;
-  score: number;
+  value: string;
 }) {
-  const percent = Math.min(100, Math.round((score / 5) * 100));
-
   return (
     <div className="rounded-[18px] border border-[#eadfd6] bg-white p-4">
       <div className="flex items-center justify-between gap-3">
@@ -561,13 +558,7 @@ function RatingSignalCard({
           <Icon className="h-4 w-4 text-[#201a18]" aria-hidden="true" />
           {label}
         </span>
-        <span className="text-sm font-extrabold">{score.toFixed(1)}</span>
-      </div>
-      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#f1ebe6]">
-        <div
-          className="h-full rounded-full bg-[#201a18]"
-          style={{ width: `${percent}%` }}
-        />
+        <span className="text-sm font-extrabold text-[#315d3b]">{value}</span>
       </div>
     </div>
   );
@@ -595,25 +586,29 @@ function StayMap({ listing }: { listing: Listing }) {
   return (
     <div className="mt-5 overflow-hidden rounded-[28px] border border-[#eadfd6] bg-[#edf6f8]">
       <div className="relative h-80">
-        <div className="absolute inset-x-0 top-20 h-3 bg-white/80" />
-        <div className="absolute inset-x-0 bottom-24 h-3 bg-white/80" />
-        <div className="absolute inset-y-0 left-1/4 w-3 bg-white/80" />
-        <div className="absolute inset-y-0 right-1/3 w-3 bg-white/80" />
-        <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#ff385c] p-4 text-white shadow-xl">
-          <Home className="h-6 w-6" aria-hidden="true" />
-        </div>
+        <iframe
+          title={`OpenStreetMap area for ${listing.title}`}
+          src={getOpenStreetMapEmbedUrl(listing)}
+          className="absolute inset-0 h-full w-full border-0"
+          loading="lazy"
+        />
         <div className="absolute bottom-5 left-5 right-5 flex flex-col gap-3 rounded-[22px] bg-white/95 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-extrabold">
               Approximate area near {listing.neighborhood}
             </p>
             <p className="mt-1 text-xs font-semibold text-[#786a60]">
-              Exact coordinates stay private until booking confirmation.
+              OpenStreetMap is shown from the coordinates stored for this listing.
             </p>
           </div>
-          <p className="text-xs font-extrabold text-[#5f5148]">
-            {listing.coordinates.lat.toFixed(3)}, {listing.coordinates.lng.toFixed(3)}
-          </p>
+          <Link
+            href={getOpenStreetMapUrl(listing)}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex h-9 items-center justify-center rounded-full bg-[#201a18] px-4 text-xs font-extrabold text-white hover:bg-black"
+          >
+            Open map
+          </Link>
         </div>
       </div>
     </div>
@@ -690,41 +685,39 @@ function buildQuickHighlights(listing: Listing) {
   return highlights.slice(0, 4);
 }
 
-function buildRatingSignals(listing: Listing) {
+function buildListingSignals(listing: Listing) {
   return [
     {
       icon: CheckCircle2,
-      label: "Cleanliness",
-      score: signalScore(listing.rating, 0.06),
+      label: "Listing status",
+      value: "Live",
     },
     {
       icon: Home,
-      label: "Accuracy",
-      score: signalScore(listing.rating, -0.01),
+      label: "Space",
+      value: `${listing.bedrooms} bed · ${listing.capacity} guests`,
     },
     {
       icon: DoorOpen,
       label: "Check-in",
-      score: listing.amenities.includes("Self check-in")
-        ? signalScore(listing.rating, 0.08)
-        : signalScore(listing.rating, -0.03),
+      value: listing.amenities.includes("Self check-in")
+        ? "Self check-in"
+        : "Host assisted",
     },
     {
       icon: MessageCircle,
-      label: "Communication",
-      score: listing.host.isSuperhost
-        ? signalScore(listing.rating, 0.07)
-        : signalScore(listing.rating, 0),
+      label: "Host",
+      value: listing.host.responseTime,
     },
     {
       icon: MapPin,
       label: "Location",
-      score: signalScore(listing.rating, 0.02),
+      value: listing.neighborhood,
     },
     {
       icon: Sparkles,
       label: "Value",
-      score: signalScore(listing.rating, listing.pricePerNight <= 220 ? 0.09 : -0.04),
+      value: `$${listing.pricePerNight}/night`,
     },
   ];
 }
@@ -764,8 +757,40 @@ function buildGuestSignals(listing: Listing) {
   return signals;
 }
 
-function signalScore(base: number, offset: number) {
-  return Math.min(5, Math.max(4.1, Number((base + offset).toFixed(1))));
+function getOpenStreetMapEmbedUrl(listing: Listing) {
+  const { lat, lng } = getListingCoordinates(listing);
+  const latOffset = 0.018;
+  const lngOffset = 0.024;
+  const bbox = [
+    lng - lngOffset,
+    lat - latOffset,
+    lng + lngOffset,
+    lat + latOffset,
+  ].join(",");
+
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(
+    bbox,
+  )}&layer=mapnik&marker=${encodeURIComponent(`${lat},${lng}`)}`;
+}
+
+function getOpenStreetMapUrl(listing: Listing) {
+  const { lat, lng } = getListingCoordinates(listing);
+
+  return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}`;
+}
+
+function getListingCoordinates(listing: Listing) {
+  const lat = Number.isFinite(listing.coordinates.lat)
+    ? listing.coordinates.lat
+    : 32.7767;
+  const lng = Number.isFinite(listing.coordinates.lng)
+    ? listing.coordinates.lng
+    : -96.797;
+
+  return {
+    lat: lat || 32.7767,
+    lng: lng || -96.797,
+  };
 }
 
 function formatShortDate(value: string) {

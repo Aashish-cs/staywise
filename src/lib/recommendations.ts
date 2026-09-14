@@ -79,7 +79,6 @@ export function rankListings(
         input.propertyTypes.includes(listing.propertyType);
       const hasBedrooms = listing.bedrooms >= input.minBedrooms;
       const hasBathrooms = listing.bathrooms >= input.minBathrooms;
-      const hasRating = listing.rating >= input.minRating;
 
       return (
         matchesDestination &&
@@ -87,8 +86,7 @@ export function rankListings(
         isAvailable &&
         matchesPropertyType &&
         hasBedrooms &&
-        hasBathrooms &&
-        hasRating
+        hasBathrooms
       );
     })
     .map((listing) => scoreListing(listing, input))
@@ -148,12 +146,6 @@ function scoreListing(listing: Listing, input: SearchInput): RankedListing {
   if (listing.host.isSuperhost) {
     score += 5;
     reasons.push("Hosted by a top StayWise host");
-  }
-
-  score += Math.round((listing.rating - 4.7) * 18);
-
-  if (listing.reviewCount > 100) {
-    score += 3;
   }
 
   if (reasons.length === 0) {

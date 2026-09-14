@@ -18,7 +18,6 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
-  Star,
   Trees,
   UserRound,
   Users,
@@ -36,7 +35,7 @@ import {
 import { rankListings, searchSchema, type SearchInput } from "@/lib/recommendations";
 import { buildSearchQueryString } from "@/lib/search-url";
 
-type SortMode = "recommended" | "price-low" | "rating";
+type SortMode = "recommended" | "price-low" | "space";
 type RankedListing = ReturnType<typeof rankListings>[number];
 
 const purposeIcons: Record<TripPurpose, typeof BriefcaseBusiness> = {
@@ -183,7 +182,6 @@ export function SearchExperience({
     search.propertyTypes.length +
     (search.minBedrooms > 0 ? 1 : 0) +
     (search.minBathrooms > 0 ? 1 : 0) +
-    (search.minRating > 0 ? 1 : 0) +
     (search.maxNightlyBudget !== defaultSearch.maxNightlyBudget ? 1 : 0);
   const selectedPropertyTypeLabel =
     search.propertyTypes.length > 0
@@ -347,7 +345,7 @@ export function SearchExperience({
   return (
     <main className="min-h-screen bg-white text-[#201a18]">
       <header className="sticky top-0 z-20 border-b border-[#ebe3dd] bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 lg:px-8">
+        <div className="mx-auto flex max-w-[1536px] items-center justify-between px-5 py-4 lg:px-8">
           <Link
             href="/"
             className="flex items-center gap-3"
@@ -357,10 +355,17 @@ export function SearchExperience({
             <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff385c] text-white shadow-sm">
               <Sparkles className="h-5 w-5" aria-hidden="true" />
             </span>
-            <span className="text-xl font-semibold tracking-tight">StayWise</span>
+            <span>
+              <span className="block text-xl font-extrabold tracking-tight">
+                StayWise
+              </span>
+              <span className="hidden text-xs font-semibold text-[#786a60] sm:block">
+                Smart Stays, Better Days.
+              </span>
+            </span>
           </Link>
 
-          <nav className="hidden items-center gap-2 rounded-full border border-[#eadfd6] bg-white px-2 py-2 shadow-sm lg:flex">
+          <nav className="hidden items-center gap-2 rounded-full border border-[#eadfd6] bg-[#fbfaf8] px-2 py-2 shadow-sm lg:flex">
             <Link className="nav-pill" href="/search">
               Stays
             </Link>
@@ -446,7 +451,7 @@ export function SearchExperience({
         </div>
 
         <div className="border-t border-[#f3ede8]">
-          <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-5 py-3 lg:px-8">
+          <div className="mx-auto flex max-w-[1536px] gap-2 overflow-x-auto px-5 py-3 lg:px-8">
             {searchCategoryLinks.map((item, index) => {
               const Icon = item.icon;
 
@@ -470,16 +475,16 @@ export function SearchExperience({
         </div>
       </header>
 
-      <section className="mx-auto max-w-7xl px-5 py-7 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-[410px_1fr]">
-          <aside id="search" className="self-start rounded-[28px] border border-[#eadfd6] bg-[#fffaf5] p-5 shadow-sm lg:sticky lg:top-24">
+      <section className="mx-auto max-w-[1536px] px-5 py-6 lg:px-8">
+        <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
+          <aside id="search" className="self-start rounded-[28px] border border-[#eadfd6] bg-white p-5 shadow-sm lg:sticky lg:top-24">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-[#ff385c]">AI-ranked stays</p>
-                <h1 className="mt-2 text-3xl font-semibold leading-tight tracking-tight">
-                  Smart Stays, Better Days.
+                <p className="text-sm font-extrabold text-[#ff385c]">Search stays</p>
+                <h1 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight">
+                  Find the right stay.
                 </h1>
-                <p className="mt-3 text-sm leading-6 text-[#5f5148]">
+                <p className="mt-3 text-sm font-semibold leading-6 text-[#5f5148]">
                   Find the stay that fits the trip with live inventory and clear AI
                   match reasons.
                 </p>
@@ -675,7 +680,7 @@ export function SearchExperience({
                   </div>
                 </div>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <label className="block">
                     <span className="field-label">Bedrooms</span>
                     <span className="field-shell">
@@ -708,25 +713,6 @@ export function SearchExperience({
                         }
                         className="field-input"
                       />
-                    </span>
-                  </label>
-
-                  <label className="block">
-                    <span className="field-label">Rating</span>
-                    <span className="field-shell">
-                      <Star className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-                      <select
-                        value={search.minRating}
-                        onChange={(event) =>
-                          updateSearch("minRating", Number(event.target.value))
-                        }
-                        className="field-input"
-                      >
-                        <option value={0}>Any</option>
-                        <option value={4.5}>4.5+</option>
-                        <option value={4.7}>4.7+</option>
-                        <option value={4.85}>4.85+</option>
-                      </select>
                     </span>
                   </label>
                 </div>
@@ -803,8 +789,8 @@ export function SearchExperience({
                   Recommended stays
                 </h2>
                 <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#5f5148]">
-                  Smart sort weighs budget, trip style, guest count, amenities, rating,
-                  and the filters in your shareable search URL.
+                  Smart sort weighs budget, trip style, guest count, amenities, and the
+                  filters in your shareable search URL.
                 </p>
               </div>
 
@@ -823,7 +809,7 @@ export function SearchExperience({
                   >
                     <option value="recommended">Recommended</option>
                     <option value="price-low">Lowest price</option>
-                    <option value="rating">Top rated</option>
+                    <option value="space">Most space</option>
                   </select>
                 </label>
                 <button
@@ -897,9 +883,8 @@ export function SearchExperience({
                                 {listing.neighborhood}, {listing.city}
                               </p>
                             </div>
-                            <span className="flex shrink-0 items-center gap-1 text-sm font-semibold">
-                              <Star className="h-4 w-4 fill-[#201a18]" aria-hidden="true" />
-                              {listing.rating.toFixed(2)}
+                            <span className="shrink-0 rounded-full bg-[#f7f3ee] px-3 py-1 text-xs font-extrabold text-[#5f5148]">
+                              Live
                             </span>
                           </div>
 
@@ -1153,8 +1138,6 @@ function ListingMapPanel({
   listingDetailQuery: string;
   onSelectListing: (id: string) => void;
 }) {
-  const pins = buildMapPins(listings);
-
   return (
     <>
       <div className="flex items-start justify-between gap-4">
@@ -1168,38 +1151,31 @@ function ListingMapPanel({
       </div>
 
       <div className="mt-5 overflow-hidden rounded-[22px] border border-[#eadfd6] bg-[#edf6f8]">
-        <div className="relative h-64">
-          <div className="absolute inset-x-0 top-1/4 h-3 bg-white/80" />
-          <div className="absolute inset-x-0 bottom-1/3 h-3 bg-white/80" />
-          <div className="absolute inset-y-0 left-1/5 w-3 bg-white/80" />
-          <div className="absolute inset-y-0 right-1/4 w-3 bg-white/80" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(255,255,255,0.8),transparent_18%),radial-gradient(circle_at_70%_60%,rgba(255,255,255,0.75),transparent_16%)]" />
-          {pins.map((pin) => {
-            const active = pin.listing.id === listing.id;
-
-            return (
-              <button
-                key={pin.listing.id}
-                type="button"
-                aria-label={`Select ${pin.listing.title}`}
-                className={clsx(
-                  "absolute -translate-x-1/2 -translate-y-1/2 rounded-full px-3 py-1 text-xs font-extrabold shadow-lg transition hover:scale-105",
-                  active
-                    ? "z-20 bg-[#ff385c] text-white"
-                    : "z-10 bg-white text-[#201a18]",
-                )}
-                style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
-                onClick={() => onSelectListing(pin.listing.id)}
-              >
-                ${pin.listing.pricePerNight}
-              </button>
-            );
-          })}
-          <div className="absolute bottom-4 left-4 rounded-full bg-white/95 px-3 py-1 text-xs font-semibold text-[#5f5148] shadow-sm">
-            Approximate map
+        <div className="relative h-72">
+          <iframe
+            title={`OpenStreetMap area for ${listing.title}`}
+            src={getOpenStreetMapEmbedUrl(listing)}
+            className="absolute inset-0 h-full w-full border-0"
+            loading="lazy"
+          />
+          <div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-extrabold text-[#5f5148] shadow-sm">
+            Real map source
           </div>
+          <Link
+            href={getOpenStreetMapUrl(listing)}
+            target="_blank"
+            rel="noreferrer"
+            className="absolute bottom-4 left-4 rounded-full bg-white/95 px-3 py-1 text-xs font-extrabold text-[#201a18] shadow-sm hover:text-[#df2348]"
+          >
+            Open map
+          </Link>
         </div>
       </div>
+
+      <p className="mt-3 text-xs font-semibold leading-5 text-[#786a60]">
+        Map uses the listing coordinates stored in Supabase and shows an approximate
+        area, not an exact address.
+      </p>
 
       <div className="mt-5 max-h-[310px] space-y-3 overflow-y-auto pr-1">
         {listings.map((item) => (
@@ -1244,37 +1220,40 @@ function ListingMapPanel({
   );
 }
 
-function buildMapPins(listings: RankedListing[]) {
-  const validListings = listings.filter(
-    (listing) =>
-      Number.isFinite(listing.coordinates.lat) &&
-      Number.isFinite(listing.coordinates.lng) &&
-      (listing.coordinates.lat !== 0 || listing.coordinates.lng !== 0),
-  );
-  const source = validListings.length > 0 ? validListings : listings;
-  const latitudes = source.map((listing) => listing.coordinates.lat || 32.78);
-  const longitudes = source.map((listing) => listing.coordinates.lng || -96.8);
-  const minLat = Math.min(...latitudes);
-  const maxLat = Math.max(...latitudes);
-  const minLng = Math.min(...longitudes);
-  const maxLng = Math.max(...longitudes);
-  const latSpan = Math.max(0.001, maxLat - minLat);
-  const lngSpan = Math.max(0.001, maxLng - minLng);
+function getOpenStreetMapEmbedUrl(listing: RankedListing) {
+  const { lat, lng } = getListingCoordinates(listing);
+  const latOffset = 0.018;
+  const lngOffset = 0.024;
+  const bbox = [
+    lng - lngOffset,
+    lat - latOffset,
+    lng + lngOffset,
+    lat + latOffset,
+  ].join(",");
 
-  return source.slice(0, 18).map((listing, index) => {
-    const lat = listing.coordinates.lat || 32.78 + index * 0.01;
-    const lng = listing.coordinates.lng || -96.8 - index * 0.01;
-
-    return {
-      listing,
-      x: clampMapPosition(12 + ((lng - minLng) / lngSpan) * 76),
-      y: clampMapPosition(88 - ((lat - minLat) / latSpan) * 76),
-    };
-  });
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(
+    bbox,
+  )}&layer=mapnik&marker=${encodeURIComponent(`${lat},${lng}`)}`;
 }
 
-function clampMapPosition(value: number) {
-  return Math.max(10, Math.min(90, value));
+function getOpenStreetMapUrl(listing: RankedListing) {
+  const { lat, lng } = getListingCoordinates(listing);
+
+  return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}`;
+}
+
+function getListingCoordinates(listing: RankedListing) {
+  const lat = Number.isFinite(listing.coordinates.lat)
+    ? listing.coordinates.lat
+    : 32.7767;
+  const lng = Number.isFinite(listing.coordinates.lng)
+    ? listing.coordinates.lng
+    : -96.797;
+
+  return {
+    lat: lat || 32.7767,
+    lng: lng || -96.797,
+  };
 }
 
 function ProductSignal({
@@ -1333,11 +1312,11 @@ function sortListings(
     );
   }
 
-  if (sortMode === "rating") {
+  if (sortMode === "space") {
     return sorted.sort(
       (first, second) =>
-        second.rating - first.rating ||
-        second.reviewCount - first.reviewCount ||
+        second.bedrooms - first.bedrooms ||
+        second.capacity - first.capacity ||
         second.matchScore - first.matchScore,
     );
   }
@@ -1353,7 +1332,6 @@ function getActiveFilterLabels(search: SearchInput) {
   if (search.maxNightlyBudget) labels.push(`Up to $${search.maxNightlyBudget}`);
   if (search.minBedrooms > 0) labels.push(`${search.minBedrooms}+ bedrooms`);
   if (search.minBathrooms > 0) labels.push(`${search.minBathrooms}+ baths`);
-  if (search.minRating > 0) labels.push(`${search.minRating}+ rating`);
   labels.push(...search.propertyTypes);
   labels.push(...search.amenities);
 

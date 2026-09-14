@@ -7,7 +7,6 @@ import {
   Home,
   MapPin,
   Sparkles,
-  Star,
   Timer,
   WalletCards,
 } from "lucide-react";
@@ -173,7 +172,7 @@ export default async function HostPage() {
                 tone="gold"
               />
               <HostSignal
-                icon={Star}
+                icon={WalletCards}
                 label="Average nightly"
                 value={averageNightly ? formatMoney(averageNightly) : "$0"}
                 tone="pink"
@@ -303,8 +302,8 @@ function HostListingRow({ listing }: { listing: Listing }) {
       <div className="flex items-center justify-between gap-4 md:block md:text-right">
         <p className="font-semibold">{formatMoney(listing.pricePerNight)}/night</p>
         <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-[#5f5148] md:justify-end">
-          <Star className="h-4 w-4 fill-[#201a18]" aria-hidden="true" />
-          {listing.rating.toFixed(2)}
+          <CheckCircle2 className="h-4 w-4 text-[#315d3b]" aria-hidden="true" />
+          Live listing
         </p>
         <Link
           href={`/listings/${listing.id}`}

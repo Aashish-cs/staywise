@@ -16,7 +16,6 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
-  Star,
   Trees,
   UserRound,
   Users,
@@ -695,11 +694,9 @@ function MarketplaceListingCard({
             className="object-cover transition duration-500 group-hover:scale-105"
           />
         </Link>
-        {listing.rating >= 4.86 && (
-          <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-extrabold text-[#201a18] shadow-sm">
-            Wise pick
-          </span>
-        )}
+        <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-extrabold text-[#201a18] shadow-sm">
+          Live listing
+        </span>
         <button
           type="button"
           aria-label={`${saved ? "Remove saved" : "Save"} ${listing.title}`}
@@ -724,9 +721,8 @@ function MarketplaceListingCard({
               {listing.neighborhood}, {listing.city}
             </p>
           </div>
-          <span className="flex shrink-0 items-center gap-1 text-sm font-extrabold">
-            <Star className="h-4 w-4 fill-[#201a18]" aria-hidden="true" />
-            {listing.rating.toFixed(2)}
+          <span className="shrink-0 rounded-full bg-[#f7f3ee] px-3 py-1 text-xs font-extrabold text-[#5f5148]">
+            {listing.capacity} guests
           </span>
         </div>
         <p className="mt-2 text-sm text-[#5f5148]">
@@ -853,7 +849,7 @@ function buildListingSections(
   const valuePicks = [...listings].sort(
     (first, second) =>
       first.pricePerNight - second.pricePerNight ||
-      second.rating - first.rating,
+      second.matchScore - first.matchScore,
   );
 
   return [

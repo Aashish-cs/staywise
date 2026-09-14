@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
@@ -22,7 +22,7 @@ import {
   ListingSaveButton,
 } from "@/components/listing-card-primitives";
 import { StayWiseAccountMenu, StayWiseHeader } from "@/components/staywise-header";
-import { toggleFavoriteAction } from "@/app/favorites/actions";
+import { useSavedListings } from "@/hooks/use-saved-listings";
 import type { Listing } from "@/lib/listings";
 import { rankListings, searchSchema, type SearchInput } from "@/lib/recommendations";
 import {
@@ -67,9 +67,12 @@ export function MarketplaceHome({
   const [aiMessage, setAiMessage] = useState<string | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
   const [isAiSearching, setIsAiSearching] = useState(false);
-  const [savedIds, setSavedIds] = useState(initialFavoriteIds);
-  const [notice, setNotice] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
+  const { notice, savedIds, toggleSaved } = useSavedListings({
+    accountRole,
+    initialSavedIds: initialFavoriteIds,
+    isSignedIn,
+    signInHref: `/auth?mode=signin&next=${encodeURIComponent("/")}`,
+  });
 
   const topCity = useMemo(() => getTopCity(initialListings), [initialListings]);
   const cityOptions = useMemo(
@@ -169,54 +172,6 @@ export function MarketplaceHome({
     } finally {
       setIsAiSearching(false);
     }
-  }
-
-  function toggleSaved(id: string) {
-    if (!isSignedIn) {
-      router.push(`/auth?mode=signin&next=${encodeURIComponent("/")}`);
-      return;
-    }
-
-    if (accountRole !== "guest") {
-      setNotice("Use a guest account to save stays.");
-      return;
-    }
-
-    const wasSaved = savedIds.includes(id);
-    const intent = wasSaved ? "remove" : "save";
-    setSavedIds((current) =>
-      intent === "remove"
-        ? current.filter((savedId) => savedId !== id)
-        : [...current, id],
-    );
-    setNotice(null);
-
-    startTransition(() => {
-      const formData = new FormData();
-      formData.set("listingId", id);
-      formData.set("intent", intent);
-      void toggleFavoriteAction(formData)
-        .then((result) => {
-          if (result?.ok) {
-            return;
-          }
-
-          setSavedIds((current) =>
-            wasSaved
-              ? Array.from(new Set([...current, id]))
-              : current.filter((savedId) => savedId !== id),
-          );
-          setNotice(result?.message ?? "This saved stay change did not finish.");
-        })
-        .catch(() => {
-          setSavedIds((current) =>
-            wasSaved
-              ? Array.from(new Set([...current, id]))
-              : current.filter((savedId) => savedId !== id),
-          );
-          setNotice("This saved stay change did not finish.");
-        });
-    });
   }
 
   return (

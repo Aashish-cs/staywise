@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
@@ -26,7 +26,7 @@ import {
   ListingSaveButton,
 } from "@/components/listing-card-primitives";
 import { StayWiseAccountMenu, StayWiseHeader } from "@/components/staywise-header";
-import { toggleFavoriteAction } from "@/app/favorites/actions";
+import { useSavedListings } from "@/hooks/use-saved-listings";
 import {
   featuredAmenities,
   type Listing,
@@ -114,13 +114,10 @@ export function SearchExperience({
   const [sortMode, setSortMode] = useState<SortMode>("recommended");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showMapPanel, setShowMapPanel] = useState(false);
-  const [savedIds, setSavedIds] = useState<string[]>(initialFavoriteIds);
-  const [notice, setNotice] = useState<string | null>(null);
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiMessage, setAiMessage] = useState<string | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
   const [isAiSearching, setIsAiSearching] = useState(false);
-  const [, startTransition] = useTransition();
 
   const rankedListings = useMemo(
     () => rankListings(search, initialListings),
@@ -140,6 +137,13 @@ export function SearchExperience({
     );
   }, [initialListings]);
   const listingDetailQuery = buildSearchQueryString(search);
+  const searchHref = `/search${listingDetailQuery ? `?${listingDetailQuery}` : ""}`;
+  const { notice, savedIds, setNotice, toggleSaved } = useSavedListings({
+    accountRole,
+    initialSavedIds: initialFavoriteIds,
+    isSignedIn,
+    signInHref: `/auth?mode=signin&next=${encodeURIComponent(searchHref)}`,
+  });
   const resultSummary = getSearchResultSummary(displayedListings, search);
   const activeFilterLabels = getActiveSearchFilterLabels(search);
   const averageNightlyRate =
@@ -256,56 +260,6 @@ export function SearchExperience({
     } finally {
       setIsAiSearching(false);
     }
-  }
-
-  function toggleSaved(id: string) {
-    if (!isSignedIn) {
-      const query = buildSearchQueryString(search);
-      const next = `/search${query ? `?${query}` : ""}`;
-      router.push(`/auth?mode=signin&next=${encodeURIComponent(next)}`);
-      return;
-    }
-
-    if (accountRole !== "guest") {
-      setNotice("Use a guest account to save stays.");
-      return;
-    }
-
-    const wasSaved = savedIds.includes(id);
-    const intent = wasSaved ? "remove" : "save";
-    setSavedIds((current) =>
-      intent === "remove"
-        ? current.filter((savedId) => savedId !== id)
-        : [...current, id],
-    );
-    setNotice(null);
-
-    startTransition(() => {
-      const formData = new FormData();
-      formData.set("listingId", id);
-      formData.set("intent", intent);
-      void toggleFavoriteAction(formData)
-        .then((result) => {
-          if (result?.ok) {
-            return;
-          }
-
-          setSavedIds((current) =>
-            wasSaved
-              ? Array.from(new Set([...current, id]))
-              : current.filter((savedId) => savedId !== id),
-          );
-          setNotice(result?.message ?? "This saved stay change did not finish.");
-        })
-        .catch(() => {
-          setSavedIds((current) =>
-            wasSaved
-              ? Array.from(new Set([...current, id]))
-              : current.filter((savedId) => savedId !== id),
-          );
-          setNotice("This saved stay change did not finish.");
-        });
-    });
   }
 
   function focusSearch() {

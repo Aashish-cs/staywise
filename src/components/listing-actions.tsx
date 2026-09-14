@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { CheckCircle2, Heart, Share2 } from "lucide-react";
-import { toggleFavoriteAction } from "@/app/favorites/actions";
+import { useSavedListings } from "@/hooks/use-saved-listings";
 
 export function ListingActions({
   accountRole,
@@ -21,47 +19,19 @@ export function ListingActions({
   listingTitle: string;
   signInHref: string;
 }) {
-  const router = useRouter();
-  const [saved, setSaved] = useState(initialSaved);
-  const [message, setMessage] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
-
-  function toggleSaved() {
-    if (!isSignedIn) {
-      router.push(signInHref);
-      return;
-    }
-
-    if (accountRole !== "guest") {
-      setMessage("Use a guest account to save stays.");
-      return;
-    }
-
-    const wasSaved = saved;
-    const intent = wasSaved ? "remove" : "save";
-    setSaved(!wasSaved);
-    setMessage(null);
-
-    startTransition(() => {
-      const formData = new FormData();
-      formData.set("listingId", listingId);
-      formData.set("intent", intent);
-      void toggleFavoriteAction(formData)
-        .then((result) => {
-          if (result?.ok) {
-            setMessage(result.message);
-            return;
-          }
-
-          setSaved(wasSaved);
-          setMessage(result?.message ?? "This saved stay change did not finish.");
-        })
-        .catch(() => {
-          setSaved(wasSaved);
-          setMessage("This saved stay change did not finish.");
-        });
-    });
-  }
+  const {
+    isSaved,
+    notice: message,
+    setNotice: setMessage,
+    toggleSaved,
+  } = useSavedListings({
+    accountRole,
+    initialSavedIds: initialSaved ? [listingId] : [],
+    isSignedIn,
+    showSuccessMessage: true,
+    signInHref,
+  });
+  const saved = isSaved(listingId);
 
   async function shareListing() {
     const url = window.location.href;
@@ -94,7 +64,7 @@ export function ListingActions({
               : "border-[#eadfd6] bg-white text-[#201a18]",
           )}
           aria-pressed={saved}
-          onClick={toggleSaved}
+          onClick={() => toggleSaved(listingId)}
         >
           <Heart
             className={clsx("h-4 w-4", saved && "fill-[#ff385c]")}

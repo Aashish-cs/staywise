@@ -67,6 +67,10 @@ type AvailableListingIdRow = {
   listing_id: string;
 };
 
+type SupabaseQueryError = {
+  message?: string;
+};
+
 export type ListingAvailabilityStatus = {
   available: boolean | null;
   message: string;
@@ -104,6 +108,9 @@ const listingSelect = `
   )
 `;
 
+const publicListingLoadAttempts = 3;
+const publicListingRetryDelayMs = 250;
+
 export async function getPublicListings() {
   const supabase = await createSupabaseServerClient();
 
@@ -111,19 +118,29 @@ export async function getPublicListings() {
     return [];
   }
 
-  const { data, error } = await supabase
-    .from("listings")
-    .select(listingSelect)
-    .eq("is_active", true)
-    .order("created_at", { ascending: false })
-    .limit(80);
+  for (let attempt = 1; attempt <= publicListingLoadAttempts; attempt += 1) {
+    const { data, error } = await loadPublicListingRows(supabase);
 
-  if (error) {
-    console.error("Unable to load listings", error);
-    return [];
+    if (!error) {
+      return ((data ?? []) as ListingRow[]).map(mapListingRow);
+    }
+
+    if (
+      attempt === publicListingLoadAttempts ||
+      !isTransientSupabaseError(error)
+    ) {
+      console.error("Unable to load listings", error);
+      return [];
+    }
+
+    console.warn("Retrying public listings after transient Supabase error", {
+      attempt,
+      message: error.message,
+    });
+    await wait(publicListingRetryDelayMs * attempt);
   }
 
-  return ((data ?? []) as ListingRow[]).map(mapListingRow);
+  return [];
 }
 
 export async function getPublicListingsForDates(
@@ -247,6 +264,30 @@ async function getAvailableListingIds(checkIn: string, checkOut: string) {
       .map((row) => row.listing_id)
       .filter(Boolean),
   );
+}
+
+async function loadPublicListingRows(supabase: SupabaseClient) {
+  return supabase
+    .from("listings")
+    .select(listingSelect)
+    .eq("is_active", true)
+    .order("created_at", { ascending: false })
+    .limit(80);
+}
+
+function isTransientSupabaseError(error: SupabaseQueryError) {
+  const message = error.message?.toLowerCase() ?? "";
+
+  return (
+    message.includes("bad gateway") ||
+    message.includes("failed to get project config") ||
+    message.includes("fetch failed") ||
+    message.includes("network")
+  );
+}
+
+function wait(milliseconds: number) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 function shouldCheckAvailability(checkIn: string, checkOut: string) {

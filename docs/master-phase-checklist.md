@@ -32,6 +32,7 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Current pass: shared listing-card media/save primitives extracted into `src/components/listing-card-primitives.tsx`.
   - Current pass: search result sorting/summary/filter helpers extracted into `src/lib/search-results.ts`.
   - Current pass: listing coordinate fallback and OpenStreetMap URL helpers extracted into `src/lib/listing-map.ts`.
+  - Current pass: public listing reads now retry transient Supabase gateway/config errors before showing empty marketplace states.
 
 - [ ] Phase 3: Database design
   - Audit current Supabase schema.

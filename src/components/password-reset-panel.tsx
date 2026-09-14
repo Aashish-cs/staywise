@@ -27,7 +27,9 @@ export function PasswordResetPanel() {
     try {
       const supabase = createSupabaseBrowserClient();
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/update-password`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+          "/auth/update-password",
+        )}`,
       });
 
       if (resetError) {
@@ -60,6 +62,7 @@ export function PasswordResetPanel() {
                 onChange={(event) => setEmail(event.target.value)}
                 className="field-input"
                 placeholder="name@example.com"
+                autoComplete="email"
                 required
               />
             </span>

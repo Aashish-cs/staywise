@@ -50,10 +50,11 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Enforce public read rules, guest ownership rules, host ownership rules, reservation access rules, review eligibility, and image permissions in RLS/server logic.
   - Current pass: documented policy coverage in `docs/phase-4-rls-audit.md`, hardened availability block ownership, and added host review read access without exposing profile emails publicly.
 
-- [~] Phase 5: Authentication
+- [x] Phase 5: Authentication
   - Verify signup, signin, signout, email confirmation, forgot/reset password, callback, sessions, protected routes, return-to-route, auth-required actions, validation, loading, errors, password visibility, labels, and mobile forms.
+  - Current pass: added callback error handling, recovery-link callback exchange, password visibility toggles, protected dashboard/host middleware redirects, `next` preservation, and `docs/phase-5-authentication.md`.
 
-- [ ] Phase 6: Real location system
+- [~] Phase 6: Real location system
   - Add legitimate place lookup/geocoding abstraction.
   - Store provider ids, formatted addresses, structured city/region/country, coordinates, and bounds where available.
   - Avoid fake city objects as the main architecture.

@@ -5,7 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
-import { ArrowRight, CheckCircle2, Mail, ShieldCheck, UserRound } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Mail,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 
@@ -13,10 +21,12 @@ type AuthMode = "signin" | "signup";
 type AccountRole = "guest" | "host";
 
 export function AuthPanel({
+  initialError,
   initialMode = "signup",
   initialNext,
   initialRole = "guest",
 }: {
+  initialError?: string | null;
   initialMode?: AuthMode;
   initialNext?: string | null;
   initialRole?: AccountRole;
@@ -28,7 +38,8 @@ export function AuthPanel({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError ?? null);
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -147,7 +158,11 @@ export function AuthPanel({
                     ? "bg-[#201a18] text-white"
                     : "text-[#5f5148] hover:text-[#201a18]",
                 )}
-                onClick={() => setMode(item)}
+                onClick={() => {
+                  setMode(item);
+                  setError(null);
+                  setMessage(null);
+                }}
               >
                 {item === "signup" ? "Create account" : "Sign in"}
               </button>
@@ -223,7 +238,7 @@ export function AuthPanel({
               <span className="field-shell">
                 <ShieldCheck className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   className="field-input"
@@ -231,6 +246,18 @@ export function AuthPanel({
                   autoComplete={mode === "signup" ? "new-password" : "current-password"}
                   required
                 />
+                <button
+                  type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="rounded-full p-1 text-[#786a60] hover:bg-[#f7f3ee] hover:text-[#201a18]"
+                  onClick={() => setShowPassword((current) => !current)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Eye className="h-4 w-4" aria-hidden="true" />
+                  )}
+                </button>
               </span>
             </label>
 

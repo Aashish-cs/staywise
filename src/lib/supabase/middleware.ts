@@ -30,7 +30,33 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getClaims();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user && isProtectedWorkspace(request.nextUrl.pathname)) {
+    const redirectUrl = new URL("/auth", request.url);
+    redirectUrl.searchParams.set("mode", "signin");
+    redirectUrl.searchParams.set(
+      "next",
+      `${request.nextUrl.pathname}${request.nextUrl.search}`,
+    );
+
+    if (request.nextUrl.pathname.startsWith("/host")) {
+      redirectUrl.searchParams.set("role", "host");
+    }
+
+    return NextResponse.redirect(redirectUrl);
+  }
 
   return response;
+}
+
+function isProtectedWorkspace(pathname: string) {
+  return (
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
+    pathname === "/host" ||
+    pathname.startsWith("/host/")
+  );
 }

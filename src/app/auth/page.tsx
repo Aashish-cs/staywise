@@ -10,10 +10,12 @@ export default async function AuthPage({ searchParams }: PageProps<"/auth">) {
   const mode = firstParam(params.mode) === "signin" ? "signin" : "signup";
   const role = firstParam(params.role) === "host" ? "host" : "guest";
   const next = parseSafeNext(firstParam(params.next));
+  const authError = getAuthErrorMessage(firstParam(params.error));
 
   return (
     <AuthPanel
-      key={`${mode}-${role}-${next ?? ""}`}
+      key={`${mode}-${role}-${next ?? ""}-${authError ?? ""}`}
+      initialError={authError}
       initialMode={mode}
       initialNext={next}
       initialRole={role}
@@ -31,4 +33,24 @@ function parseSafeNext(value: string | undefined) {
   }
 
   return value;
+}
+
+function getAuthErrorMessage(value: string | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  if (value === "callback") {
+    return "We could not finish sign-in from that email link. Try signing in again.";
+  }
+
+  if (value === "missing-code") {
+    return "That email link is missing its verification code. Request a new link.";
+  }
+
+  if (value === "expired") {
+    return "That email link expired. Request a new link and try again.";
+  }
+
+  return "Authentication could not be completed. Try again.";
 }

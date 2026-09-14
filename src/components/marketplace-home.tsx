@@ -24,6 +24,15 @@ import {
 import { toggleFavoriteAction } from "@/app/favorites/actions";
 import type { Listing } from "@/lib/listings";
 import { rankListings, searchSchema, type SearchInput } from "@/lib/recommendations";
+import {
+  broadMarketplaceSearchInput,
+  createListingSearchInput,
+  familySearchPreset,
+  homeSearchInput,
+  outdoorSearchPreset,
+  valueSearchPreset,
+  workReadySearchPreset,
+} from "@/lib/search-presets";
 import { buildSearchQueryString } from "@/lib/search-url";
 
 type MarketplaceHomeProps = {
@@ -41,19 +50,6 @@ type CategoryItem = {
 };
 
 type RankedListing = ReturnType<typeof rankListings>[number];
-
-const baseSearch: SearchInput = {
-  destination: "",
-  checkIn: "",
-  checkOut: "",
-  guests: 2,
-  maxNightlyBudget: 300,
-  minBathrooms: 0,
-  minBedrooms: 0,
-  propertyTypes: [],
-  tripPurpose: "remote-work",
-  amenities: ["Fast Wi-Fi", "Workspace"],
-};
 
 export function MarketplaceHome({
   accountRole,
@@ -84,16 +80,7 @@ export function MarketplaceHome({
     [initialListings],
   );
   const rankedListings = useMemo(
-    () =>
-      rankListings(
-        {
-          ...baseSearch,
-          amenities: [],
-          destination: "",
-          maxNightlyBudget: 1200,
-        },
-        initialListings,
-      ),
+    () => rankListings(broadMarketplaceSearchInput, initialListings),
     [initialListings],
   );
   const sections = useMemo(
@@ -123,7 +110,7 @@ export function MarketplaceHome({
 
   function getCurrentSearch(): SearchInput {
     return searchSchema.parse({
-      ...baseSearch,
+      ...homeSearchInput,
       checkIn,
       checkOut,
       destination,
@@ -668,9 +655,7 @@ function MarketplaceListingCard({
   saved: boolean;
 }) {
   const query = buildSearchQueryString({
-    ...baseSearch,
-    destination: listing.city,
-    maxNightlyBudget: Math.max(listing.pricePerNight + 60, baseSearch.maxNightlyBudget),
+    ...createListingSearchInput(listing),
   });
 
   return (
@@ -789,29 +774,19 @@ function buildCategoryItems(topCity: string | null): CategoryItem[] {
     },
     {
       description: "Desk, Wi-Fi, easy check-in",
-      href: makeSearchHref({
-        amenities: ["Fast Wi-Fi", "Workspace"],
-        tripPurpose: "remote-work",
-      }),
+      href: makeSearchHref(workReadySearchPreset),
       icon: Wifi,
       label: "Work-ready",
     },
     {
       description: "More room, kitchens, parking",
-      href: makeSearchHref({
-        amenities: ["Kitchen", "Parking", "Washer"],
-        guests: 5,
-        tripPurpose: "family",
-      }),
+      href: makeSearchHref(familySearchPreset),
       icon: Users,
       label: "Family trips",
     },
     {
       description: "Basecamps and easy parking",
-      href: makeSearchHref({
-        amenities: ["Parking", "Pet friendly"],
-        tripPurpose: "outdoor",
-      }),
+      href: makeSearchHref(outdoorSearchPreset),
       icon: Trees,
       label: "Outdoors",
     },
@@ -856,27 +831,19 @@ function buildListingSections(
       title: topCity ? `Popular stays in ${topCity}` : "Popular stays",
     },
     {
-      href: getHref({
-        amenities: ["Fast Wi-Fi", "Workspace"],
-        tripPurpose: "remote-work",
-      }),
+      href: getHref(workReadySearchPreset),
       listings: workReady.slice(0, 8),
       subtitle: "Fast Wi-Fi, workspace signals, and focused layouts.",
       title: "Work-ready stays",
     },
     {
-      href: getHref({
-        guests: 5,
-        tripPurpose: "family",
-      }),
+      href: getHref(familySearchPreset),
       listings: groupReady.slice(0, 8),
       subtitle: "More room for families, friends, and longer weekends.",
       title: "Room for the whole trip",
     },
     {
-      href: getHref({
-        maxNightlyBudget: 220,
-      }),
+      href: getHref(valueSearchPreset),
       listings: valuePicks.slice(0, 8),
       subtitle: "Lower nightly rates without losing the essentials.",
       title: "Smart value picks",
@@ -886,7 +853,7 @@ function buildListingSections(
 
 function makeSearchHref(input: Partial<SearchInput>) {
   const query = buildSearchQueryString({
-    ...baseSearch,
+    ...homeSearchInput,
     ...input,
   });
 

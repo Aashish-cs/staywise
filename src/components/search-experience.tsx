@@ -26,12 +26,19 @@ import {
 import { toggleFavoriteAction } from "@/app/favorites/actions";
 import {
   featuredAmenities,
-  type PropertyType,
   type Listing,
+  type PropertyType,
   tripPurposeLabels,
   type TripPurpose,
 } from "@/lib/listings";
 import { rankListings, searchSchema, type SearchInput } from "@/lib/recommendations";
+import {
+  defaultSearchInput,
+  familySearchPreset,
+  outdoorSearchPreset,
+  propertyTypeOptions,
+  workReadySearchPreset,
+} from "@/lib/search-presets";
 import { buildSearchQueryString } from "@/lib/search-url";
 
 type SortMode = "recommended" | "price-low" | "space";
@@ -47,28 +54,6 @@ const purposeIcons: Record<TripPurpose, typeof BriefcaseBusiness> = {
   outdoor: Trees,
 };
 
-const defaultSearch: SearchInput = {
-  destination: "",
-  checkIn: "",
-  checkOut: "",
-  guests: 2,
-  maxNightlyBudget: 250,
-  minBathrooms: 0,
-  minBedrooms: 0,
-  propertyTypes: [],
-  tripPurpose: "remote-work",
-  amenities: ["Fast Wi-Fi", "Workspace"],
-};
-
-const propertyTypes: PropertyType[] = [
-  "Apartment",
-  "House",
-  "Cabin",
-  "Loft",
-  "Townhome",
-  "Villa",
-];
-
 const searchCategoryLinks = [
   {
     href: "/search",
@@ -76,27 +61,17 @@ const searchCategoryLinks = [
     label: "All stays",
   },
   {
-    href: makeSearchHref({
-      amenities: ["Fast Wi-Fi", "Workspace"],
-      tripPurpose: "remote-work",
-    }),
+    href: makeSearchHref(workReadySearchPreset),
     icon: Wifi,
     label: "Work-ready",
   },
   {
-    href: makeSearchHref({
-      amenities: ["Kitchen", "Parking", "Washer"],
-      guests: 5,
-      tripPurpose: "family",
-    }),
+    href: makeSearchHref(familySearchPreset),
     icon: Users,
     label: "Family trips",
   },
   {
-    href: makeSearchHref({
-      amenities: ["Parking", "Pet friendly"],
-      tripPurpose: "outdoor",
-    }),
+    href: makeSearchHref(outdoorSearchPreset),
     icon: Trees,
     label: "Outdoors",
   },
@@ -119,7 +94,7 @@ export function SearchExperience({
 }) {
   const router = useRouter();
   const [search, setSearch] = useState<SearchInput>(() =>
-    searchSchema.parse({ ...defaultSearch, ...initialSearch }),
+    searchSchema.parse({ ...defaultSearchInput, ...initialSearch }),
   );
   const [sortMode, setSortMode] = useState<SortMode>("recommended");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -179,7 +154,7 @@ export function SearchExperience({
     search.propertyTypes.length +
     (search.minBedrooms > 0 ? 1 : 0) +
     (search.minBathrooms > 0 ? 1 : 0) +
-    (search.maxNightlyBudget !== defaultSearch.maxNightlyBudget ? 1 : 0);
+    (search.maxNightlyBudget !== defaultSearchInput.maxNightlyBudget ? 1 : 0);
   const selectedPropertyTypeLabel =
     search.propertyTypes.length > 0
       ? search.propertyTypes.join(", ")
@@ -213,7 +188,7 @@ export function SearchExperience({
     setSearch((current) => ({
       ...current,
       amenities: [],
-      maxNightlyBudget: defaultSearch.maxNightlyBudget,
+      maxNightlyBudget: defaultSearchInput.maxNightlyBudget,
       minBathrooms: 0,
       minBedrooms: 0,
       propertyTypes: [],
@@ -642,7 +617,7 @@ export function SearchExperience({
                 <div className="mt-4">
                   <span className="field-label">Property type</span>
                   <div className="grid grid-cols-2 gap-2">
-                    {propertyTypes.map((propertyType) => {
+                    {propertyTypeOptions.map((propertyType) => {
                       const active = search.propertyTypes.includes(propertyType);
 
                       return (
@@ -1320,7 +1295,7 @@ function getActiveFilterLabels(search: SearchInput) {
 
 function makeSearchHref(input: Partial<SearchInput>) {
   const query = buildSearchQueryString({
-    ...defaultSearch,
+    ...defaultSearchInput,
     ...input,
   });
 

@@ -26,6 +26,7 @@ import {
   getTodayIso,
 } from "@/lib/reservation-utils";
 import { rankListings } from "@/lib/recommendations";
+import { workReadySearchPreset } from "@/lib/search-presets";
 
 export const dynamic = "force-dynamic";
 
@@ -45,8 +46,7 @@ export default async function DashboardPage() {
       maxNightlyBudget: reservations[0]?.nightlyRate
         ? reservations[0].nightlyRate + 80
         : 260,
-      tripPurpose: "remote-work",
-      amenities: ["Fast Wi-Fi", "Workspace"],
+      ...workReadySearchPreset,
     },
     publicListings,
   ).slice(0, 3);

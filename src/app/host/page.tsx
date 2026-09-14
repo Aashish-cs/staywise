@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -10,6 +9,7 @@ import {
   WalletCards,
 } from "lucide-react";
 import { HostListingForm } from "@/components/host-listing-form";
+import { ListingCardMedia } from "@/components/listing-card-primitives";
 import { StayWiseHeader } from "@/components/staywise-header";
 import {
   getCurrentUserProfile,
@@ -252,14 +252,12 @@ function HostListingRow({ listing }: { listing: Listing }) {
     <article className="grid gap-4 py-5 md:grid-cols-[140px_1fr_auto] md:items-center">
       <Link
         href={`/listings/${listing.id}`}
-        className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-[#e8dfd6]"
+        className="block"
       >
-        <Image
-          src={listing.imageUrl}
-          alt={listing.imageAlt}
-          fill
+        <ListingCardMedia
+          frameClassName="rounded-2xl"
+          listing={listing}
           sizes="128px"
-          className="object-cover"
         />
       </Link>
       <div>

@@ -13,6 +13,7 @@ import {
   Timer,
 } from "lucide-react";
 import { cancelReservationAction } from "@/app/dashboard/actions";
+import { ListingCardMedia } from "@/components/listing-card-primitives";
 import { StayWiseHeader } from "@/components/staywise-header";
 import {
   getCurrentUserProfile,
@@ -251,16 +252,12 @@ export default async function DashboardPage() {
                 {recommendations.map((listing, index) => (
                   <article key={listing.id} className="overflow-hidden rounded-[22px] border border-[#eadfd6] bg-white shadow-sm">
                     <Link href={`/listings/${listing.id}`}>
-                      <div className="relative aspect-[4/3] bg-[#e8dfd6]">
-                        <Image
-                          src={listing.imageUrl}
-                          alt={listing.imageAlt}
-                          fill
-                          priority={index === 0}
-                          sizes="(min-width: 768px) 33vw, 100vw"
-                          className="object-cover"
-                        />
-                      </div>
+                      <ListingCardMedia
+                        frameClassName="rounded-none"
+                        listing={listing}
+                        priority={index === 0}
+                        sizes="(min-width: 768px) 33vw, 100vw"
+                      />
                       <div className="p-4">
                         <div className="flex items-start justify-between gap-3">
                           <h3 className="font-semibold">{listing.title}</h3>
@@ -307,15 +304,11 @@ export default async function DashboardPage() {
                     className="overflow-hidden rounded-[22px] border border-[#eadfd6] bg-white shadow-sm"
                   >
                     <Link href={`/listings/${listing.id}`}>
-                      <div className="relative aspect-[4/3] bg-[#e8dfd6]">
-                        <Image
-                          src={listing.imageUrl}
-                          alt={listing.imageAlt}
-                          fill
-                          sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
-                          className="object-cover"
-                        />
-                      </div>
+                      <ListingCardMedia
+                        frameClassName="rounded-none"
+                        listing={listing}
+                        sizes="(min-width: 1280px) 25vw, (min-width: 768px) 50vw, 100vw"
+                      />
                       <div className="p-4">
                         <div className="flex items-start justify-between gap-3">
                           <h3 className="line-clamp-2 text-sm font-extrabold">

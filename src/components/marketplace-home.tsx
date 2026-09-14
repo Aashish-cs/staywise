@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
@@ -9,7 +8,6 @@ import {
   ArrowRight,
   CalendarDays,
   Car,
-  Heart,
   Home,
   MapPin,
   Search,
@@ -19,6 +17,10 @@ import {
   Users,
   Wifi,
 } from "lucide-react";
+import {
+  ListingCardMedia,
+  ListingSaveButton,
+} from "@/components/listing-card-primitives";
 import { StayWiseAccountMenu, StayWiseHeader } from "@/components/staywise-header";
 import { toggleFavoriteAction } from "@/app/favorites/actions";
 import type { Listing } from "@/lib/listings";
@@ -584,35 +586,25 @@ function MarketplaceListingCard({
   return (
     <article className="group min-w-0">
       <div className="relative overflow-hidden rounded-[22px] bg-[#e8dfd6]">
-        <Link
+        <ListingCardMedia
           href={`/listings/${listing.id}?${query}`}
           aria-label={`View ${listing.title}`}
-          className="block aspect-[4/3]"
-        >
-          <Image
-            src={listing.imageUrl}
-            alt={listing.imageAlt}
-            fill
-            priority={priority}
-            sizes="(min-width: 1280px) 280px, (min-width: 768px) 33vw, 82vw"
-            className="object-cover transition duration-500 group-hover:scale-105"
-          />
-        </Link>
+          frameClassName="block"
+          imageClassName="transition duration-500 group-hover:scale-105"
+          listing={listing}
+          priority={priority}
+          sizes="(min-width: 1280px) 280px, (min-width: 768px) 33vw, 82vw"
+        />
         <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-extrabold text-[#201a18] shadow-sm">
           Live listing
         </span>
-        <button
-          type="button"
-          aria-label={`${saved ? "Remove saved" : "Save"} ${listing.title}`}
-          aria-pressed={saved}
+        <ListingSaveButton
           className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#201a18] shadow-sm backdrop-blur transition hover:scale-105"
+          iconClassName="h-5 w-5"
+          listingTitle={listing.title}
           onClick={() => onToggleSaved(listing.id)}
-        >
-          <Heart
-            className={clsx("h-5 w-5", saved && "fill-[#ff385c] text-[#ff385c]")}
-            aria-hidden="true"
-          />
-        </button>
+          saved={saved}
+        />
       </div>
 
       <Link href={`/listings/${listing.id}?${query}`} className="mt-3 block">

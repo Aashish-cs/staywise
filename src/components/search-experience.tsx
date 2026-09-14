@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
@@ -22,6 +21,10 @@ import {
   Users,
   Wifi,
 } from "lucide-react";
+import {
+  ListingCardMedia,
+  ListingSaveButton,
+} from "@/components/listing-card-primitives";
 import { StayWiseAccountMenu, StayWiseHeader } from "@/components/staywise-header";
 import { toggleFavoriteAction } from "@/app/favorites/actions";
 import {
@@ -737,19 +740,16 @@ export function SearchExperience({
                         aria-label={`View details for ${listing.title}`}
                         onClick={() => setSelectedId(listing.id)}
                       >
-                        <div className="relative aspect-[4/3] overflow-hidden bg-[#e8dfd6]">
-                          <Image
-                            src={listing.imageUrl}
-                            alt={listing.imageAlt}
-                            fill
-                            priority={index === 0}
-                            sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
-                            className="object-cover transition duration-500 group-hover:scale-105"
-                          />
+                        <ListingCardMedia
+                          imageClassName="transition duration-500 group-hover:scale-105"
+                          listing={listing}
+                          priority={index === 0}
+                          sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
+                        >
                           <div className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-sm font-semibold shadow-sm">
                             {listing.matchScore}% match
                           </div>
-                        </div>
+                        </ListingCardMedia>
 
                         <div className="p-4">
                           <div className="flex items-start justify-between gap-3">
@@ -785,25 +785,14 @@ export function SearchExperience({
                       </button>
 
                       <div className="flex items-center justify-between border-t border-[#f0e7df] px-4 py-3">
-                        <button
-                          type="button"
+                        <ListingSaveButton
                           className="flex h-9 items-center gap-2 rounded-full px-3 text-sm font-semibold hover:bg-[#fff3f5]"
+                          iconClassName="h-4 w-4"
+                          listingTitle={listing.title}
                           onClick={() => toggleSaved(listing.id)}
-                          aria-label={`${
-                            savedIds.includes(listing.id) ? "Remove saved" : "Save"
-                          } ${listing.title}`}
-                          aria-pressed={savedIds.includes(listing.id)}
-                        >
-                          <Heart
-                            className={clsx(
-                              "h-4 w-4",
-                              savedIds.includes(listing.id) &&
-                                "fill-[#ff385c] text-[#ff385c]",
-                            )}
-                            aria-hidden="true"
-                          />
-                          Save
-                        </button>
+                          saved={savedIds.includes(listing.id)}
+                          showLabel
+                        />
                         <Link
                           href={`/listings/${listing.id}${
                             listingDetailQuery ? `?${listingDetailQuery}` : ""

@@ -33,6 +33,17 @@ create table if not exists public.listings (
   bathrooms numeric(3, 1) not null check (bathrooms >= 0),
   latitude numeric(9, 6),
   longitude numeric(9, 6),
+  place_provider text not null default 'manual',
+  place_provider_id text,
+  formatted_address text,
+  address_city text,
+  address_region text,
+  address_country text,
+  address_country_code text,
+  bounds_south numeric(10, 7),
+  bounds_north numeric(10, 7),
+  bounds_west numeric(10, 7),
+  bounds_east numeric(10, 7),
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -181,6 +192,10 @@ create table if not exists public.payment_records (
 
 create index if not exists listings_city_state_idx on public.listings (city, state);
 create index if not exists listings_host_idx on public.listings (host_id);
+create index if not exists listings_place_provider_idx
+  on public.listings (place_provider, place_provider_id);
+create index if not exists listings_address_city_region_idx
+  on public.listings (address_city, address_region);
 create index if not exists reservations_guest_idx on public.reservations (guest_id);
 create index if not exists reservations_listing_dates_idx on public.reservations (listing_id, start_date, end_date);
 create index if not exists trips_guest_idx on public.trips (guest_id);
@@ -233,6 +248,46 @@ begin
       exclude using gist (
         listing_id with =,
         daterange(start_date, end_date, '[)') with &&
+      );
+  end if;
+end $$;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'listings_place_provider_check'
+      and conrelid = 'public.listings'::regclass
+  ) then
+    alter table public.listings
+      add constraint listings_place_provider_check
+      check (place_provider in ('manual', 'nominatim'));
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'listings_bounds_check'
+      and conrelid = 'public.listings'::regclass
+  ) then
+    alter table public.listings
+      add constraint listings_bounds_check
+      check (
+        (
+          bounds_south is null
+          and bounds_north is null
+          and bounds_west is null
+          and bounds_east is null
+        )
+        or (
+          bounds_south between -90 and 90
+          and bounds_north between -90 and 90
+          and bounds_west between -180 and 180
+          and bounds_east between -180 and 180
+          and bounds_south <= bounds_north
+          and bounds_west <= bounds_east
+        )
       );
   end if;
 end $$;

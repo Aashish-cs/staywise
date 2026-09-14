@@ -11,6 +11,7 @@ import {
   parseSearchParams,
   type RawSearchParams,
 } from "@/lib/search-url";
+import { resolveSearchLocation } from "@/lib/location-service";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   );
   const { user, profile } = await getCurrentUserProfile();
   const favoriteIds = user ? await getFavoriteListingIds(user.id) : [];
+  const location = search.destination
+    ? await resolveLocationForPage(search.destination)
+    : null;
   const accountRole =
     profile?.role === "host" ? "host" : profile?.role === "guest" ? "guest" : null;
 
@@ -43,9 +47,19 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       accountRole={accountRole}
       initialFavoriteIds={favoriteIds}
       initialListings={listings}
+      initialLocation={location}
       initialSearch={search}
       isSignedIn={Boolean(user)}
       showProductSections={false}
     />
   );
+}
+
+async function resolveLocationForPage(destination: string) {
+  try {
+    return await resolveSearchLocation(destination);
+  } catch (error) {
+    console.error("Unable to resolve destination", error);
+    return null;
+  }
 }

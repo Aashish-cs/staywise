@@ -54,12 +54,13 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Verify signup, signin, signout, email confirmation, forgot/reset password, callback, sessions, protected routes, return-to-route, auth-required actions, validation, loading, errors, password visibility, labels, and mobile forms.
   - Current pass: added callback error handling, recovery-link callback exchange, password visibility toggles, protected dashboard/host middleware redirects, `next` preservation, and `docs/phase-5-authentication.md`.
 
-- [~] Phase 6: Real location system
+- [x] Phase 6: Real location system
   - Add legitimate place lookup/geocoding abstraction.
   - Store provider ids, formatted addresses, structured city/region/country, coordinates, and bounds where available.
   - Avoid fake city objects as the main architecture.
+  - Current pass: added server-side OpenStreetMap/Nominatim lookup, explicit location search API, submitted-destination verification with attribution, provider metadata listing columns, `supabase/phase6_location_foundation.sql`, and `docs/phase-6-location-system.md`.
 
-- [ ] Phase 7: Current location / near me
+- [~] Phase 7: Current location / near me
   - Implement browser geolocation with accepted, denied, unsupported, timeout, unavailable, loading, and retry states.
   - Reverse geocode returned coordinates and search nearby listings without hardcoding the user city.
   - Show distance when appropriate.

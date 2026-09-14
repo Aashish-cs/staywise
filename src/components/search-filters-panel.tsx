@@ -20,6 +20,7 @@ import {
   tripPurposeLabels,
   type TripPurpose,
 } from "@/lib/listings";
+import type { LocationLookupResult } from "@/lib/location-service";
 import type { SearchInput } from "@/lib/recommendations";
 import { propertyTypeOptions } from "@/lib/search-presets";
 
@@ -35,6 +36,7 @@ type SearchFiltersPanelProps = {
   aiPrompt: string;
   destinations: string[];
   isAiSearching: boolean;
+  location: LocationLookupResult | null;
   notice: string | null;
   onAiPromptChange: (value: string) => void;
   onApplyAiSearch: () => void;
@@ -63,6 +65,7 @@ export function SearchFiltersPanel({
   aiPrompt,
   destinations,
   isAiSearching,
+  location,
   notice,
   onAiPromptChange,
   onApplyAiSearch,
@@ -77,6 +80,9 @@ export function SearchFiltersPanel({
     search.propertyTypes.length > 0
       ? search.propertyTypes.join(", ")
       : "Any property type";
+  const verifiedLocation = isSameLocationQuery(search.destination, location)
+    ? location
+    : null;
 
   return (
     <aside
@@ -151,6 +157,28 @@ export function SearchFiltersPanel({
             />
           </span>
         </label>
+
+        {search.destination && (
+          <div className="rounded-2xl border border-[#eadfd6] bg-[#fbfaf8] p-3 text-xs font-semibold leading-5 text-[#5f5148]">
+            {verifiedLocation ? (
+              <>
+                <span className="block font-extrabold text-[#315d3b]">
+                  Verified place: {formatVerifiedPlace(verifiedLocation)}
+                </span>
+                <a
+                  href="https://www.openstreetmap.org/copyright"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-flex text-[#786a60] underline decoration-2 underline-offset-4 hover:text-[#ff385c]"
+                >
+                  Data © OpenStreetMap contributors
+                </a>
+              </>
+            ) : (
+              "Press Search to verify this destination with OpenStreetMap."
+            )}
+          </div>
+        )}
 
         {destinations.length > 0 && (
           <div className="flex flex-wrap gap-2">
@@ -366,4 +394,20 @@ export function SearchFiltersPanel({
       </div>
     </aside>
   );
+}
+
+function isSameLocationQuery(
+  destination: string,
+  location: LocationLookupResult | null,
+) {
+  return (
+    Boolean(location) &&
+    destination.trim().toLowerCase() === location?.query.trim().toLowerCase()
+  );
+}
+
+function formatVerifiedPlace(location: LocationLookupResult) {
+  return [location.city ?? location.name, location.region, location.country]
+    .filter(Boolean)
+    .join(", ");
 }

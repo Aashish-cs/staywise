@@ -14,7 +14,7 @@
 The Supabase schema is organized around durable marketplace entities:
 
 - Account data: `profiles` and `profile_settings`.
-- Listing data: `listings`, `listing_images`, `listing_amenities`, and `listing_availability_blocks`.
+- Listing data: `listings`, listing provider location metadata, `listing_images`, `listing_amenities`, and `listing_availability_blocks`.
 - Guest workflow data: `trips`, `favorites`, `reservations`, and `reviews`.
 - Product intelligence data: `recommendation_events`.
 - Payment-ready data: `payment_records`.
@@ -36,6 +36,10 @@ The first AI feature is explainable ranking. Listings are scored against a trip 
 Recommendation events are stored when users search, use AI-style prompt parsing, save listings, and confirm reservations. These events give later phases real signals for popularity, personalization, and evaluation without fabricating ratings or reviews.
 
 This is intentionally explainable for a senior design demo. It can be evaluated with synthetic scenarios and does not require paid model calls.
+
+## Location System
+
+StayWise uses a server-side location abstraction for submitted destinations. The current provider is OpenStreetMap/Nominatim, called only from server code for user-triggered searches. Results are cached, attributed, and normalized into provider id, display address, city, region, country, coordinates, and bounds. The app avoids client-side autocomplete against the public Nominatim API.
 
 ## Future AI Layer
 

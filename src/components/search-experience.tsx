@@ -24,6 +24,7 @@ import {
   type Listing,
   type PropertyType,
 } from "@/lib/listings";
+import type { LocationLookupResult } from "@/lib/location-service";
 import {
   rankListings,
   searchSchema,
@@ -70,6 +71,7 @@ export function SearchExperience({
   accountRole,
   initialFavoriteIds,
   initialListings,
+  initialLocation,
   initialSearch,
   isSignedIn,
   showProductSections = true,
@@ -77,6 +79,7 @@ export function SearchExperience({
   accountRole: "guest" | "host" | null;
   initialFavoriteIds: string[];
   initialListings: Listing[];
+  initialLocation?: LocationLookupResult | null;
   initialSearch?: Partial<SearchInput>;
   isSignedIn: boolean;
   showProductSections?: boolean;
@@ -275,6 +278,7 @@ export function SearchExperience({
             aiPrompt={aiPrompt}
             destinations={destinations}
             isAiSearching={isAiSearching}
+            location={initialLocation ?? null}
             notice={notice}
             onAiPromptChange={setAiPrompt}
             onApplyAiSearch={() => {

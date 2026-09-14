@@ -12,12 +12,13 @@ Create one repository for the team and keep it private until the course team is 
 4. Run `supabase/phase3_booking_integrity.sql` for reservation validation and double-booking protection.
 5. Run `supabase/phase4_availability.sql` for date-aware search and reservation availability checks.
 6. Run `supabase/phase5_marketplace_foundation.sql` for profile settings, host availability blocks, real-review eligibility, recommendation events, and payment records.
-7. In Authentication settings, enable email confirmation.
-8. Add redirect URLs:
+7. Run `supabase/phase6_location_foundation.sql` for provider-backed location metadata columns.
+8. In Authentication settings, enable email confirmation.
+9. Add redirect URLs:
    - `http://localhost:3000/auth/callback`
    - `https://YOUR-VERCEL-DOMAIN.vercel.app/auth/callback`
-9. In Authentication email settings, configure custom SMTP using Resend.
-10. Keep Row Level Security enabled on every application table.
+10. In Authentication email settings, configure custom SMTP using Resend.
+11. Keep Row Level Security enabled on every application table.
 
 ## Resend SMTP
 
@@ -37,6 +38,8 @@ Use Resend as the SMTP provider for Supabase Auth emails:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `NEXT_PUBLIC_SITE_URL`
+   - `NOMINATIM_EMAIL` (optional but recommended)
+   - `NOMINATIM_BASE_URL` (optional, defaults to OpenStreetMap Nominatim)
 3. Deploy from `main`.
 4. Copy the deployment URL back into Supabase Auth redirect settings.
 
@@ -50,6 +53,8 @@ Use Resend as the SMTP provider for Supabase Auth emails:
 - `supabase/phase3_booking_integrity.sql` run for booking safeguards.
 - `supabase/phase4_availability.sql` run for availability-aware search.
 - `supabase/phase5_marketplace_foundation.sql` run for production support entities.
+- `supabase/phase6_location_foundation.sql` run for provider-backed location columns.
+- OpenStreetMap/Nominatim attribution remains visible anywhere verified destination data appears.
 - No `.env.local` or API secrets committed.
 - `pnpm lint`, `pnpm typecheck`, and `pnpm build` pass.
 - Demo accounts prepared for guest and host roles.

@@ -34,6 +34,7 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Current pass: listing coordinate fallback and OpenStreetMap URL helpers extracted into `src/lib/listing-map.ts`.
   - Current pass: public listing reads now retry transient Supabase gateway/config errors before showing empty marketplace states.
   - Current pass: shared optimistic saved-stay client hook extracted into `src/hooks/use-saved-listings.ts` and reused by home, search, and listing detail actions.
+  - Current pass: shared AI search client hook extracted into `src/hooks/use-ai-search.ts` and reused by home/search forms.
 
 - [ ] Phase 3: Database design
   - Audit current Supabase schema.

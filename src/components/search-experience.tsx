@@ -26,6 +26,7 @@ import {
   ListingSaveButton,
 } from "@/components/listing-card-primitives";
 import { StayWiseAccountMenu, StayWiseHeader } from "@/components/staywise-header";
+import { useAiSearch } from "@/hooks/use-ai-search";
 import { useSavedListings } from "@/hooks/use-saved-listings";
 import {
   featuredAmenities,
@@ -114,10 +115,6 @@ export function SearchExperience({
   const [sortMode, setSortMode] = useState<SortMode>("recommended");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showMapPanel, setShowMapPanel] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState("");
-  const [aiMessage, setAiMessage] = useState<string | null>(null);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [isAiSearching, setIsAiSearching] = useState(false);
 
   const rankedListings = useMemo(
     () => rankListings(search, initialListings),
@@ -143,6 +140,21 @@ export function SearchExperience({
     initialSavedIds: initialFavoriteIds,
     isSignedIn,
     signInHref: `/auth?mode=signin&next=${encodeURIComponent(searchHref)}`,
+  });
+  const {
+    aiError,
+    aiMessage,
+    aiPrompt,
+    applyAiSearch,
+    isAiSearching,
+    setAiPrompt,
+  } = useAiSearch({
+    getCurrentSearch: () => search,
+    onSearchApplied(nextSearch) {
+      setSearch(nextSearch);
+      setSelectedId(null);
+      setNotice(null);
+    },
   });
   const resultSummary = getSearchResultSummary(displayedListings, search);
   const activeFilterLabels = getActiveSearchFilterLabels(search);
@@ -209,57 +221,6 @@ export function SearchExperience({
       minBedrooms: 0,
       propertyTypes: [],
     }));
-  }
-
-  async function applyAiSearch() {
-    const prompt = aiPrompt.trim();
-
-    if (!prompt) {
-      setAiError("Describe the stay you want first.");
-      setAiMessage(null);
-      return;
-    }
-
-    setIsAiSearching(true);
-    setAiError(null);
-    setAiMessage(null);
-
-    try {
-      const response = await fetch("/api/ai-search", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          currentSearch: search,
-          prompt,
-        }),
-      });
-      const result = (await response.json().catch(() => null)) as
-        | { error?: string; search?: Partial<SearchInput>; summary?: string }
-        | null;
-
-      if (!response.ok || !result?.search) {
-        throw new Error(result?.error ?? "StayWise could not read that request.");
-      }
-
-      const nextSearch = searchSchema.parse(result.search);
-      const query = buildSearchQueryString(nextSearch);
-
-      setSearch(nextSearch);
-      setSelectedId(null);
-      setNotice(null);
-      setAiMessage(result.summary ?? "I updated the search from your request.");
-      router.push(`/search${query ? `?${query}` : ""}`);
-    } catch (error) {
-      setAiError(
-        error instanceof Error
-          ? error.message
-          : "StayWise could not read that request.",
-      );
-    } finally {
-      setIsAiSearching(false);
-    }
   }
 
   function focusSearch() {

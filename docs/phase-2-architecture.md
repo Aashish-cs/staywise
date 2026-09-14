@@ -18,6 +18,7 @@ Last updated: 2026-09-14
 - Updated search map preview and listing detail map sections to use shared map helpers instead of duplicating provider URL logic.
 - Added transient retry handling around the shared public listing loader so short Supabase gateway/config failures do not immediately render empty search or recommendation results.
 - Added `src/hooks/use-saved-listings.ts` so home, search, and listing detail share one optimistic saved-stay flow with the same guest/auth handling and rollback behavior.
+- Added `src/hooks/use-ai-search.ts` so home and search share one AI-search submit flow, including validation, API parsing, loading, error messages, and URL navigation.
 - Kept visual behavior unchanged while reducing duplication in the largest components.
 
 ## Next Phase 2 Extraction Targets

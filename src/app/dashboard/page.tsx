@@ -13,6 +13,7 @@ import {
   Timer,
 } from "lucide-react";
 import { cancelReservationAction } from "@/app/dashboard/actions";
+import { StayWiseHeader } from "@/components/staywise-header";
 import {
   getCurrentUserProfile,
   getFavoriteListingIds,
@@ -398,20 +399,9 @@ function ReservationRow({ reservation }: { reservation: Reservation }) {
 
 function DashboardHeader({ email }: { email?: string }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-[#ebe3dd] bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-[1536px] items-center justify-between px-5 py-4 lg:px-8">
-        <Link href="/" className="flex items-center gap-3" aria-label="StayWise home">
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff385c] text-white">
-            <Sparkles className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <span>
-            <span className="block text-xl font-extrabold tracking-tight">StayWise</span>
-            <span className="hidden text-xs font-semibold text-[#786a60] sm:block">
-              Smart Stays, Better Days.
-            </span>
-          </span>
-        </Link>
-        <div className="flex items-center gap-2">
+    <StayWiseHeader
+      actions={
+        <>
           <Link
             href="/search"
             className="hidden rounded-full px-4 py-2 text-sm font-extrabold hover:bg-[#f7f3ee] sm:block"
@@ -441,9 +431,9 @@ function DashboardHeader({ email }: { email?: string }) {
               Sign in
             </Link>
           )}
-        </div>
-      </div>
-    </header>
+        </>
+      }
+    />
   );
 }
 

@@ -28,6 +28,7 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Separate UI, business logic, data access, validation, and types.
   - Avoid giant components, duplicated Supabase queries, and business logic hidden inside JSX.
   - Current pass: shared search defaults and category presets extracted into `src/lib/search-presets.ts`.
+  - Current pass: shared StayWise header/account primitives extracted into `src/components/staywise-header.tsx`.
 
 - [ ] Phase 3: Database design
   - Audit current Supabase schema.

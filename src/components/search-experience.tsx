@@ -13,7 +13,6 @@ import {
   Home,
   Map,
   MapPin,
-  Menu,
   Search,
   ShieldCheck,
   SlidersHorizontal,
@@ -23,6 +22,7 @@ import {
   Users,
   Wifi,
 } from "lucide-react";
+import { StayWiseAccountMenu, StayWiseHeader } from "@/components/staywise-header";
 import { toggleFavoriteAction } from "@/app/favorites/actions";
 import {
   featuredAmenities,
@@ -98,7 +98,6 @@ export function SearchExperience({
   );
   const [sortMode, setSortMode] = useState<SortMode>("recommended");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [showMapPanel, setShowMapPanel] = useState(false);
   const [savedIds, setSavedIds] = useState<string[]>(initialFavoriteIds);
   const [notice, setNotice] = useState<string | null>(null);
@@ -315,27 +314,9 @@ export function SearchExperience({
 
   return (
     <main className="min-h-screen bg-white text-[#201a18]">
-      <header className="sticky top-0 z-20 border-b border-[#ebe3dd] bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1536px] items-center justify-between px-5 py-4 lg:px-8">
-          <Link
-            href="/"
-            className="flex items-center gap-3"
-            aria-label="StayWise home"
-            onClick={() => setIsAccountMenuOpen(false)}
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff385c] text-white shadow-sm">
-              <Sparkles className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <span>
-              <span className="block text-xl font-extrabold tracking-tight">
-                StayWise
-              </span>
-              <span className="hidden text-xs font-semibold text-[#786a60] sm:block">
-                Smart Stays, Better Days.
-              </span>
-            </span>
-          </Link>
-
+      <StayWiseHeader
+        className="z-20"
+        nav={
           <nav className="hidden items-center gap-2 rounded-full border border-[#eadfd6] bg-[#fbfaf8] px-2 py-2 shadow-sm lg:flex">
             <Link className="nav-pill" href="/search">
               Stays
@@ -350,76 +331,18 @@ export function SearchExperience({
               Host
             </Link>
           </nav>
-
-          <div className="flex items-center gap-2">
-            <Link
-              className="hidden rounded-full px-4 py-2 text-sm font-semibold hover:bg-white md:block"
-              href={accountHref}
-            >
-              {accountLabel}
-            </Link>
-            <div className="relative">
-              <button
-                type="button"
-                aria-expanded={isAccountMenuOpen}
-                aria-label="Open account menu"
-                className="flex h-11 items-center gap-2 rounded-full border border-[#ddd0c6] bg-white px-3 text-sm shadow-sm"
-                onClick={() => setIsAccountMenuOpen((current) => !current)}
-              >
-                <Menu className="h-4 w-4" aria-hidden="true" />
-                <UserRound className="h-5 w-5" aria-hidden="true" />
-              </button>
-
-              {isAccountMenuOpen && (
-                <div className="absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-2xl border border-[#eadfd6] bg-white py-2 text-sm font-semibold shadow-lg">
-                  {isSignedIn ? (
-                    <>
-                      <Link
-                        href="/dashboard"
-                        className="block px-4 py-3 hover:bg-[#fff3f5]"
-                        onClick={() => setIsAccountMenuOpen(false)}
-                      >
-                        My trips
-                      </Link>
-                      <Link
-                        href="/host"
-                        className="block px-4 py-3 hover:bg-[#fff3f5]"
-                        onClick={() => setIsAccountMenuOpen(false)}
-                      >
-                        Host dashboard
-                      </Link>
-                      <form action="/auth/signout" method="post">
-                        <button
-                          type="submit"
-                          className="w-full px-4 py-3 text-left font-semibold hover:bg-[#fff3f5]"
-                        >
-                          Sign out
-                        </button>
-                      </form>
-                    </>
-                  ) : (
-                    <>
-                      <Link
-                        href="/auth?mode=signin"
-                        className="block px-4 py-3 hover:bg-[#fff3f5]"
-                        onClick={() => setIsAccountMenuOpen(false)}
-                      >
-                        Sign in
-                      </Link>
-                      <Link
-                        href="/auth?mode=signup"
-                        className="block px-4 py-3 hover:bg-[#fff3f5]"
-                        onClick={() => setIsAccountMenuOpen(false)}
-                      >
-                        Create account
-                      </Link>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        }
+        actions={
+          <StayWiseAccountMenu
+            accountHref={accountHref}
+            accountLabel={accountLabel}
+            accountLinkClassName="hover:bg-white"
+            accountLinkVisibilityClassName="hidden md:block"
+            isSignedIn={isSignedIn}
+            menuClassName="z-30 shadow-lg"
+          />
+        }
+      >
 
         <div className="border-t border-[#f3ede8]">
           <div className="mx-auto flex max-w-[1536px] gap-2 overflow-x-auto px-5 py-3 lg:px-8">
@@ -444,7 +367,7 @@ export function SearchExperience({
             })}
           </div>
         </div>
-      </header>
+      </StayWiseHeader>
 
       <section className="mx-auto max-w-[1536px] px-5 py-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-[360px_1fr]">

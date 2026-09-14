@@ -12,15 +12,14 @@ import {
   Heart,
   Home,
   MapPin,
-  Menu,
   Search,
   ShieldCheck,
   Sparkles,
   Trees,
-  UserRound,
   Users,
   Wifi,
 } from "lucide-react";
+import { StayWiseAccountMenu, StayWiseHeader } from "@/components/staywise-header";
 import { toggleFavoriteAction } from "@/app/favorites/actions";
 import type { Listing } from "@/lib/listings";
 import { rankListings, searchSchema, type SearchInput } from "@/lib/recommendations";
@@ -66,7 +65,6 @@ export function MarketplaceHome({
   const [aiMessage, setAiMessage] = useState<string | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
   const [isAiSearching, setIsAiSearching] = useState(false);
-  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [savedIds, setSavedIds] = useState(initialFavoriteIds);
   const [notice, setNotice] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -221,27 +219,10 @@ export function MarketplaceHome({
 
   return (
     <main className="min-h-screen bg-white text-[#201a18]">
-      <header className="sticky top-0 z-30 border-b border-[#ebe3dd] bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1536px] items-center justify-between gap-5 px-5 py-4 lg:px-8">
-          <Link
-            href="/"
-            className="flex shrink-0 items-center gap-3"
-            aria-label="StayWise home"
-            onClick={() => setIsAccountMenuOpen(false)}
-          >
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff385c] text-white shadow-sm">
-              <Sparkles className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <span>
-              <span className="block text-xl font-extrabold tracking-tight">
-                StayWise
-              </span>
-              <span className="hidden text-xs font-semibold text-[#786a60] sm:block">
-                Smart Stays, Better Days.
-              </span>
-            </span>
-          </Link>
-
+      <StayWiseHeader
+        brandClassName="shrink-0"
+        innerClassName="gap-5"
+        nav={
           <nav className="hidden items-center gap-1 rounded-full border border-[#ebe3dd] bg-[#fbfaf8] p-1 lg:flex">
             {categoryItems.slice(0, 4).map((item, index) => {
               const Icon = item.icon;
@@ -261,82 +242,24 @@ export function MarketplaceHome({
               );
             })}
           </nav>
-
-          <div className="flex shrink-0 items-center gap-2">
+        }
+        actions={
+          <>
             <Link
               className="hidden rounded-full px-4 py-2 text-sm font-extrabold hover:bg-[#f7f3ee] md:block"
               href="/host"
             >
               Host on StayWise
             </Link>
-            <Link
-              className="hidden rounded-full px-4 py-2 text-sm font-extrabold hover:bg-[#f7f3ee] sm:block"
-              href={accountHref}
-            >
-              {accountLabel}
-            </Link>
-            <div className="relative">
-              <button
-                type="button"
-                aria-expanded={isAccountMenuOpen}
-                aria-label="Open account menu"
-                className="flex h-11 items-center gap-2 rounded-full border border-[#ddd0c6] bg-white px-3 text-sm shadow-sm"
-                onClick={() => setIsAccountMenuOpen((current) => !current)}
-              >
-                <Menu className="h-4 w-4" aria-hidden="true" />
-                <UserRound className="h-5 w-5" aria-hidden="true" />
-              </button>
-
-              {isAccountMenuOpen && (
-                <div className="absolute right-0 top-full z-40 mt-2 w-56 overflow-hidden rounded-2xl border border-[#eadfd6] bg-white py-2 text-sm font-semibold shadow-xl">
-                  {isSignedIn ? (
-                    <>
-                      <Link
-                        href="/dashboard"
-                        className="block px-4 py-3 hover:bg-[#fff3f5]"
-                        onClick={() => setIsAccountMenuOpen(false)}
-                      >
-                        My trips
-                      </Link>
-                      <Link
-                        href="/host"
-                        className="block px-4 py-3 hover:bg-[#fff3f5]"
-                        onClick={() => setIsAccountMenuOpen(false)}
-                      >
-                        Host dashboard
-                      </Link>
-                      <form action="/auth/signout" method="post">
-                        <button
-                          type="submit"
-                          className="w-full px-4 py-3 text-left font-semibold hover:bg-[#fff3f5]"
-                        >
-                          Sign out
-                        </button>
-                      </form>
-                    </>
-                  ) : (
-                    <>
-                      <Link
-                        href="/auth?mode=signin"
-                        className="block px-4 py-3 hover:bg-[#fff3f5]"
-                        onClick={() => setIsAccountMenuOpen(false)}
-                      >
-                        Sign in
-                      </Link>
-                      <Link
-                        href="/auth?mode=signup"
-                        className="block px-4 py-3 hover:bg-[#fff3f5]"
-                        onClick={() => setIsAccountMenuOpen(false)}
-                      >
-                        Create account
-                      </Link>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+            <StayWiseAccountMenu
+              accountHref={accountHref}
+              accountLabel={accountLabel}
+              accountLinkClassName="font-extrabold"
+              isSignedIn={isSignedIn}
+            />
+          </>
+        }
+      >
 
         <div className="border-t border-[#f3ede8] lg:hidden">
           <div className="mx-auto flex max-w-[1536px] gap-2 overflow-x-auto px-5 py-3">
@@ -361,7 +284,7 @@ export function MarketplaceHome({
             })}
           </div>
         </div>
-      </header>
+      </StayWiseHeader>
 
       <section className="border-b border-[#ebe3dd] bg-[#fbfaf8]">
         <div className="mx-auto max-w-5xl px-5 py-7 text-center lg:px-8">

@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { ListingActions } from "@/components/listing-actions";
 import { ReservationPanel } from "@/components/reservation-panel";
+import { StayWiseHeader } from "@/components/staywise-header";
 import {
   getCurrentUserProfile,
   getFavoriteListingIds,
@@ -138,22 +139,8 @@ export default async function ListingPage({
 
   return (
     <main className="min-h-screen bg-white text-[#201a18]">
-      <header className="sticky top-0 z-30 border-b border-[#ebe3dd] bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-[1536px] items-center justify-between gap-4 px-5 py-4 lg:px-8">
-          <Link href="/" className="flex items-center gap-3" aria-label="StayWise home">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff385c] text-white shadow-sm">
-              <Sparkles className="h-5 w-5" aria-hidden="true" />
-            </span>
-            <span>
-              <span className="block text-xl font-extrabold tracking-tight">
-                StayWise
-              </span>
-              <span className="hidden text-xs font-semibold text-[#786a60] sm:block">
-                Smart Stays, Better Days.
-              </span>
-            </span>
-          </Link>
-
+      <StayWiseHeader
+        center={
           <Link
             href={backToSearchHref}
             className="hidden min-w-0 max-w-xl flex-1 items-center justify-center rounded-full border border-[#eadfd6] bg-white px-4 py-2 text-sm font-extrabold shadow-sm transition hover:shadow-md lg:flex"
@@ -170,8 +157,9 @@ export default async function ListingPage({
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </span>
           </Link>
-
-          <div className="flex items-center gap-2">
+        }
+        actions={
+          <>
             <Link
               href="/host"
               className="hidden rounded-full px-4 py-2 text-sm font-extrabold hover:bg-[#f7f3ee] md:block"
@@ -184,9 +172,9 @@ export default async function ListingPage({
             >
               {accountLabel}
             </Link>
-          </div>
-        </div>
-      </header>
+          </>
+        }
+      />
 
       <section className="mx-auto max-w-[1536px] px-5 py-6 lg:px-8">
         <Link

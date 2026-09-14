@@ -45,11 +45,12 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Add constraints, indexes, UUID keys, and reproducible migrations.
   - Current pass: added `supabase/phase5_marketplace_foundation.sql` and updated canonical `supabase/schema.sql` with profile settings, host availability blocks, legitimate reviews, recommendation events, payment records, constraints, indexes, RLS, and availability-aware RPC updates.
 
-- [~] Phase 4: Row Level Security
+- [x] Phase 4: Row Level Security
   - Audit all table policies.
   - Enforce public read rules, guest ownership rules, host ownership rules, reservation access rules, review eligibility, and image permissions in RLS/server logic.
+  - Current pass: documented policy coverage in `docs/phase-4-rls-audit.md`, hardened availability block ownership, and added host review read access without exposing profile emails publicly.
 
-- [ ] Phase 5: Authentication
+- [~] Phase 5: Authentication
   - Verify signup, signin, signout, email confirmation, forgot/reset password, callback, sessions, protected routes, return-to-route, auth-required actions, validation, loading, errors, password visibility, labels, and mobile forms.
 
 - [ ] Phase 6: Real location system

@@ -115,6 +115,7 @@ alter table public.payment_records enable row level security;
 drop policy if exists "Profile settings are managed by owner" on public.profile_settings;
 drop policy if exists "Hosts manage own availability blocks" on public.listing_availability_blocks;
 drop policy if exists "Public can read reviews for active listings" on public.reviews;
+drop policy if exists "Hosts read own listing reviews" on public.reviews;
 drop policy if exists "Guests create eligible reviews" on public.reviews;
 drop policy if exists "Guests update own reviews" on public.reviews;
 drop policy if exists "Users read own recommendation events" on public.recommendation_events;
@@ -141,6 +142,10 @@ with check (
     where listings.id = listing_availability_blocks.listing_id
       and listings.host_id = auth.uid()
   )
+  and (
+    listing_availability_blocks.created_by is null
+    or listing_availability_blocks.created_by = auth.uid()
+  )
 );
 
 create policy "Public can read reviews for active listings"
@@ -150,6 +155,16 @@ using (
     select 1 from public.listings
     where listings.id = reviews.listing_id
       and listings.is_active = true
+  )
+);
+
+create policy "Hosts read own listing reviews"
+on public.reviews for select
+using (
+  exists (
+    select 1 from public.listings
+    where listings.id = reviews.listing_id
+      and listings.host_id = auth.uid()
   )
 );
 

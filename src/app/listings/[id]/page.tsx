@@ -500,7 +500,7 @@ function HostBadge({ listing }: { listing: Listing }) {
       <span>
         <span className="block text-sm font-extrabold">{listing.host.name}</span>
         <span className="mt-1 block text-xs font-semibold text-[#786a60]">
-          {listing.host.isSuperhost ? "Top StayWise host" : "Verified StayWise host"}
+          Verified StayWise host
         </span>
       </span>
     </div>
@@ -646,9 +646,9 @@ function buildQuickHighlights(listing: Listing) {
       title: "Room details",
     },
     {
-      body: `Host usually responds in ${listing.host.responseTime}.`,
+      body: "Host identity is connected to a verified StayWise account.",
       icon: MessageCircle,
-      title: "Host response",
+      title: "Verified host",
     },
     {
       body: "Selected dates are checked against confirmed reservations before booking.",
@@ -707,7 +707,7 @@ function buildListingSignals(listing: Listing) {
     {
       icon: MessageCircle,
       label: "Host",
-      value: listing.host.responseTime,
+      value: "Verified",
     },
     {
       icon: MapPin,

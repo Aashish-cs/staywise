@@ -143,11 +143,6 @@ function scoreListing(listing: Listing, input: SearchInput): RankedListing {
     tradeoffs.push("Capacity is exact with little extra room");
   }
 
-  if (listing.host.isSuperhost) {
-    score += 5;
-    reasons.push("Hosted by a top StayWise host");
-  }
-
   if (reasons.length === 0) {
     reasons.push("Balanced match across price, space, and location");
   }

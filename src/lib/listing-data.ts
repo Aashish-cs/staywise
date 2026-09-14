@@ -24,6 +24,10 @@ type ListingAmenityRow = {
   amenity: string;
 };
 
+type ListingHostRow = {
+  full_name: string | null;
+};
+
 type ListingRow = {
   id: string;
   host_id: string | null;
@@ -42,6 +46,7 @@ type ListingRow = {
   longitude: number | string | null;
   is_active: boolean;
   created_at?: string;
+  host?: ListingHostRow | ListingHostRow[] | null;
   listing_images?: ListingImageRow[] | null;
   listing_amenities?: ListingAmenityRow[] | null;
 };
@@ -86,6 +91,9 @@ const listingSelect = `
   longitude,
   is_active,
   created_at,
+  host:profiles!listings_host_id_fkey (
+    full_name
+  ),
   listing_images (
     image_url,
     alt_text,
@@ -452,8 +460,7 @@ function mapListingRow(row: ListingRow): Listing {
     .map((item) => item.amenity)
     .filter(Boolean)
     .sort();
-  const ratingSeed = seededNumber(row.id, 17);
-  const reviewSeed = seededNumber(row.id, 113);
+  const host = Array.isArray(row.host) ? row.host[0] : row.host;
 
   return {
     id: row.id,
@@ -467,8 +474,6 @@ function mapListingRow(row: ListingRow): Listing {
     imageUrl: image?.image_url ?? fallbackListingImage,
     imageAlt: image?.alt_text ?? row.title,
     pricePerNight: row.price_per_night,
-    rating: Number((4.72 + ratingSeed / 1000).toFixed(2)),
-    reviewCount: 44 + reviewSeed,
     capacity: row.capacity,
     bedrooms: row.bedrooms,
     bathrooms: Number(row.bathrooms),
@@ -478,9 +483,7 @@ function mapListingRow(row: ListingRow): Listing {
       lng: Number(row.longitude ?? 0),
     },
     host: {
-      name: row.host_id ? "Verified StayWise host" : "StayWise market host",
-      isSuperhost: ratingSeed > 140,
-      responseTime: ratingSeed > 140 ? "18 min" : "42 min",
+      name: host?.full_name?.trim() || "StayWise host",
     },
     amenities,
     traits: inferTraits(row, amenities),
@@ -542,9 +545,4 @@ function inferTraits(row: ListingRow, amenities: string[]) {
   if (amenities.includes("Self check-in")) traits.push("self check-in");
 
   return traits.slice(0, 5);
-}
-
-function seededNumber(value: string, max: number) {
-  const total = value.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return total % max;
 }

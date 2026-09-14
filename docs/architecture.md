@@ -20,8 +20,7 @@ The first AI feature is explainable ranking. Listings are scored against a trip 
 - trip purpose
 - requested amenities
 - purpose-specific amenity signals
-- host reliability
-- listing rating and review volume
+- verified host profile availability
 
 This is intentionally explainable for a senior design demo. It can be evaluated with synthetic scenarios and does not require paid model calls.
 

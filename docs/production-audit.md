@@ -18,7 +18,7 @@ Brand source of truth: StayWise uses the slogan "Smart Stays, Better Days."
 - Browser geolocation and nearby discovery are not implemented yet.
 - Stripe, payment statuses, webhook verification, and confirmation email are not implemented.
 - Host listing creation is a single form, not a multi-step wizard, and it stores image URLs instead of Supabase Storage uploads.
-- Ratings and review counts are currently derived placeholders; real reviews and aggregate ratings are not implemented.
+- Fake rating/review UI has been removed; real reviews and aggregate ratings are not implemented yet.
 - Messages, admin tools, and account settings are not implemented and should not be shown as navigation until real.
 - Property detail pages need richer production sections: rules, cancellation policy, full availability calendar, reviews, and favorite/share behavior.
 
@@ -47,7 +47,7 @@ Brand source of truth: StayWise uses the slogan "Smart Stays, Better Days."
 
 - Make the homepage a polished discovery surface with a mature search bar, location-aware sections, and real listing sections.
 - Build `/search` with URL-persisted destination, dates, guests, filters, sorting, empty states, and a map panel.
-- Refine property cards into a reusable component with consistent image ratio, favorite state, rating, price, and match reason.
+- Refine property cards into a reusable component with consistent image ratio, favorite state, real review display when available, price, and match reason.
 - Upgrade the listing detail page with gallery layout, sticky booking card, rules, cancellation policy, availability messaging, and map.
 - Build a dedicated favorites/wishlist page before adding a Favorites nav link.
 - Convert the host listing form into a multi-step wizard once storage and draft support are ready.

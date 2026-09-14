@@ -1108,7 +1108,7 @@ function ListingFitPanel({ listing }: { listing: RankedListing }) {
 
       <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
         <Metric label="Host" value={listing.host.name} />
-        <Metric label="Response" value={listing.host.responseTime} />
+        <Metric label="Status" value="Verified" />
         <Metric label="Beds" value={`${listing.bedrooms}`} />
         <Metric label="Baths" value={`${listing.bathrooms}`} />
       </div>

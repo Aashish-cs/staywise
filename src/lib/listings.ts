@@ -30,8 +30,6 @@ export type Listing = {
   imageUrl: string;
   imageAlt: string;
   pricePerNight: number;
-  rating: number;
-  reviewCount: number;
   capacity: number;
   bedrooms: number;
   bathrooms: number;
@@ -42,8 +40,6 @@ export type Listing = {
   };
   host: {
     name: string;
-    isSuperhost: boolean;
-    responseTime: string;
   };
   amenities: string[];
   traits: string[];

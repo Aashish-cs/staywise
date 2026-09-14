@@ -39,12 +39,13 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Current pass: search AI prompt, destination/date/guest/budget fields, advanced filters, trip style, amenities, and search action extracted into `src/components/search-filters-panel.tsx`.
   - Current pass: marketplace listing rails and home listing cards extracted into `src/components/marketplace-listing-rails.tsx`.
 
-- [ ] Phase 3: Database design
+- [x] Phase 3: Database design
   - Audit current Supabase schema.
   - Refine production entities for profiles, listings, images, amenities, favorites, reservations, reviews, availability, settings, recommendation events, and payment records where appropriate.
   - Add constraints, indexes, UUID keys, and reproducible migrations.
+  - Current pass: added `supabase/phase5_marketplace_foundation.sql` and updated canonical `supabase/schema.sql` with profile settings, host availability blocks, legitimate reviews, recommendation events, payment records, constraints, indexes, RLS, and availability-aware RPC updates.
 
-- [ ] Phase 4: Row Level Security
+- [~] Phase 4: Row Level Security
   - Audit all table policies.
   - Enforce public read rules, guest ownership rules, host ownership rules, reservation access rules, review eligibility, and image permissions in RLS/server logic.
 

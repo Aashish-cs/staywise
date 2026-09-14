@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getPublicListings } from "@/lib/listing-data";
 import { parseNaturalLanguageSearch } from "@/lib/natural-language-search";
+import { recordRecommendationEvent } from "@/lib/recommendation-events";
 import { type SearchInput } from "@/lib/recommendations";
 
 export const dynamic = "force-dynamic";
@@ -32,8 +33,18 @@ export async function POST(request: Request) {
     !Array.isArray(parsed.data.currentSearch)
       ? (parsed.data.currentSearch as Partial<SearchInput>)
       : {};
-
-  return NextResponse.json(
-    parseNaturalLanguageSearch(parsed.data.prompt, currentSearch, listings),
+  const interpretedSearch = parseNaturalLanguageSearch(
+    parsed.data.prompt,
+    currentSearch,
+    listings,
   );
+
+  await recordRecommendationEvent({
+    eventName: "ai_search_parsed",
+    resultCount: listings.length,
+    searchFilters: interpretedSearch,
+    searchQuery: parsed.data.prompt,
+  });
+
+  return NextResponse.json(interpretedSearch);
 }

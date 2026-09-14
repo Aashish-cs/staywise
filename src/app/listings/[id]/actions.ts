@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { countNights, getTodayIso } from "@/lib/reservation-utils";
+import { recordRecommendationEvent } from "@/lib/recommendation-events";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type ReservationActionState = {
@@ -101,6 +102,17 @@ export async function createReservationAction(
   revalidatePath("/search");
   revalidatePath(`/listings/${listingId}`);
 
+  await recordRecommendationEvent({
+    eventName: "reservation_confirmed",
+    listingId,
+    searchFilters: {
+      checkIn,
+      checkOut,
+      guests,
+      nights,
+    },
+  });
+
   return {
     ok: true,
     message: "Reservation confirmed. It now appears in your trips.",
@@ -142,6 +154,10 @@ function getReservationErrorMessage(errorMessage: string) {
     errorMessage.includes("reservations_no_active_overlap")
   ) {
     return "Those dates were just booked. Choose different dates.";
+  }
+
+  if (errorMessage.includes("listing_blocked")) {
+    return "The host blocked those dates. Choose different dates.";
   }
 
   if (errorMessage.includes("create_reservation")) {

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { recordRecommendationEvent } from "@/lib/recommendation-events";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const favoriteSchema = z.object({
@@ -67,6 +68,11 @@ export async function toggleFavoriteAction(formData: FormData) {
         message: error.message,
       };
     }
+
+    await recordRecommendationEvent({
+      eventName: "favorite_created",
+      listingId: parsed.data.listingId,
+    });
   } else {
     const { error } = await supabase
       .from("favorites")

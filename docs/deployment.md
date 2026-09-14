@@ -11,12 +11,13 @@ Create one repository for the team and keep it private until the course team is 
 3. Run `supabase/phase2_seed.sql` for synthetic demo listings.
 4. Run `supabase/phase3_booking_integrity.sql` for reservation validation and double-booking protection.
 5. Run `supabase/phase4_availability.sql` for date-aware search and reservation availability checks.
-6. In Authentication settings, enable email confirmation.
-7. Add redirect URLs:
+6. Run `supabase/phase5_marketplace_foundation.sql` for profile settings, host availability blocks, real-review eligibility, recommendation events, and payment records.
+7. In Authentication settings, enable email confirmation.
+8. Add redirect URLs:
    - `http://localhost:3000/auth/callback`
    - `https://YOUR-VERCEL-DOMAIN.vercel.app/auth/callback`
-8. In Authentication email settings, configure custom SMTP using Resend.
-9. Keep Row Level Security enabled on every application table.
+9. In Authentication email settings, configure custom SMTP using Resend.
+10. Keep Row Level Security enabled on every application table.
 
 ## Resend SMTP
 
@@ -48,6 +49,7 @@ Use Resend as the SMTP provider for Supabase Auth emails:
 - `supabase/phase2_seed.sql` run for demo listings.
 - `supabase/phase3_booking_integrity.sql` run for booking safeguards.
 - `supabase/phase4_availability.sql` run for availability-aware search.
+- `supabase/phase5_marketplace_foundation.sql` run for production support entities.
 - No `.env.local` or API secrets committed.
 - `pnpm lint`, `pnpm typecheck`, and `pnpm build` pass.
 - Demo accounts prepared for guest and host roles.

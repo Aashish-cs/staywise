@@ -36,6 +36,7 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Current pass: shared optimistic saved-stay client hook extracted into `src/hooks/use-saved-listings.ts` and reused by home, search, and listing detail actions.
   - Current pass: shared AI search client hook extracted into `src/hooks/use-ai-search.ts` and reused by home/search forms.
   - Current pass: search result cards, toolbar, empty state, fit panel, and map panel extracted into `src/components/search-results-section.tsx`.
+  - Current pass: search AI prompt, destination/date/guest/budget fields, advanced filters, trip style, amenities, and search action extracted into `src/components/search-filters-panel.tsx`.
 
 - [ ] Phase 3: Database design
   - Audit current Supabase schema.

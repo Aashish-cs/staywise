@@ -5,20 +5,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import {
-  BriefcaseBusiness,
-  CalendarDays,
   Car,
-  Heart,
   Home,
-  MapPin,
-  Search,
   ShieldCheck,
   Sparkles,
   Trees,
-  UserRound,
   Users,
   Wifi,
 } from "lucide-react";
+import { SearchFiltersPanel } from "@/components/search-filters-panel";
 import {
   SearchResultsSection,
 } from "@/components/search-results-section";
@@ -26,11 +21,8 @@ import { StayWiseAccountMenu, StayWiseHeader } from "@/components/staywise-heade
 import { useAiSearch } from "@/hooks/use-ai-search";
 import { useSavedListings } from "@/hooks/use-saved-listings";
 import {
-  featuredAmenities,
   type Listing,
   type PropertyType,
-  tripPurposeLabels,
-  type TripPurpose,
 } from "@/lib/listings";
 import {
   rankListings,
@@ -47,20 +39,9 @@ import {
   defaultSearchInput,
   familySearchPreset,
   outdoorSearchPreset,
-  propertyTypeOptions,
   workReadySearchPreset,
 } from "@/lib/search-presets";
 import { buildSearchQueryString } from "@/lib/search-url";
-
-const purposeIcons: Record<TripPurpose, typeof BriefcaseBusiness> = {
-  business: BriefcaseBusiness,
-  family: Users,
-  "remote-work": Wifi,
-  romantic: Heart,
-  solo: UserRound,
-  group: Home,
-  outdoor: Trees,
-};
 
 const searchCategoryLinks = [
   {
@@ -175,10 +156,6 @@ export function SearchExperience({
     (search.minBedrooms > 0 ? 1 : 0) +
     (search.minBathrooms > 0 ? 1 : 0) +
     (search.maxNightlyBudget !== defaultSearchInput.maxNightlyBudget ? 1 : 0);
-  const selectedPropertyTypeLabel =
-    search.propertyTypes.length > 0
-      ? search.propertyTypes.join(", ")
-      : "Any property type";
 
   function updateSearch<K extends keyof SearchInput>(key: K, value: SearchInput[K]) {
     setSearch((current) => ({ ...current, [key]: value }));
@@ -291,291 +268,25 @@ export function SearchExperience({
 
       <section className="mx-auto max-w-[1536px] px-5 py-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
-          <aside id="search" className="self-start rounded-[28px] border border-[#eadfd6] bg-white p-5 shadow-sm lg:sticky lg:top-24">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-extrabold text-[#ff385c]">Search stays</p>
-                <h1 className="mt-2 text-2xl font-extrabold leading-tight tracking-tight">
-                  Find the right stay.
-                </h1>
-                <p className="mt-3 text-sm font-semibold leading-6 text-[#5f5148]">
-                  Find the stay that fits the trip with live inventory and clear AI
-                  match reasons.
-                </p>
-              </div>
-              <span className="rounded-full bg-[#e7f2e4] px-3 py-1 text-sm font-semibold text-[#315d3b]">
-                Beta
-              </span>
-            </div>
-
-            <div className="mt-6 space-y-5">
-              <form
-                className="space-y-3 rounded-3xl bg-white/75 p-3 shadow-[inset_0_0_0_1px_#eadfd6]"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void applyAiSearch();
-                }}
-              >
-                <label className="block">
-                  <span className="field-label">AI trip request</span>
-                  <textarea
-                    value={aiPrompt}
-                    onChange={(event) => setAiPrompt(event.target.value)}
-                    placeholder="Quiet Dallas stay under $250 for 2 people with Wi-Fi"
-                    className="field-textarea min-h-24 resize-none"
-                  />
-                </label>
-
-                <button
-                  type="submit"
-                  disabled={isAiSearching}
-                  className="flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#201a18] px-5 text-sm font-semibold text-white transition hover:bg-black disabled:cursor-not-allowed disabled:bg-[#a79a91]"
-                >
-                  <Sparkles className="h-4 w-4" aria-hidden="true" />
-                  {isAiSearching ? "Reading request" : "Search with AI"}
-                </button>
-
-                {aiMessage && (
-                  <p className="rounded-2xl bg-[#e7f2e4] p-3 text-sm font-semibold text-[#315d3b]">
-                    {aiMessage}
-                  </p>
-                )}
-
-                {aiError && (
-                  <p className="rounded-2xl bg-[#fff3f5] p-3 text-sm font-semibold text-[#bd1740]">
-                    {aiError}
-                  </p>
-                )}
-              </form>
-
-              <label className="block">
-                <span className="field-label">Destination</span>
-                <span className="field-shell">
-                  <MapPin className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-                  <input
-                    value={search.destination}
-                    onChange={(event) => updateSearch("destination", event.target.value)}
-                    placeholder="Search by city or neighborhood"
-                    className="field-input"
-                  />
-                </span>
-              </label>
-
-              {destinations.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {destinations.map((destination) => (
-                    <button
-                      type="button"
-                      key={destination}
-                      className="rounded-full border border-[#eadfd6] bg-white px-3 py-2 text-sm font-medium hover:border-[#ff385c]"
-                      onClick={() => updateSearch("destination", destination)}
-                    >
-                      {destination}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block">
-                  <span className="field-label">Check in</span>
-                  <span className="field-shell">
-                    <CalendarDays className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-                    <input
-                      type="date"
-                      value={search.checkIn}
-                      onChange={(event) => updateSearch("checkIn", event.target.value)}
-                      className="field-input"
-                    />
-                  </span>
-                </label>
-
-                <label className="block">
-                  <span className="field-label">Check out</span>
-                  <span className="field-shell">
-                    <CalendarDays className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-                    <input
-                      type="date"
-                      value={search.checkOut}
-                      onChange={(event) => updateSearch("checkOut", event.target.value)}
-                      className="field-input"
-                    />
-                  </span>
-                </label>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block">
-                  <span className="field-label">Guests</span>
-                  <span className="field-shell">
-                    <Users className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-                    <input
-                      type="number"
-                      min="1"
-                      max="16"
-                      value={search.guests}
-                      onChange={(event) =>
-                        updateSearch("guests", Number(event.target.value))
-                      }
-                      className="field-input"
-                    />
-                  </span>
-                </label>
-
-                <label className="block">
-                  <span className="field-label">Budget</span>
-                  <span className="field-shell">
-                    <span className="text-sm font-semibold text-[#786a60]">$</span>
-                    <input
-                      type="number"
-                      min="50"
-                      max="1200"
-                      value={search.maxNightlyBudget}
-                      onChange={(event) =>
-                        updateSearch("maxNightlyBudget", Number(event.target.value))
-                      }
-                      className="field-input"
-                    />
-                  </span>
-                </label>
-              </div>
-
-              <div className="rounded-3xl border border-[#eadfd6] bg-white p-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <span className="field-label">Advanced filters</span>
-                    <p className="text-sm font-extrabold">{selectedPropertyTypeLabel}</p>
-                  </div>
-                  {activeFilterCount > 0 && (
-                    <button
-                      type="button"
-                      className="rounded-full bg-[#f7f3ee] px-3 py-1 text-xs font-extrabold text-[#5f5148] hover:text-[#df2348]"
-                      onClick={clearAdvancedFilters}
-                    >
-                      Clear {activeFilterCount}
-                    </button>
-                  )}
-                </div>
-
-                <div className="mt-4">
-                  <span className="field-label">Property type</span>
-                  <div className="grid grid-cols-2 gap-2">
-                    {propertyTypeOptions.map((propertyType) => {
-                      const active = search.propertyTypes.includes(propertyType);
-
-                      return (
-                        <button
-                          type="button"
-                          key={propertyType}
-                          aria-pressed={active}
-                          className={clsx("choice-button", active && "choice-button-active")}
-                          onClick={() => togglePropertyType(propertyType)}
-                        >
-                          {propertyType}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="field-label">Bedrooms</span>
-                    <span className="field-shell">
-                      <Home className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-                      <input
-                        type="number"
-                        min="0"
-                        max="12"
-                        value={search.minBedrooms}
-                        onChange={(event) =>
-                          updateSearch("minBedrooms", Number(event.target.value))
-                        }
-                        className="field-input"
-                      />
-                    </span>
-                  </label>
-
-                  <label className="block">
-                    <span className="field-label">Bathrooms</span>
-                    <span className="field-shell">
-                      <Home className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-                      <input
-                        type="number"
-                        min="0"
-                        max="12"
-                        step="0.5"
-                        value={search.minBathrooms}
-                        onChange={(event) =>
-                          updateSearch("minBathrooms", Number(event.target.value))
-                        }
-                        className="field-input"
-                      />
-                    </span>
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <span className="field-label">Trip style</span>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {(Object.keys(tripPurposeLabels) as TripPurpose[]).map((purpose) => {
-                    const Icon = purposeIcons[purpose];
-                    const active = search.tripPurpose === purpose;
-
-                    return (
-                      <button
-                        type="button"
-                        key={purpose}
-                        aria-pressed={active}
-                        className={clsx("choice-button", active && "choice-button-active")}
-                        onClick={() => updateSearch("tripPurpose", purpose)}
-                      >
-                        <Icon className="h-4 w-4" aria-hidden="true" />
-                        <span>{tripPurposeLabels[purpose]}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <span className="field-label">Amenities</span>
-                <div className="flex flex-wrap gap-2">
-                  {featuredAmenities.map((amenity) => {
-                    const active = search.amenities.includes(amenity);
-
-                    return (
-                      <button
-                        type="button"
-                        key={amenity}
-                        aria-pressed={active}
-                        className={clsx("amenity-chip", active && "amenity-chip-active")}
-                        onClick={() => toggleAmenity(amenity)}
-                      >
-                        {amenity}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={focusResults}
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#ff385c] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#df2348]"
-              >
-                <Search className="h-4 w-4" aria-hidden="true" />
-                Search StayWise
-              </button>
-
-              {notice && (
-                <p className="rounded-2xl bg-[#fff3f5] p-3 text-sm font-semibold text-[#bd1740]">
-                  {notice}
-                </p>
-              )}
-            </div>
-          </aside>
+          <SearchFiltersPanel
+            activeFilterCount={activeFilterCount}
+            aiError={aiError}
+            aiMessage={aiMessage}
+            aiPrompt={aiPrompt}
+            destinations={destinations}
+            isAiSearching={isAiSearching}
+            notice={notice}
+            onAiPromptChange={setAiPrompt}
+            onApplyAiSearch={() => {
+              void applyAiSearch();
+            }}
+            onClearAdvancedFilters={clearAdvancedFilters}
+            onFocusResults={focusResults}
+            onToggleAmenity={toggleAmenity}
+            onTogglePropertyType={togglePropertyType}
+            onUpdateSearch={updateSearch}
+            search={search}
+          />
 
           <SearchResultsSection
             activeFilterCount={activeFilterCount}

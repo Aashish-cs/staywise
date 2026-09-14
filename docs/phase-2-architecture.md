@@ -20,6 +20,7 @@ Last updated: 2026-09-14
 - Added `src/hooks/use-saved-listings.ts` so home, search, and listing detail share one optimistic saved-stay flow with the same guest/auth handling and rollback behavior.
 - Added `src/hooks/use-ai-search.ts` so home and search share one AI-search submit flow, including validation, API parsing, loading, error messages, and URL navigation.
 - Added `src/components/search-results-section.tsx` so search result cards, sort/map toolbar, empty state, fit panel, and map panel are separated from the main search state container.
+- Added `src/components/search-filters-panel.tsx` so AI prompt, destination/date/guest/budget inputs, advanced filters, trip style, amenities, and search action are separated from the main search state container.
 - Kept visual behavior unchanged while reducing duplication in the largest components.
 
 ## Next Phase 2 Extraction Targets

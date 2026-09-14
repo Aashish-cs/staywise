@@ -2,7 +2,7 @@
 
 Smart Stays, Better Days.
 
-StayWise is a senior design project for an AI-assisted short-term rental marketplace. Guests can search real database listings, save places, reserve stays, and receive explainable recommendations. Hosts can publish listings and view reservation demand.
+StayWise is a senior design project for an AI-assisted short-term rental marketplace. Guests can search Supabase-backed listings, save places, reserve stays with date-conflict protection, and receive explainable recommendations. Hosts can publish listings and view reservation demand.
 
 ## Tech Stack
 
@@ -45,7 +45,7 @@ Resend is configured inside Supabase as a custom SMTP provider. Do not put the R
 7. Configure custom SMTP with Resend.
 8. Add `http://localhost:3000/auth/callback` and the Vercel production callback URL to Supabase redirect URLs.
 
-The seed listings are synthetic StayWise data with public stock imagery. Do not scrape Airbnb or copy private marketplace content into this database.
+The seed listings are synthetic StayWise data with public stock imagery and real geographic coordinates. They are not scraped from Airbnb or any other marketplace. Do not copy private marketplace content into this database.
 
 ## Useful Scripts
 
@@ -60,6 +60,14 @@ pnpm build
 
 Use GitHub as the source repository and import it into Vercel. Add the same environment variables in Vercel Project Settings. The database, auth, email, seed data, and deployment setup is documented in `docs/deployment.md`.
 
-## Project Scope
+## Current Scope
 
-The current implementation covers authentication, Supabase-backed listing search, natural-language AI search, explainable AI ranking, date-aware guest reservations, persisted favorites, and a host listing dashboard. Payment processing, guest-host messaging, reviews, advanced adaptive learning, native mobile apps, and calendar sync remain future items per the SRS.
+The current implementation covers authentication, Supabase-backed listing search, natural-language search parsing, explainable AI-style ranking, date-aware guest reservations, persisted favorites, and a host listing dashboard. Ratings/reviews are intentionally not displayed until a real review workflow exists.
+
+## Known Limitations
+
+- Listings can come from host-created rows or the provided synthetic seed data; production should not silently fall back to hardcoded listing arrays.
+- Location search currently matches stored city/neighborhood data. Provider-backed autocomplete, geocoding, reverse geocoding, and near-me search are planned next.
+- Maps currently use OpenStreetMap embeds. A synchronized interactive marker map is planned for later phases.
+- Payments, guest-host messaging, reviews, Supabase Storage image uploads, profile settings, and automated browser tests are still roadmap items.
+- Any Supabase key that was shared during setup should be rotated before final presentation.

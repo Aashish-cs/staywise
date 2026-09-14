@@ -31,13 +31,11 @@ export const searchSchema = z.object({
   maxNightlyBudget: z.coerce.number().int().min(50).max(1200).default(250),
   minBathrooms: z.coerce.number().min(0).max(12).default(0),
   minBedrooms: z.coerce.number().int().min(0).max(12).default(0),
-  minRating: z.coerce.number().min(0).max(5).default(0),
   propertyTypes: z.array(z.enum(propertyTypeValues)).default([]),
   tripPurpose: z
     .enum(["business", "family", "remote-work", "romantic", "solo", "group", "outdoor"])
     .default("remote-work"),
   amenities: z.array(z.enum(amenityValues)).default([]),
-  month: z.string().trim().default("Sep"),
 });
 
 export type SearchInput = z.infer<typeof searchSchema>;
@@ -73,7 +71,6 @@ export function rankListings(
           .toLowerCase()
           .includes(destination);
       const hasCapacity = listing.capacity >= input.guests;
-      const isAvailable = !input.month || listing.availableMonths.includes(input.month);
       const matchesPropertyType =
         input.propertyTypes.length === 0 ||
         input.propertyTypes.includes(listing.propertyType);
@@ -83,7 +80,6 @@ export function rankListings(
       return (
         matchesDestination &&
         hasCapacity &&
-        isAvailable &&
         matchesPropertyType &&
         hasBedrooms &&
         hasBathrooms

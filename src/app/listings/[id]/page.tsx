@@ -111,7 +111,6 @@ export default async function ListingPage({
       amenities: listing.amenities.filter((amenity) =>
         featuredAmenities.includes(amenity as (typeof featuredAmenities)[number]),
       ),
-      month: search.month,
     },
     [listing],
   )[0];
@@ -321,7 +320,8 @@ export default async function ListingPage({
                       </h2>
                       <p className="mt-4 text-sm font-semibold leading-7 text-white/70">
                         The score is built from the current search, listing amenities,
-                        group size, budget, and availability month.
+                        group size, and budget. Exact date availability is checked by
+                        StayWise before reservation.
                       </p>
                     </div>
                     <div className="grid gap-3 bg-white/5 p-4 md:p-6">

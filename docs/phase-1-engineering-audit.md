@@ -1,6 +1,6 @@
 # Phase 1 Engineering Audit
 
-Status: In progress
+Status: Completed
 
 Last updated: 2026-09-14
 
@@ -16,6 +16,7 @@ Last updated: 2026-09-14
 | Local search smoke test | Passed, `/search?destination=Dallas...` returned 200 |
 | Local listing smoke test | Passed, known seeded listing returned 200 |
 | Local recommendations API smoke test | Passed, Dallas returned 3 listings |
+| Production deployment smoke test | Passed on `https://staywise-tau.vercel.app` |
 
 ## Issues Fixed In This Phase Pass
 
@@ -24,8 +25,11 @@ Last updated: 2026-09-14
 - Removed fake host response-time and "top host" derivations.
 - Updated recommendation scoring so it no longer rewards generated host/rating signals.
 - Changed host UI to show verified host/account status instead of fake response metrics.
+- Removed fake static month availability from listing data, ranking, URL parsing, AI parsing, and search UI.
+- Removed dormant rating search parameters until real reviews exist.
 - Added a master phase checklist so phases 0-56 can be tracked without skipping tasks.
 - Fixed the Supabase host profile join by using the explicit `profiles!listings_host_id_fkey` relationship.
+- Updated README and architecture docs to clearly label seed data, real current capabilities, and future limitations.
 
 ## Current Architecture Observations
 
@@ -70,6 +74,7 @@ Last updated: 2026-09-14
 ### Auth And Security
 
 - Signup, signin, signout, callback, password reset, and protected account routing exist.
+- Header logo links are plain navigation links in home, search, listing, dashboard, and host routes. No source-level evidence was found that the logo submits sign-out; full browser click QA remains part of Phase 50.
 - Server actions check user/session/role for favorites, listings, and reservations.
 - RLS exists for profiles, listings, listing images, amenities, trips, favorites, and reservations.
 - A full RLS audit against every future table remains required in Phase 4.
@@ -99,10 +104,7 @@ Last updated: 2026-09-14
 - No service-role key should be exposed to the browser.
 - No production runtime fallback to demo arrays should be added.
 
-## Next Phase 1 Work
+## Phase 2 Handoff
 
-- Continue static audit for route-level UX gaps and missing states.
-- Add/update documentation for known limitations in README.
-- Decide whether Phase 2 architecture split should happen before adding large new location/map features.
-- After Phase 1 is accepted, begin Phase 2 by extracting shared data/search/listing UI modules in small, tested steps.
-
+- Start by extracting shared data/search/listing UI modules in small, tested steps.
+- Keep large visual redesign, location provider work, and map replacement behind later phases so architecture improves before feature size grows.

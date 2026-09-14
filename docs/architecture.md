@@ -15,7 +15,6 @@ The first AI feature is explainable ranking. Listings are scored against a trip 
 
 - destination match
 - guest capacity
-- monthly availability
 - budget fit
 - trip purpose
 - requested amenities

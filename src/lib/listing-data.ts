@@ -488,7 +488,6 @@ function mapListingRow(row: ListingRow): Listing {
     amenities,
     traits: inferTraits(row, amenities),
     bestFor: inferBestFor(row, amenities),
-    availableMonths: ["Sep", "Oct", "Nov", "Dec"],
     description: row.description,
   };
 }

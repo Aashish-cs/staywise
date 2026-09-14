@@ -1,6 +1,5 @@
 import {
   featuredAmenities,
-  stayMonths,
   type Listing,
   type TripPurpose,
 } from "@/lib/listings";
@@ -136,13 +135,6 @@ const purposeSignals: Array<{
   },
 ];
 
-const monthSignals = [
-  { month: "Sep", patterns: [/\bsep\b/i, /\bseptember\b/i] },
-  { month: "Oct", patterns: [/\boct\b/i, /\boctober\b/i] },
-  { month: "Nov", patterns: [/\bnov\b/i, /\bnovember\b/i] },
-  { month: "Dec", patterns: [/\bdec\b/i, /\bdecember\b/i] },
-] as const;
-
 export function parseNaturalLanguageSearch(
   prompt: string,
   currentSearch: Partial<SearchInput> = {},
@@ -168,12 +160,6 @@ export function parseNaturalLanguageSearch(
   if (dates.checkOut) {
     next.checkOut = dates.checkOut;
     detected.push(`check out ${dates.checkOut}`);
-  }
-
-  const month = inferMonth(cleanPrompt);
-  if (month) {
-    next.month = month;
-    detected.push(month);
   }
 
   const guests = inferGuests(cleanPrompt);
@@ -250,16 +236,6 @@ function inferDates(prompt: string) {
     checkIn: isValidIsoDate(matches[0]) ? matches[0] : "",
     checkOut: isValidIsoDate(matches[1]) ? matches[1] : "",
   };
-}
-
-function inferMonth(prompt: string) {
-  const signal = monthSignals.find(({ patterns }) =>
-    patterns.some((pattern) => pattern.test(prompt)),
-  );
-
-  return signal && (stayMonths as readonly string[]).includes(signal.month)
-    ? signal.month
-    : null;
 }
 
 function inferGuests(prompt: string) {

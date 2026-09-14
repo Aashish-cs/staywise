@@ -1,7 +1,6 @@
 import {
   featuredAmenities,
   type PropertyType,
-  stayMonths,
   tripPurposeLabels,
   type TripPurpose,
 } from "@/lib/listings";
@@ -13,7 +12,6 @@ export function parseSearchParams(params: RawSearchParams): SearchInput {
   const tripPurpose = parseTripPurpose(
     firstParam(params.purpose) ?? firstParam(params.tripPurpose),
   );
-  const month = parseMonth(firstParam(params.month));
   const amenities = allParams(params.amenities).filter(isFeaturedAmenity);
   const propertyTypes = allParams(params.propertyTypes).filter(isPropertyType);
 
@@ -35,11 +33,9 @@ export function parseSearchParams(params: RawSearchParams): SearchInput {
       0,
       12,
     ),
-    minRating: clampNumberParam(firstParam(params.minRating), 0, 0, 5),
     propertyTypes,
     tripPurpose,
     amenities,
-    month,
   });
 }
 
@@ -70,16 +66,11 @@ export function buildSearchQueryString(input: Partial<SearchInput>) {
     params.set("minBathrooms", String(parsed.minBathrooms));
   }
 
-  if (parsed.minRating > 0) {
-    params.set("minRating", String(parsed.minRating));
-  }
-
   parsed.propertyTypes.forEach((propertyType) => {
     params.append("propertyTypes", propertyType);
   });
 
   params.set("purpose", parsed.tripPurpose);
-  params.set("month", parsed.month);
 
   parsed.amenities.forEach((amenity) => {
     params.append("amenities", amenity);
@@ -123,10 +114,6 @@ function parseDateParam(value: string | undefined) {
   const date = new Date(`${value}T00:00:00`);
 
   return Number.isNaN(date.getTime()) ? "" : value;
-}
-
-function parseMonth(value: string | undefined) {
-  return value && (stayMonths as readonly string[]).includes(value) ? value : "Sep";
 }
 
 function parseTripPurpose(value: string | undefined): TripPurpose {

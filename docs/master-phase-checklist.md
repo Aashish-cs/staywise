@@ -18,12 +18,12 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Preserve good working code and existing Supabase data.
   - Avoid blind rewrites, destructive DB changes, secret exposure, and auth regressions.
 
-- [~] Phase 1: Complete engineering audit
+- [x] Phase 1: Complete engineering audit
   - Find hardcoded listings/cities/coordinates, fake ratings/reviews/hosts/recommendations/bookings, dead buttons, broken routes, unfinished forms, duplicate components, unhandled errors, auth bugs, RLS assumptions, TypeScript/lint/build issues, accessibility/mobile/performance/security issues, and missing states.
   - Run `pnpm install`, `pnpm lint`, `pnpm typecheck`, and `pnpm build`.
   - Fix errors and continue beyond simply passing the build.
 
-- [ ] Phase 2: Define real product architecture
+- [~] Phase 2: Define real product architecture
   - Move toward feature-oriented structure where useful.
   - Separate UI, business logic, data access, validation, and types.
   - Avoid giant components, duplicated Supabase queries, and business logic hidden inside JSX.

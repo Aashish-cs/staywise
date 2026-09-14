@@ -44,7 +44,6 @@ export type Listing = {
   amenities: string[];
   traits: string[];
   bestFor: TripPurpose[];
-  availableMonths: string[];
   description: string;
 };
 
@@ -87,8 +86,6 @@ export const featuredAmenities = [
   "Pet friendly",
   "Self check-in",
 ] as const;
-
-export const stayMonths = ["Sep", "Oct", "Nov", "Dec"] as const;
 
 export const fallbackListingImage =
   "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=80";

@@ -4,7 +4,7 @@
 
 - Next.js project scaffolded.
 - Branded StayWise interface.
-- Listing search with destination, guests, month, budget, trip purpose, and amenities.
+- Listing search with destination, date range, guests, budget, trip purpose, and amenities.
 - Explainable recommendation ranking.
 - Supabase email/password auth pages.
 - Guest dashboard structure.

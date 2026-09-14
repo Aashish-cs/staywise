@@ -50,11 +50,9 @@ const baseSearch: SearchInput = {
   maxNightlyBudget: 300,
   minBathrooms: 0,
   minBedrooms: 0,
-  minRating: 0,
   propertyTypes: [],
   tripPurpose: "remote-work",
   amenities: ["Fast Wi-Fi", "Workspace"],
-  month: "Sep",
 };
 
 export function MarketplaceHome({
@@ -93,7 +91,6 @@ export function MarketplaceHome({
           amenities: [],
           destination: "",
           maxNightlyBudget: 1200,
-          month: "",
         },
         initialListings,
       ),
@@ -131,7 +128,6 @@ export function MarketplaceHome({
       checkOut,
       destination,
       guests,
-      month: getSupportedMonth(checkIn),
     });
   }
 
@@ -910,19 +906,4 @@ function getTopCity(listings: Listing[]) {
         secondCount - firstCount || firstCity.localeCompare(secondCity),
     )[0]?.[0] ?? null
   );
-}
-
-function getSupportedMonth(checkIn: string) {
-  if (!checkIn) {
-    return baseSearch.month;
-  }
-
-  const month = new Date(`${checkIn}T00:00:00`).getUTCMonth();
-
-  if (month === 8) return "Sep";
-  if (month === 9) return "Oct";
-  if (month === 10) return "Nov";
-  if (month === 11) return "Dec";
-
-  return baseSearch.month;
 }

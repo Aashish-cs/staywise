@@ -47,7 +47,6 @@ export default async function DashboardPage() {
         : 260,
       tripPurpose: "remote-work",
       amenities: ["Fast Wi-Fi", "Workspace"],
-      month: "Nov",
     },
     publicListings,
   ).slice(0, 3);

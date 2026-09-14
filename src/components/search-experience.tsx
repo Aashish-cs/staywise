@@ -27,7 +27,6 @@ import { toggleFavoriteAction } from "@/app/favorites/actions";
 import {
   featuredAmenities,
   type PropertyType,
-  stayMonths,
   type Listing,
   tripPurposeLabels,
   type TripPurpose,
@@ -56,11 +55,9 @@ const defaultSearch: SearchInput = {
   maxNightlyBudget: 250,
   minBathrooms: 0,
   minBedrooms: 0,
-  minRating: 0,
   propertyTypes: [],
   tripPurpose: "remote-work",
   amenities: ["Fast Wi-Fi", "Workspace"],
-  month: "Sep",
 };
 
 const propertyTypes: PropertyType[] = [
@@ -156,7 +153,7 @@ export function SearchExperience({
   const listingDetailQuery = buildSearchQueryString(search);
   const resultSummary = `${displayedListings.length} ${
     displayedListings.length === 1 ? "match" : "matches"
-  }${search.destination ? ` near ${search.destination}` : ""} for ${search.month}`;
+  }${search.destination ? ` near ${search.destination}` : ""}`;
   const activeFilterLabels = getActiveFilterLabels(search);
   const averageNightlyRate =
     initialListings.length > 0
@@ -219,7 +216,6 @@ export function SearchExperience({
       maxNightlyBudget: defaultSearch.maxNightlyBudget,
       minBathrooms: 0,
       minBedrooms: 0,
-      minRating: 0,
       propertyTypes: [],
     }));
   }
@@ -590,23 +586,7 @@ export function SearchExperience({
                 </label>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
-                <label className="block">
-                  <span className="field-label">Month</span>
-                  <span className="field-shell">
-                    <CalendarDays className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-                    <select
-                      value={search.month}
-                      onChange={(event) => updateSearch("month", event.target.value)}
-                      className="field-input"
-                    >
-                      {stayMonths.map((month) => (
-                        <option key={month}>{month}</option>
-                      ))}
-                    </select>
-                  </span>
-                </label>
-
+              <div className="grid gap-3 sm:grid-cols-2">
                 <label className="block">
                   <span className="field-label">Guests</span>
                   <span className="field-shell">

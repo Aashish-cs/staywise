@@ -32,7 +32,7 @@ export function MarketplaceListingRails({
   sections,
 }: MarketplaceListingRailsProps) {
   return (
-    <section className="space-y-9 pb-12">
+    <section className="space-y-11 py-12">
       {sections.map((section, sectionIndex) => (
         <ListingRail
           key={section.title}
@@ -68,12 +68,14 @@ function ListingRail({
 }) {
   return (
     <section className="mx-auto max-w-[1536px] px-5 lg:px-8">
-      <div className="mb-4 flex items-end justify-between gap-4">
+      <div className="mb-5 flex items-end justify-between gap-4">
         <div>
           <h2 className="text-xl font-extrabold tracking-tight md:text-2xl">
             {title}
           </h2>
-          <p className="mt-1 text-sm font-semibold text-[#786a60]">{subtitle}</p>
+          <p className="mt-1 max-w-2xl text-sm font-semibold text-[#786a60]">
+            {subtitle}
+          </p>
         </div>
         <Link
           href={href}
@@ -84,7 +86,7 @@ function ListingRail({
         </Link>
       </div>
 
-      <div className="grid auto-cols-[minmax(245px,1fr)] grid-flow-col gap-4 overflow-x-auto pb-3 [scrollbar-width:none] md:auto-cols-[minmax(260px,1fr)] lg:auto-cols-[minmax(265px,1fr)]">
+      <div className="grid auto-cols-[minmax(245px,1fr)] grid-flow-col gap-5 overflow-x-auto pb-3 [scrollbar-width:none] md:auto-cols-[minmax(260px,1fr)] lg:auto-cols-[minmax(275px,1fr)]">
         {listings.map((listing, index) => (
           <MarketplaceListingCard
             key={`${title}-${listing.id}`}
@@ -114,21 +116,22 @@ function MarketplaceListingCard({
     ...homeSearchInput,
     ...createListingSearchInput(listing),
   });
+  const href = `/listings/${listing.id}${query ? `?${query}` : ""}`;
 
   return (
     <article className="group min-w-0">
-      <div className="relative overflow-hidden rounded-[22px] bg-[#e8dfd6]">
+      <div className="relative overflow-hidden rounded-[24px] bg-[#e8dfd6] shadow-sm">
         <ListingCardMedia
-          href={`/listings/${listing.id}?${query}`}
+          href={href}
           aria-label={`View ${listing.title}`}
-          frameClassName="block"
+          frameClassName="block aspect-square rounded-[24px]"
           imageClassName="transition duration-500 group-hover:scale-105"
           listing={listing}
           priority={priority}
           sizes="(min-width: 1280px) 280px, (min-width: 768px) 33vw, 82vw"
         />
         <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-extrabold text-[#201a18] shadow-sm">
-          Live listing
+          {listing.matchScore}% match
         </span>
         <ListingSaveButton
           className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#201a18] shadow-sm backdrop-blur transition hover:scale-105"
@@ -139,7 +142,7 @@ function MarketplaceListingCard({
         />
       </div>
 
-      <Link href={`/listings/${listing.id}?${query}`} className="mt-3 block">
+      <Link href={href} className="mt-3 block">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 className="line-clamp-2 text-sm font-extrabold leading-5">
@@ -157,7 +160,7 @@ function MarketplaceListingCard({
           <span className="font-extrabold text-[#201a18]">
             ${listing.pricePerNight}
           </span>{" "}
-          night · {listing.capacity} guests
+          night · {listing.propertyType}
         </p>
         <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-[#315d3b]">
           {listing.matchReasons[0]}

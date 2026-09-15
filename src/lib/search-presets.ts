@@ -19,7 +19,7 @@ export const homeSearchInput = createSearchInput({
 export const broadMarketplaceSearchInput = createSearchInput({
   amenities: [],
   destination: "",
-  maxNightlyBudget: 1200,
+  maxNightlyBudget: 300,
 });
 
 export const workReadySearchPreset = {

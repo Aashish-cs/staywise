@@ -77,11 +77,12 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Preserve overlap protection with trusted logic.
   - Current pass: confirmed search uses the `get_available_listing_ids` RPC, added date range chips, visible availability-check messaging, date-specific empty-state copy, and `docs/phase-9-availability-search.md`.
 
-- [~] Phase 10: Airbnb-quality home page
+- [x] Phase 10: Airbnb-quality home page
   - Make homepage feel like a travel marketplace, not SaaS.
   - Build premium header, meaningful nav, search bar, real listing sections, and strong photography.
+  - Current pass: rebuilt the home page around compact premium search, category discovery, real-listing spotlight cards, operational marketplace signals, refreshed listing rails, realistic homepage match copy, and `docs/phase-10-airbnb-quality-home.md`.
 
-- [ ] Phase 11: Design system
+- [~] Phase 11: Design system
   - Create consistent StayWise primitives for buttons, inputs, selects, modals/drawers/popovers/dropdowns, date picker, guest picker, search bar, listing card, skeleton, empty/error states, toast, avatar, badge, price, and rating display.
   - Keep the style premium, mature, restrained, and travel-oriented.
 

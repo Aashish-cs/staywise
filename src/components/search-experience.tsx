@@ -33,6 +33,7 @@ import {
 import {
   getActiveSearchFilterLabels,
   getSearchResultSummary,
+  hasSearchDateRange,
   sortRankedListings,
   type SortMode,
 } from "@/lib/search-results";
@@ -146,6 +147,7 @@ export function SearchExperience({
   });
   const resultSummary = getSearchResultSummary(displayedListings, search);
   const activeFilterLabels = getActiveSearchFilterLabels(search);
+  const availabilityFilterApplied = hasSearchDateRange(search);
   const averageNightlyRate =
     initialListings.length > 0
       ? Math.round(
@@ -342,6 +344,7 @@ export function SearchExperience({
             activeFilterCount={activeFilterCount}
             activeFilterLabels={activeFilterLabels}
             displayedListings={displayedListings}
+            availabilityFilterApplied={availabilityFilterApplied}
             listingDetailQuery={listingDetailQuery}
             onClearAdvancedFilters={clearAdvancedFilters}
             onFocusSearch={focusSearch}

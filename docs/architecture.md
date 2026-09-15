@@ -21,6 +21,8 @@ The Supabase schema is organized around durable marketplace entities:
 
 Reservations and availability are protected by database functions and constraints, not only client-side checks. The active-reservation exclusion constraint prevents double-booking, and the availability RPCs hide both active reservations and host-blocked dates from search.
 
+Search result pages use the same availability RPC path when a valid check-in/check-out range is present, and reservation creation still repeats the overlap checks in the trusted booking RPC.
+
 ## Recommendation Engine
 
 The first AI feature is explainable ranking. Listings are scored against a trip request using:

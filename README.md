@@ -75,7 +75,7 @@ The current implementation covers authentication, Supabase-filtered listing sear
 
 - Listings can come from host-created rows or the provided synthetic seed data; production should not silently fall back to hardcoded listing arrays.
 - Listing search now runs server-side filters for destination, current location, dates, guests, price, property type, bedrooms/beds, bathrooms, amenities, and page state before the UI ranks and displays results.
-- Phase 9 will continue hardening availability-specific search behavior and date-range empty states.
+- Availability search uses the database RPC path to exclude active reservations and host-blocked dates, then shows date-aware result and empty states.
 - Maps currently use OpenStreetMap embeds. A synchronized interactive marker map is planned for later phases.
 - Guest-host messaging, review UI, Supabase Storage image uploads, profile settings UI, real payment provider checkout/webhooks, and automated browser tests are still roadmap items.
 - Any Supabase key that was shared during setup should be rotated before final presentation.

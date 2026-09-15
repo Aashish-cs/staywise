@@ -18,6 +18,7 @@ import type { SortMode } from "@/lib/search-results";
 type SearchResultsSectionProps = {
   activeFilterCount: number;
   activeFilterLabels: string[];
+  availabilityFilterApplied: boolean;
   displayedListings: RankedListing[];
   listingDetailQuery: string;
   onClearAdvancedFilters: () => void;
@@ -44,6 +45,7 @@ type SearchResultsSectionProps = {
 export function SearchResultsSection({
   activeFilterCount,
   activeFilterLabels,
+  availabilityFilterApplied,
   displayedListings,
   listingDetailQuery,
   onClearAdvancedFilters,
@@ -73,6 +75,11 @@ export function SearchResultsSection({
             Smart sort weighs budget, trip style, guest count, amenities, and the
             filters in your shareable search URL.
           </p>
+          {availabilityFilterApplied && (
+            <p className="mt-2 inline-flex rounded-full bg-[#e7f2e4] px-3 py-1 text-xs font-extrabold text-[#315d3b]">
+              Dates checked against live reservations and host blocks
+            </p>
+          )}
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
@@ -237,8 +244,9 @@ export function SearchResultsSection({
           <Sparkles className="mx-auto h-8 w-8 text-[#ff385c]" aria-hidden="true" />
           <p className="mt-4 text-lg font-semibold">No stays match this trip yet.</p>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#786a60]">
-            StayWise can loosen the filters, widen the budget, or use AI search to
-            translate the trip into a better set of matches.
+            {availabilityFilterApplied
+              ? "Those dates may already be booked or blocked by hosts. Try nearby dates, widen the budget, or clear advanced filters."
+              : "StayWise can loosen the filters, widen the budget, or use AI search to translate the trip into a better set of matches."}
           </p>
           <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
             <button

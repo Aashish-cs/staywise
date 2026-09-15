@@ -72,11 +72,12 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Preserve refresh-safe, shareable URL state with pagination/cursor loading.
   - Current pass: added `searchPublicListings`, Supabase-side search filters, shared recommendation API usage, page URLs, pagination controls, out-of-range page handling, `beds` URL aliases, and `docs/phase-8-real-listing-search.md`.
 
-- [~] Phase 9: Availability search
+- [x] Phase 9: Availability search
   - Ensure selected date ranges remove unavailable properties server-side/database-side.
   - Preserve overlap protection with trusted logic.
+  - Current pass: confirmed search uses the `get_available_listing_ids` RPC, added date range chips, visible availability-check messaging, date-specific empty-state copy, and `docs/phase-9-availability-search.md`.
 
-- [ ] Phase 10: Airbnb-quality home page
+- [~] Phase 10: Airbnb-quality home page
   - Make homepage feel like a travel marketplace, not SaaS.
   - Build premium header, meaningful nav, search bar, real listing sections, and strong photography.
 

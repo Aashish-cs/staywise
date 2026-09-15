@@ -22,6 +22,7 @@ import {
 } from "@/components/listing-card-primitives";
 import { MarketplaceListingRails } from "@/components/marketplace-listing-rails";
 import { StayWiseAccountMenu, StayWiseHeader } from "@/components/staywise-header";
+import { Badge, Price } from "@/components/ui/primitives";
 import { useAiSearch } from "@/hooks/use-ai-search";
 import { useSavedListings } from "@/hooks/use-saved-listings";
 import type { Listing } from "@/lib/listings";
@@ -506,19 +507,19 @@ function FeaturedStayCard({
         <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/5" />
         <div className="absolute inset-x-0 bottom-0 p-5 text-white md:p-7">
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full bg-white/95 px-3 py-1 text-xs font-extrabold text-[#201a18]">
+            <Badge tone="neutral" className="bg-white/95">
               Today&apos;s smart pick
-            </span>
-            <span className="rounded-full bg-black/35 px-3 py-1 text-xs font-extrabold backdrop-blur">
+            </Badge>
+            <Badge tone="neutral" className="bg-black/35 text-white backdrop-blur">
               {listing.matchScore}% match
-            </span>
+            </Badge>
           </div>
           <h2 className="mt-4 max-w-2xl text-3xl font-extrabold leading-tight tracking-tight md:text-5xl">
             {listing.title}
           </h2>
           <p className="mt-3 text-sm font-semibold text-white/85 md:text-base">
-            {listing.neighborhood}, {listing.city} · {listing.capacity} guests · $
-            {listing.pricePerNight}/night
+            {listing.neighborhood}, {listing.city} · {listing.capacity} guests ·{" "}
+            <Price amount={listing.pricePerNight} tone="inverse" />
           </p>
           <p className="mt-3 max-w-xl text-sm font-semibold leading-6 text-white/85">
             {listing.matchReasons[0]}
@@ -568,9 +569,9 @@ function SpotlightStayCard({
       </div>
       <Link href={href} className="flex min-w-0 flex-col justify-between p-4">
         <span>
-          <span className="rounded-full bg-[#fff3f5] px-3 py-1 text-xs font-extrabold text-[#bd1740]">
+          <Badge tone="brand">
             {listing.propertyType}
-          </span>
+          </Badge>
           <h3 className="mt-3 line-clamp-2 text-base font-extrabold leading-6">
             {listing.title}
           </h3>
@@ -582,9 +583,7 @@ function SpotlightStayCard({
           <span className="font-semibold text-[#5f5148]">
             {listing.capacity} guests
           </span>
-          <span className="font-extrabold text-[#201a18]">
-            ${listing.pricePerNight}/night
-          </span>
+          <Price amount={listing.pricePerNight} />
         </span>
       </Link>
     </article>

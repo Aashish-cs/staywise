@@ -8,6 +8,14 @@ import {
   ListingSaveButton,
 } from "@/components/listing-card-primitives";
 import {
+  Badge,
+  Button,
+  ButtonLink,
+  EmptyState,
+  Price,
+  Surface,
+} from "@/components/ui/primitives";
+import {
   getOpenStreetMapEmbedUrl,
   getOpenStreetMapUrl,
 } from "@/lib/listing-map";
@@ -76,9 +84,9 @@ export function SearchResultsSection({
             filters in your shareable search URL.
           </p>
           {availabilityFilterApplied && (
-            <p className="mt-2 inline-flex rounded-full bg-[#e7f2e4] px-3 py-1 text-xs font-extrabold text-[#315d3b]">
+            <Badge tone="success" className="mt-2">
               Dates checked against live reservations and host blocks
-            </p>
+            </Badge>
           )}
         </div>
 
@@ -118,12 +126,9 @@ export function SearchResultsSection({
       {activeFilterLabels.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-2">
           {activeFilterLabels.map((label) => (
-            <span
-              key={label}
-              className="rounded-full bg-[#f7f3ee] px-3 py-1 text-xs font-extrabold text-[#5f5148]"
-            >
+            <Badge key={label} tone="neutral">
               {label}
-            </span>
+            </Badge>
           ))}
         </div>
       )}
@@ -132,13 +137,12 @@ export function SearchResultsSection({
         <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           <div className="grid gap-5 md:grid-cols-2">
             {displayedListings.map((listing, index) => (
-              <article
+              <Surface
+                as="article"
                 key={listing.id}
                 className={clsx(
-                  "group overflow-hidden rounded-[22px] border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md",
-                  selectedListing?.id === listing.id
-                    ? "border-[#ff385c]"
-                    : "border-[#eadfd6]",
+                  "group overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md",
+                  selectedListing?.id === listing.id && "border-[#ff385c]",
                 )}
               >
                 <button
@@ -153,9 +157,12 @@ export function SearchResultsSection({
                     priority={index === 0}
                     sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
                   >
-                    <div className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-sm font-semibold shadow-sm">
+                    <Badge
+                      tone="neutral"
+                      className="absolute left-3 top-3 bg-white/95 text-sm font-semibold shadow-sm"
+                    >
                       {listing.matchScore}% match
-                    </div>
+                    </Badge>
                   </ListingCardMedia>
 
                   <div className="p-4">
@@ -171,9 +178,9 @@ export function SearchResultsSection({
                             : ""}
                         </p>
                       </div>
-                      <span className="shrink-0 rounded-full bg-[#f7f3ee] px-3 py-1 text-xs font-extrabold text-[#5f5148]">
+                      <Badge tone="neutral" className="shrink-0">
                         Live
-                      </span>
+                      </Badge>
                     </div>
 
                     <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-[#5f5148]">
@@ -184,8 +191,7 @@ export function SearchResultsSection({
 
                     <div className="mt-4 flex items-center justify-between gap-3">
                       <p className="text-sm">
-                        <span className="font-semibold">${listing.pricePerNight}</span>{" "}
-                        night
+                        <Price amount={listing.pricePerNight} />
                       </p>
                       <p className="text-xs font-semibold text-[#315d3b]">
                         {listing.matchReasons[0]}
@@ -203,22 +209,23 @@ export function SearchResultsSection({
                     saved={savedIds.includes(listing.id)}
                     showLabel
                   />
-                  <Link
+                  <ButtonLink
                     href={`/listings/${listing.id}${
                       listingDetailQuery ? `?${listingDetailQuery}` : ""
                     }`}
                     aria-label={`Reserve ${listing.title}`}
-                    className="rounded-full bg-[#201a18] px-4 py-2 text-sm font-semibold text-white hover:bg-black"
+                    size="sm"
+                    variant="secondary"
                   >
                     Reserve
-                  </Link>
+                  </ButtonLink>
                 </div>
-              </article>
+              </Surface>
             ))}
           </div>
 
           {selectedListing && (
-            <aside className="self-start rounded-[24px] border border-[#eadfd6] bg-white p-5 shadow-sm xl:sticky xl:top-24">
+            <Surface as="aside" className="self-start p-5 xl:sticky xl:top-24">
               {showMapPanel ? (
                 <ListingMapPanel
                   listings={displayedListings}
@@ -229,7 +236,7 @@ export function SearchResultsSection({
               ) : (
                 <ListingFitPanel listing={selectedListing} />
               )}
-            </aside>
+            </Surface>
           )}
 
           {pagination &&
@@ -240,31 +247,34 @@ export function SearchResultsSection({
             )}
         </div>
       ) : (
-        <div className="mt-6 rounded-[24px] border border-dashed border-[#d7c8bd] bg-white p-8 text-center">
-          <Sparkles className="mx-auto h-8 w-8 text-[#ff385c]" aria-hidden="true" />
-          <p className="mt-4 text-lg font-semibold">No stays match this trip yet.</p>
-          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#786a60]">
-            {availabilityFilterApplied
+        <EmptyState
+          className="mt-6"
+          icon={Sparkles}
+          title="No stays match this trip yet."
+          body={
+            availabilityFilterApplied
               ? "Those dates may already be booked or blocked by hosts. Try nearby dates, widen the budget, or clear advanced filters."
-              : "StayWise can loosen the filters, widen the budget, or use AI search to translate the trip into a better set of matches."}
-          </p>
-          <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
-            <button
+              : "StayWise can loosen the filters, widen the budget, or use AI search to translate the trip into a better set of matches."
+          }
+          actions={
+            <>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={onClearAdvancedFilters}
+              >
+                Clear advanced filters
+              </Button>
+              <Button
               type="button"
-              className="inline-flex h-11 items-center justify-center rounded-full bg-[#201a18] px-5 text-sm font-extrabold text-white hover:bg-black"
-              onClick={onClearAdvancedFilters}
-            >
-              Clear advanced filters
-            </button>
-            <button
-              type="button"
-              className="inline-flex h-11 items-center justify-center rounded-full border border-[#eadfd6] px-5 text-sm font-extrabold hover:border-[#ff385c] hover:text-[#df2348]"
-              onClick={onFocusSearch}
-            >
-              Try AI search
-            </button>
-          </div>
-        </div>
+                variant="outline"
+                onClick={onFocusSearch}
+              >
+                Try AI search
+              </Button>
+            </>
+          }
+        />
       )}
     </section>
   );
@@ -276,9 +286,10 @@ function SearchPagination({
   pagination: NonNullable<SearchResultsSectionProps["pagination"]>;
 }) {
   return (
-    <nav
+    <Surface
+      as="nav"
       aria-label="Search result pages"
-      className="flex flex-col gap-3 rounded-[22px] border border-[#eadfd6] bg-white p-4 text-sm font-extrabold sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-col gap-3 p-4 text-sm font-extrabold sm:flex-row sm:items-center sm:justify-between"
     >
       <p className="text-[#5f5148]">
         Page {pagination.page}
@@ -286,23 +297,25 @@ function SearchPagination({
       </p>
       <div className="flex gap-2">
         {pagination.hasPreviousPage && (
-          <Link
+          <ButtonLink
             href={pagination.previousHref}
-            className="rounded-full border border-[#eadfd6] px-4 py-2 hover:border-[#ff385c] hover:text-[#df2348]"
+            size="sm"
+            variant="outline"
           >
             Previous
-          </Link>
+          </ButtonLink>
         )}
         {pagination.hasNextPage && (
-          <Link
+          <ButtonLink
             href={pagination.nextHref}
-            className="rounded-full bg-[#201a18] px-4 py-2 text-white hover:bg-black"
+            size="sm"
+            variant="secondary"
           >
             Next page
-          </Link>
+          </ButtonLink>
         )}
       </div>
-    </nav>
+    </Surface>
   );
 }
 
@@ -323,9 +336,9 @@ function ListingFitPanel({ listing }: { listing: RankedListing }) {
           <p className="text-sm font-semibold text-[#ff385c]">StayWise fit</p>
           <h3 className="mt-1 text-xl font-semibold">{listing.title}</h3>
         </div>
-        <span className="rounded-full bg-[#fff3f5] px-3 py-1 text-sm font-semibold text-[#bd1740]">
+        <Badge tone="brand" className="text-sm font-semibold">
           {listing.matchScore}%
-        </span>
+        </Badge>
       </div>
 
       <p className="mt-4 text-sm leading-6 text-[#5f5148]">{listing.description}</p>
@@ -368,12 +381,9 @@ function ListingFitPanel({ listing }: { listing: RankedListing }) {
 
       <div className="mt-5 flex flex-wrap gap-2">
         {listing.amenities.slice(0, 5).map((amenity) => (
-          <span
-            key={amenity}
-            className="rounded-full bg-[#edf6f8] px-3 py-1 text-xs font-semibold text-[#23515a]"
-          >
+          <Badge key={amenity} tone="info" className="font-semibold">
             {amenity}
-          </span>
+          </Badge>
         ))}
       </div>
     </>
@@ -411,9 +421,12 @@ function ListingMapPanel({
             className="absolute inset-0 h-full w-full border-0"
             loading="lazy"
           />
-          <div className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-xs font-extrabold text-[#5f5148] shadow-sm">
+          <Badge
+            tone="neutral"
+            className="absolute left-4 top-4 bg-white/95 shadow-sm"
+          >
             Real map source
-          </div>
+          </Badge>
           <Link
             href={getOpenStreetMapUrl(listing)}
             target="_blank"
@@ -464,14 +477,15 @@ function ListingMapPanel({
         ))}
       </div>
 
-      <Link
+      <ButtonLink
         href={`/listings/${listing.id}${
           listingDetailQuery ? `?${listingDetailQuery}` : ""
         }`}
-        className="mt-5 flex h-11 items-center justify-center rounded-full bg-[#201a18] px-4 text-sm font-semibold text-white hover:bg-black"
+        className="mt-5 w-full"
+        variant="secondary"
       >
         Open listing
-      </Link>
+      </ButtonLink>
     </>
   );
 }

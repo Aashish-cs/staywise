@@ -6,6 +6,7 @@ import {
   ListingCardMedia,
   ListingSaveButton,
 } from "@/components/listing-card-primitives";
+import { Badge, Price } from "@/components/ui/primitives";
 import {
   createListingSearchInput,
   homeSearchInput,
@@ -130,9 +131,9 @@ function MarketplaceListingCard({
           priority={priority}
           sizes="(min-width: 1280px) 280px, (min-width: 768px) 33vw, 82vw"
         />
-        <span className="absolute left-3 top-3 rounded-full bg-white/95 px-3 py-1 text-xs font-extrabold text-[#201a18] shadow-sm">
+        <Badge tone="neutral" className="absolute left-3 top-3 bg-white/95 shadow-sm">
           {listing.matchScore}% match
-        </span>
+        </Badge>
         <ListingSaveButton
           className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#201a18] shadow-sm backdrop-blur transition hover:scale-105"
           iconClassName="h-5 w-5"
@@ -152,15 +153,12 @@ function MarketplaceListingCard({
               {listing.neighborhood}, {listing.city}
             </p>
           </div>
-          <span className="shrink-0 rounded-full bg-[#f7f3ee] px-3 py-1 text-xs font-extrabold text-[#5f5148]">
+          <Badge tone="neutral" className="shrink-0">
             {listing.capacity} guests
-          </span>
+          </Badge>
         </div>
         <p className="mt-2 text-sm text-[#5f5148]">
-          <span className="font-extrabold text-[#201a18]">
-            ${listing.pricePerNight}
-          </span>{" "}
-          night · {listing.propertyType}
+          <Price amount={listing.pricePerNight} /> · {listing.propertyType}
         </p>
         <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-[#315d3b]">
           {listing.matchReasons[0]}

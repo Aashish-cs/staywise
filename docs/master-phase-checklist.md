@@ -82,11 +82,12 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Build premium header, meaningful nav, search bar, real listing sections, and strong photography.
   - Current pass: rebuilt the home page around compact premium search, category discovery, real-listing spotlight cards, operational marketplace signals, refreshed listing rails, realistic homepage match copy, and `docs/phase-10-airbnb-quality-home.md`.
 
-- [~] Phase 11: Design system
+- [x] Phase 11: Design system
   - Create consistent StayWise primitives for buttons, inputs, selects, modals/drawers/popovers/dropdowns, date picker, guest picker, search bar, listing card, skeleton, empty/error states, toast, avatar, badge, price, and rating display.
   - Keep the style premium, mature, restrained, and travel-oriented.
+  - Current pass: added shared UI primitives in `src/components/ui/primitives.tsx`, migrated search results and home listing surfaces to shared Badge/Price/Button/Surface/EmptyState primitives, and documented the foundation in `docs/phase-11-design-system.md`.
 
-- [ ] Phase 12: Search results page
+- [~] Phase 12: Search results page
   - Desktop list/map layout with accessible search header and filters.
   - Mobile list/map toggle.
   - Synchronize result cards and map markers.

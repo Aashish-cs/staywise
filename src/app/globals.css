@@ -222,3 +222,86 @@ button {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+.staywise-map-container {
+  background: #edf6f8;
+  height: 100%;
+  min-height: 20rem;
+  width: 100%;
+}
+
+.staywise-map-container .leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.9);
+  color: #5f5148;
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.staywise-map-container .leaflet-control-attribution a {
+  color: #23515a;
+}
+
+.staywise-map-container .leaflet-control-zoom {
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  box-shadow: 0 10px 28px rgba(32, 26, 24, 0.12);
+  overflow: hidden;
+}
+
+.staywise-map-container .leaflet-control-zoom a {
+  border: 0;
+  color: #201a18;
+  font-weight: 900;
+}
+
+.staywise-map-container .leaflet-control-zoom a:hover {
+  background: #fff3f5;
+  color: var(--brand-dark);
+}
+
+.staywise-price-marker-wrapper,
+.staywise-current-location-wrapper {
+  background: transparent;
+  border: 0;
+}
+
+.staywise-price-marker {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(32, 26, 24, 0.18);
+  border-radius: 999px;
+  box-shadow: 0 10px 24px rgba(32, 26, 24, 0.18);
+  color: #201a18;
+  display: inline-flex;
+  font-size: 0.8125rem;
+  font-weight: 900;
+  height: 2rem;
+  justify-content: center;
+  min-width: 4.5rem;
+  padding: 0 0.7rem;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.staywise-price-marker:hover,
+.staywise-price-marker-active {
+  background: #201a18;
+  border-color: #201a18;
+  color: #ffffff;
+  transform: scale(1.04);
+}
+
+.staywise-current-location-marker {
+  background: #2563eb;
+  border: 3px solid #ffffff;
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 8px rgba(37, 99, 235, 0.2),
+    0 10px 24px rgba(37, 99, 235, 0.22);
+  display: block;
+  height: 1.15rem;
+  width: 1.15rem;
+}

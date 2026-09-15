@@ -93,10 +93,11 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Synchronize result cards and map markers.
   - Current pass: added a mobile results summary, mobile filter reveal, true List/Map toggle behavior, desktop sticky side panel behavior, duplicate-control cleanup, and `docs/phase-12-search-results-page.md`.
 
-- [~] Phase 13: Interactive map
+- [x] Phase 13: Interactive map
   - Use a real map system, listing price markers, current location marker, hover/click sync, fit bounds, loading/error states, zoom/pan, and responsive sizing.
+  - Current pass: replaced the search iframe with a Leaflet/OpenStreetMap interactive map, added price markers, fit bounds, current-location marker support, marker/list selection sync, loading/error states, mobile map QA, and `docs/phase-13-interactive-map.md`.
 
-- [ ] Phase 14: Listing cards
+- [~] Phase 14: Listing cards
   - Mature card design with image, heart, location, title, facts, real rating only when available, price, optional distance, card navigation, consistent ratio, Next Image, and image fallback.
 
 - [ ] Phase 15: Listing detail page

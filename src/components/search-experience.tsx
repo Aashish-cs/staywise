@@ -371,6 +371,7 @@ export function SearchExperience({
             pagination={pagination}
             resultSummary={resultSummary}
             savedIds={savedIds}
+            search={search}
             selectedListing={selectedListing}
             showMapPanel={showMapPanel}
             sortMode={sortMode}

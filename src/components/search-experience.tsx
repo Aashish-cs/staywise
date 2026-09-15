@@ -7,7 +7,9 @@ import clsx from "clsx";
 import {
   Car,
   Home,
+  Map,
   ShieldCheck,
+  SlidersHorizontal,
   Sparkles,
   Trees,
   Users,
@@ -18,6 +20,7 @@ import {
   SearchResultsSection,
 } from "@/components/search-results-section";
 import { StayWiseAccountMenu, StayWiseHeader } from "@/components/staywise-header";
+import { Badge, Button } from "@/components/ui/primitives";
 import { useAiSearch } from "@/hooks/use-ai-search";
 import { useSavedListings } from "@/hooks/use-saved-listings";
 import {
@@ -103,6 +106,7 @@ export function SearchExperience({
   const [sortMode, setSortMode] = useState<SortMode>("recommended");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showMapPanel, setShowMapPanel] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const rankedListings = useMemo(
     () => rankListings(search, initialListings),
@@ -242,6 +246,7 @@ export function SearchExperience({
   }
 
   function focusSearch() {
+    setShowMobileFilters(true);
     document.getElementById("search")?.scrollIntoView({
       behavior: "smooth",
       block: "start",
@@ -316,29 +321,40 @@ export function SearchExperience({
       </StayWiseHeader>
 
       <section className="mx-auto max-w-[1536px] px-5 py-6 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
-          <SearchFiltersPanel
-            activeFilterCount={activeFilterCount}
-            aiError={aiError}
-            aiMessage={aiMessage}
-            aiPrompt={aiPrompt}
-            destinations={destinations}
-            isAiSearching={isAiSearching}
-            location={resolvedLocation}
-            notice={notice}
-            onAiPromptChange={setAiPrompt}
-            onApplyAiSearch={() => {
-              void applyAiSearch();
-            }}
-            onClearAdvancedFilters={clearAdvancedFilters}
-            onDestinationChange={updateDestination}
-            onFocusResults={focusResults}
-            onToggleAmenity={toggleAmenity}
-            onTogglePropertyType={togglePropertyType}
-            onUpdateSearch={updateSearch}
-            onUseCurrentLocation={useCurrentLocation}
-            search={search}
-          />
+        <MobileSearchSummary
+          activeFilterCount={activeFilterCount}
+          activeFilterLabels={activeFilterLabels}
+          onToggleFilters={() => setShowMobileFilters((current) => !current)}
+          onToggleMap={() => setShowMapPanel((current) => !current)}
+          resultSummary={resultSummary}
+          showMapPanel={showMapPanel}
+        />
+
+        <div className="mt-4 grid gap-6 lg:mt-0 lg:grid-cols-[360px_1fr]">
+          <div className={clsx("lg:block", showMobileFilters ? "block" : "hidden")}>
+            <SearchFiltersPanel
+              activeFilterCount={activeFilterCount}
+              aiError={aiError}
+              aiMessage={aiMessage}
+              aiPrompt={aiPrompt}
+              destinations={destinations}
+              isAiSearching={isAiSearching}
+              location={resolvedLocation}
+              notice={notice}
+              onAiPromptChange={setAiPrompt}
+              onApplyAiSearch={() => {
+                void applyAiSearch();
+              }}
+              onClearAdvancedFilters={clearAdvancedFilters}
+              onDestinationChange={updateDestination}
+              onFocusResults={focusResults}
+              onToggleAmenity={toggleAmenity}
+              onTogglePropertyType={togglePropertyType}
+              onUpdateSearch={updateSearch}
+              onUseCurrentLocation={useCurrentLocation}
+              search={search}
+            />
+          </div>
 
           <SearchResultsSection
             activeFilterCount={activeFilterCount}
@@ -433,6 +449,65 @@ export function SearchExperience({
         </>
       )}
     </main>
+  );
+}
+
+function MobileSearchSummary({
+  activeFilterCount,
+  activeFilterLabels,
+  onToggleFilters,
+  onToggleMap,
+  resultSummary,
+  showMapPanel,
+}: {
+  activeFilterCount: number;
+  activeFilterLabels: string[];
+  onToggleFilters: () => void;
+  onToggleMap: () => void;
+  resultSummary: string;
+  showMapPanel: boolean;
+}) {
+  return (
+    <div className="rounded-[24px] border border-[#eadfd6] bg-white p-4 shadow-sm lg:hidden">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-extrabold text-[#ff385c]">Search results</p>
+          <h1 className="mt-1 text-xl font-extrabold tracking-tight">
+            {resultSummary}
+          </h1>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={onToggleFilters}
+          >
+            <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+            Filters{activeFilterCount > 0 ? ` ${activeFilterCount}` : ""}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={showMapPanel ? "secondary" : "outline"}
+            onClick={onToggleMap}
+          >
+            <Map className="h-4 w-4" aria-hidden="true" />
+            {showMapPanel ? "List" : "Map"}
+          </Button>
+        </div>
+      </div>
+
+      {activeFilterLabels.length > 0 && (
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+          {activeFilterLabels.slice(0, 8).map((label) => (
+            <Badge key={label} tone="neutral" className="shrink-0">
+              {label}
+            </Badge>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

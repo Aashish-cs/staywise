@@ -91,10 +91,12 @@ export function SearchResultsSection({
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          <button type="button" className="toolbar-button" onClick={onFocusSearch}>
-            <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-            Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
-          </button>
+          <div className="hidden md:block">
+            <button type="button" className="toolbar-button" onClick={onFocusSearch}>
+              <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+              Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+            </button>
+          </div>
           <label className="toolbar-button">
             <span>Sort</span>
             <select
@@ -108,18 +110,20 @@ export function SearchResultsSection({
               <option value="space">Most space</option>
             </select>
           </label>
-          <button
-            type="button"
-            aria-pressed={showMapPanel}
-            className={clsx(
-              "toolbar-button",
-              showMapPanel && "border-[#ff385c] text-[#df2348]",
-            )}
-            onClick={onToggleMapPanel}
-          >
-            <Map className="h-4 w-4" aria-hidden="true" />
-            Map view
-          </button>
+          <div className="hidden md:block">
+            <button
+              type="button"
+              aria-pressed={showMapPanel}
+              className={clsx(
+                "toolbar-button",
+                showMapPanel && "border-[#ff385c] text-[#df2348]",
+              )}
+              onClick={onToggleMapPanel}
+            >
+              <Map className="h-4 w-4" aria-hidden="true" />
+              Map view
+            </button>
+          </div>
         </div>
       </div>
 
@@ -135,7 +139,18 @@ export function SearchResultsSection({
 
       {displayedListings.length > 0 ? (
         <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="grid gap-5 md:grid-cols-2">
+          {selectedListing && showMapPanel && (
+            <Surface as="aside" className="p-5 xl:hidden">
+              <ListingMapPanel
+                listings={displayedListings}
+                listing={selectedListing}
+                listingDetailQuery={listingDetailQuery}
+                onSelectListing={onSelectListing}
+              />
+            </Surface>
+          )}
+
+          <div className={clsx("grid gap-5 md:grid-cols-2", showMapPanel && "hidden xl:grid")}>
             {displayedListings.map((listing, index) => (
               <Surface
                 as="article"
@@ -225,7 +240,10 @@ export function SearchResultsSection({
           </div>
 
           {selectedListing && (
-            <Surface as="aside" className="self-start p-5 xl:sticky xl:top-24">
+            <Surface
+              as="aside"
+              className="hidden self-start p-5 xl:sticky xl:top-24 xl:block"
+            >
               {showMapPanel ? (
                 <ListingMapPanel
                   listings={displayedListings}
@@ -241,7 +259,12 @@ export function SearchResultsSection({
 
           {pagination &&
             (pagination.hasPreviousPage || pagination.hasNextPage) && (
-              <div className="md:col-span-2 xl:col-span-1">
+              <div
+                className={clsx(
+                  "md:col-span-2 xl:col-span-1",
+                  showMapPanel && "hidden xl:block",
+                )}
+              >
                 <SearchPagination pagination={pagination} />
               </div>
             )}

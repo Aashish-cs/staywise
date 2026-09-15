@@ -87,12 +87,13 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Keep the style premium, mature, restrained, and travel-oriented.
   - Current pass: added shared UI primitives in `src/components/ui/primitives.tsx`, migrated search results and home listing surfaces to shared Badge/Price/Button/Surface/EmptyState primitives, and documented the foundation in `docs/phase-11-design-system.md`.
 
-- [~] Phase 12: Search results page
+- [x] Phase 12: Search results page
   - Desktop list/map layout with accessible search header and filters.
   - Mobile list/map toggle.
   - Synchronize result cards and map markers.
+  - Current pass: added a mobile results summary, mobile filter reveal, true List/Map toggle behavior, desktop sticky side panel behavior, duplicate-control cleanup, and `docs/phase-12-search-results-page.md`.
 
-- [ ] Phase 13: Interactive map
+- [~] Phase 13: Interactive map
   - Use a real map system, listing price markers, current location marker, hover/click sync, fit bounds, loading/error states, zoom/pan, and responsive sizing.
 
 - [ ] Phase 14: Listing cards

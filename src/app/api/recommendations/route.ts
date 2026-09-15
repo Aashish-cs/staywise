@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  filterListingsByAvailability,
-  getPublicListings,
-} from "@/lib/listing-data";
+import { searchPublicListings } from "@/lib/listing-data";
 import { recordRecommendationEvent } from "@/lib/recommendation-events";
 import { rankListings, searchSchema } from "@/lib/recommendations";
 
@@ -22,18 +19,15 @@ export async function POST(request: Request) {
     );
   }
 
-  const publicListings = await getPublicListings();
-  const listings = await filterListingsByAvailability(
-    publicListings,
-    parsed.data.checkIn,
-    parsed.data.checkOut,
-  );
-  const rankedListings = rankListings(parsed.data, listings);
+  const listingResult = await searchPublicListings(parsed.data, {
+    pageSize: 24,
+  });
+  const rankedListings = rankListings(parsed.data, listingResult.listings);
 
   await recordRecommendationEvent({
     eventName: "search_submitted",
     reasonCodes: rankedListings[0]?.matchReasons ?? [],
-    resultCount: rankedListings.length,
+    resultCount: listingResult.totalCount,
     score: rankedListings[0]?.matchScore ?? null,
     searchFilters: parsed.data,
     searchQuery: parsed.data.destination,

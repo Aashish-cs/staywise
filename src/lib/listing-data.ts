@@ -12,6 +12,9 @@ import {
   type ReservationStatus,
   type TripPurpose,
 } from "@/lib/listings";
+import { hasSearchCoordinates, nearbySearchRadiusMiles } from "@/lib/location-distance";
+import type { LocationLookupResult } from "@/lib/location-service";
+import { rankListings, type SearchInput } from "@/lib/recommendations";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type ListingImageRow = {
@@ -67,7 +70,13 @@ type AvailableListingIdRow = {
   listing_id: string;
 };
 
+type ListingAmenityMatchRow = {
+  amenity: string;
+  listing_id: string;
+};
+
 type SupabaseQueryError = {
+  code?: string;
   message?: string;
 };
 
@@ -75,6 +84,15 @@ export type ListingAvailabilityStatus = {
   available: boolean | null;
   message: string;
   status: "available" | "unavailable" | "unknown";
+};
+
+export type ListingSearchResult = {
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  listings: Listing[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
 };
 
 const listingSelect = `
@@ -141,6 +159,117 @@ export async function getPublicListings() {
   }
 
   return [];
+}
+
+export async function searchPublicListings(
+  search: SearchInput,
+  options: {
+    location?: LocationLookupResult | null;
+    page?: number;
+    pageSize?: number;
+  } = {},
+): Promise<ListingSearchResult> {
+  const supabase = await createSupabaseServerClient();
+  const pageSize = clampInteger(options.pageSize ?? 24, 1, 48);
+  const page = clampInteger(options.page ?? 1, 1, 100);
+
+  if (!supabase) {
+    return emptyListingSearchResult(page, pageSize);
+  }
+
+  const requiredListingIds = await getRequiredListingIds(supabase, search);
+
+  if (requiredListingIds && requiredListingIds.size === 0) {
+    return emptyListingSearchResult(page, pageSize);
+  }
+
+  let query = supabase
+    .from("listings")
+    .select(listingSelect, { count: "exact" })
+    .eq("is_active", true)
+    .gte("capacity", search.guests)
+    .lte("price_per_night", search.maxNightlyBudget)
+    .gte("bedrooms", search.minBedrooms)
+    .gte("bathrooms", search.minBathrooms)
+    .order("created_at", { ascending: false });
+
+  if (search.propertyTypes.length > 0) {
+    query = query.in("property_type", search.propertyTypes);
+  }
+
+  if (requiredListingIds) {
+    query = query.in("id", Array.from(requiredListingIds));
+  }
+
+  if (hasSearchCoordinates(search)) {
+    const bounds = getCoordinateBounds(
+      search.nearLat as number,
+      search.nearLng as number,
+      nearbySearchRadiusMiles,
+    );
+
+    query = query
+      .gte("latitude", bounds.south)
+      .lte("latitude", bounds.north)
+      .gte("longitude", bounds.west)
+      .lte("longitude", bounds.east)
+      .limit(200);
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Unable to search listings", error);
+      return emptyListingSearchResult(page, pageSize);
+    }
+
+    const rankedListings = rankListings(
+      search,
+      ((data ?? []) as ListingRow[]).map(mapListingRow),
+    );
+    const offset = (page - 1) * pageSize;
+    const listings = rankedListings.slice(offset, offset + pageSize);
+
+    return {
+      hasNextPage: offset + pageSize < rankedListings.length,
+      hasPreviousPage: page > 1,
+      listings,
+      page,
+      pageSize,
+      totalCount: rankedListings.length,
+    };
+  }
+
+  for (const term of getDestinationSearchTerms(search, options.location)) {
+    query = query.or(buildDestinationOrFilter(term));
+  }
+
+  const offset = (page - 1) * pageSize;
+  const { count, data, error } = await query.range(offset, offset + pageSize - 1);
+
+  if (error) {
+    if (error.code === "PGRST103") {
+      return {
+        hasNextPage: false,
+        hasPreviousPage: page > 1,
+        listings: [],
+        page,
+        pageSize,
+        totalCount: 0,
+      };
+    }
+
+    console.error("Unable to search listings", error);
+    return emptyListingSearchResult(page, pageSize);
+  }
+
+  return {
+    hasNextPage: count !== null ? offset + pageSize < count : false,
+    hasPreviousPage: page > 1,
+    listings: rankListings(search, ((data ?? []) as ListingRow[]).map(mapListingRow)),
+    page,
+    pageSize,
+    totalCount: count ?? data?.length ?? 0,
+  };
 }
 
 export async function getPublicListingsForDates(
@@ -266,6 +395,84 @@ async function getAvailableListingIds(checkIn: string, checkOut: string) {
   );
 }
 
+async function getRequiredListingIds(
+  supabase: SupabaseClient,
+  search: SearchInput,
+) {
+  const idSets: Array<Set<string>> = [];
+
+  if (shouldCheckAvailability(search.checkIn, search.checkOut)) {
+    const availableIds = await getAvailableListingIds(search.checkIn, search.checkOut);
+
+    if (availableIds) {
+      idSets.push(availableIds);
+    }
+  }
+
+  if (search.amenities.length > 0) {
+    const amenityIds = await getListingIdsMatchingAmenities(
+      supabase,
+      search.amenities,
+    );
+
+    idSets.push(amenityIds);
+  }
+
+  if (idSets.length === 0) {
+    return null;
+  }
+
+  return intersectListingIds(idSets);
+}
+
+async function getListingIdsMatchingAmenities(
+  supabase: SupabaseClient,
+  amenities: string[],
+) {
+  const uniqueAmenities = Array.from(new Set(amenities));
+
+  if (uniqueAmenities.length === 0) {
+    return new Set<string>();
+  }
+
+  const { data, error } = await supabase
+    .from("listing_amenities")
+    .select("listing_id, amenity")
+    .in("amenity", uniqueAmenities);
+
+  if (error) {
+    console.error("Unable to filter listing amenities", error);
+    return new Set<string>();
+  }
+
+  const matchesByListing = new Map<string, Set<string>>();
+
+  for (const row of (data ?? []) as ListingAmenityMatchRow[]) {
+    const matches = matchesByListing.get(row.listing_id) ?? new Set<string>();
+    matches.add(row.amenity);
+    matchesByListing.set(row.listing_id, matches);
+  }
+
+  return new Set(
+    Array.from(matchesByListing.entries())
+      .filter(([, matches]) => matches.size === uniqueAmenities.length)
+      .map(([listingId]) => listingId),
+  );
+}
+
+function intersectListingIds(idSets: Array<Set<string>>) {
+  const [first, ...rest] = idSets;
+  const result = new Set(first);
+
+  for (const listingId of first) {
+    if (!rest.every((set) => set.has(listingId))) {
+      result.delete(listingId);
+    }
+  }
+
+  return result;
+}
+
 async function loadPublicListingRows(supabase: SupabaseClient) {
   return supabase
     .from("listings")
@@ -290,6 +497,20 @@ function wait(milliseconds: number) {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
+function emptyListingSearchResult(
+  page: number,
+  pageSize: number,
+): ListingSearchResult {
+  return {
+    hasNextPage: false,
+    hasPreviousPage: page > 1,
+    listings: [],
+    page,
+    pageSize,
+    totalCount: 0,
+  };
+}
+
 function shouldCheckAvailability(checkIn: string, checkOut: string) {
   return (
     isValidIsoDate(checkIn) &&
@@ -297,6 +518,67 @@ function shouldCheckAvailability(checkIn: string, checkOut: string) {
     checkIn >= getTodayIso() &&
     countNights(checkIn, checkOut) > 0
   );
+}
+
+function getDestinationSearchTerms(
+  search: SearchInput,
+  location?: LocationLookupResult | null,
+) {
+  if (!search.destination.trim()) {
+    return [];
+  }
+
+  const locationCity = sanitizeSearchTerm(location?.city ?? "");
+
+  if (locationCity) {
+    return [locationCity];
+  }
+
+  return search.destination
+    .split(/[^a-z0-9]+/i)
+    .map(sanitizeSearchTerm)
+    .filter((term) => term.length >= 2)
+    .slice(0, 1);
+}
+
+function buildDestinationOrFilter(term: string) {
+  const pattern = `%${escapePostgrestPattern(term)}%`;
+
+  return [
+    `city.ilike.${pattern}`,
+    `state.ilike.${pattern}`,
+    `country.ilike.${pattern}`,
+    `neighborhood.ilike.${pattern}`,
+  ].join(",");
+}
+
+function sanitizeSearchTerm(term: string) {
+  return term.trim().replace(/\s+/g, " ");
+}
+
+function escapePostgrestPattern(term: string) {
+  return term.replace(/[%*,()]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function getCoordinateBounds(lat: number, lng: number, radiusMiles: number) {
+  const latDelta = radiusMiles / 69;
+  const lngDelta =
+    radiusMiles / Math.max(1, 69 * Math.cos((lat * Math.PI) / 180));
+
+  return {
+    east: Math.min(180, lng + lngDelta),
+    north: Math.min(90, lat + latDelta),
+    south: Math.max(-90, lat - latDelta),
+    west: Math.max(-180, lng - lngDelta),
+  };
+}
+
+function clampInteger(value: number, min: number, max: number) {
+  if (!Number.isFinite(value)) {
+    return min;
+  }
+
+  return Math.min(max, Math.max(min, Math.trunc(value)));
 }
 
 export async function getGuestReservations(userId: string) {

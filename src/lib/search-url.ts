@@ -32,7 +32,10 @@ export function parseSearchParams(params: RawSearchParams): SearchInput {
     ),
     minBathrooms: clampNumberParam(firstParam(params.minBathrooms), 0, 0, 12),
     minBedrooms: clampNumberParam(
-      firstParam(params.minBedrooms) ?? firstParam(params.bedrooms),
+      firstParam(params.minBedrooms) ??
+        firstParam(params.bedrooms) ??
+        firstParam(params.minBeds) ??
+        firstParam(params.beds),
       0,
       0,
       12,
@@ -85,6 +88,25 @@ export function buildSearchQueryString(input: Partial<SearchInput>) {
   if (hasSearchCoordinates(parsed)) {
     params.set("nearLat", formatCoordinateForUrl(parsed.nearLat as number));
     params.set("nearLng", formatCoordinateForUrl(parsed.nearLng as number));
+  }
+
+  return params.toString();
+}
+
+export function parseSearchPage(params: RawSearchParams) {
+  return clampNumberParam(firstParam(params.page), 1, 1, 100);
+}
+
+export function buildSearchPageQueryString(
+  input: Partial<SearchInput>,
+  page: number,
+) {
+  const params = new URLSearchParams(buildSearchQueryString(input));
+
+  if (page > 1) {
+    params.set("page", String(page));
+  } else {
+    params.delete("page");
   }
 
   return params.toString();

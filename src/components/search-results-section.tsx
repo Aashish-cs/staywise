@@ -26,6 +26,14 @@ type SearchResultsSectionProps = {
   onSortModeChange: (sortMode: SortMode) => void;
   onToggleMapPanel: () => void;
   onToggleSaved: (listingId: string) => void;
+  pagination?: {
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    nextHref: string;
+    page: number;
+    previousHref: string;
+    totalCount: number;
+  };
   resultSummary: string;
   savedIds: string[];
   selectedListing?: RankedListing;
@@ -44,6 +52,7 @@ export function SearchResultsSection({
   onSortModeChange,
   onToggleMapPanel,
   onToggleSaved,
+  pagination,
   resultSummary,
   savedIds,
   selectedListing,
@@ -215,6 +224,13 @@ export function SearchResultsSection({
               )}
             </aside>
           )}
+
+          {pagination &&
+            (pagination.hasPreviousPage || pagination.hasNextPage) && (
+              <div className="md:col-span-2 xl:col-span-1">
+                <SearchPagination pagination={pagination} />
+              </div>
+            )}
         </div>
       ) : (
         <div className="mt-6 rounded-[24px] border border-dashed border-[#d7c8bd] bg-white p-8 text-center">
@@ -243,6 +259,42 @@ export function SearchResultsSection({
         </div>
       )}
     </section>
+  );
+}
+
+function SearchPagination({
+  pagination,
+}: {
+  pagination: NonNullable<SearchResultsSectionProps["pagination"]>;
+}) {
+  return (
+    <nav
+      aria-label="Search result pages"
+      className="flex flex-col gap-3 rounded-[22px] border border-[#eadfd6] bg-white p-4 text-sm font-extrabold sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p className="text-[#5f5148]">
+        Page {pagination.page}
+        {pagination.totalCount > 0 ? ` · ${pagination.totalCount} total` : ""}
+      </p>
+      <div className="flex gap-2">
+        {pagination.hasPreviousPage && (
+          <Link
+            href={pagination.previousHref}
+            className="rounded-full border border-[#eadfd6] px-4 py-2 hover:border-[#ff385c] hover:text-[#df2348]"
+          >
+            Previous
+          </Link>
+        )}
+        {pagination.hasNextPage && (
+          <Link
+            href={pagination.nextHref}
+            className="rounded-full bg-[#201a18] px-4 py-2 text-white hover:bg-black"
+          >
+            Next page
+          </Link>
+        )}
+      </div>
+    </nav>
   );
 }
 

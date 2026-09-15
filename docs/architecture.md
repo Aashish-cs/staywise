@@ -38,6 +38,12 @@ Recommendation events are stored when users search, use AI-style prompt parsing,
 
 This is intentionally explainable for a senior design demo. It can be evaluated with synthetic scenarios and does not require paid model calls.
 
+## Listing Search
+
+The search page uses a server-side Supabase query path before client rendering. Search filters cover destination, current-location coordinate bounds, date availability, guest capacity, max nightly price, property type, bedrooms/beds, bathrooms, and amenities. The UI still applies explainable ranking and sort controls to the returned page of listings, but it no longer downloads the broad public listing set for every search page view.
+
+Search URLs are refresh-safe and support `page` for pagination. Out-of-range pages render a normal empty state instead of surfacing a Supabase range error.
+
 ## Location System
 
 StayWise uses a server-side location abstraction for submitted destinations and browser current-location searches. The current provider is OpenStreetMap/Nominatim, called only from server code for user-triggered searches and reverse geocoding. Results are cached, attributed, and normalized into provider id, display address, city, region, country, coordinates, and bounds.

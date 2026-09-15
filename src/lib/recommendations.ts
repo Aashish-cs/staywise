@@ -112,6 +112,9 @@ export function rankListings(
       const matchesPropertyType =
         input.propertyTypes.length === 0 ||
         input.propertyTypes.includes(listing.propertyType);
+      const matchesAmenities = input.amenities.every((amenity) =>
+        listing.amenities.includes(amenity),
+      );
       const hasBedrooms = listing.bedrooms >= input.minBedrooms;
       const hasBathrooms = listing.bathrooms >= input.minBathrooms;
 
@@ -120,6 +123,7 @@ export function rankListings(
         matchesNearby &&
         hasCapacity &&
         matchesPropertyType &&
+        matchesAmenities &&
         hasBedrooms &&
         hasBathrooms
       );

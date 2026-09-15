@@ -66,12 +66,13 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Show distance when appropriate.
   - Current pass: added browser current-location flow, server-side reverse geocoding, URL-persisted coordinates, distance-aware ranking/filtering, distance labels, and `docs/phase-7-current-location.md`.
 
-- [~] Phase 8: Real listing search
+- [x] Phase 8: Real listing search
   - Query Supabase server-side instead of downloading unbounded listings and filtering everything in the browser.
   - Support location, dates, guests, price, property type, bedrooms, beds, bathrooms, amenities, and rating only after real reviews exist.
   - Preserve refresh-safe, shareable URL state with pagination/cursor loading.
+  - Current pass: added `searchPublicListings`, Supabase-side search filters, shared recommendation API usage, page URLs, pagination controls, out-of-range page handling, `beds` URL aliases, and `docs/phase-8-real-listing-search.md`.
 
-- [ ] Phase 9: Availability search
+- [~] Phase 9: Availability search
   - Ensure selected date ranges remove unavailable properties server-side/database-side.
   - Preserve overlap protection with trusted logic.
 

@@ -74,6 +74,7 @@ export function SearchExperience({
   initialLocation,
   initialSearch,
   isSignedIn,
+  pagination,
   showProductSections = true,
 }: {
   accountRole: "guest" | "host" | null;
@@ -82,6 +83,14 @@ export function SearchExperience({
   initialLocation?: LocationLookupResult | null;
   initialSearch?: Partial<SearchInput>;
   isSignedIn: boolean;
+  pagination?: {
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    nextHref: string;
+    page: number;
+    previousHref: string;
+    totalCount: number;
+  };
   showProductSections?: boolean;
 }) {
   const router = useRouter();
@@ -340,6 +349,7 @@ export function SearchExperience({
             onSortModeChange={setSortMode}
             onToggleMapPanel={() => setShowMapPanel((current) => !current)}
             onToggleSaved={toggleSaved}
+            pagination={pagination}
             resultSummary={resultSummary}
             savedIds={savedIds}
             selectedListing={selectedListing}

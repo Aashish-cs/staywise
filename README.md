@@ -69,12 +69,13 @@ Use GitHub as the source repository and import it into Vercel. Add the same envi
 
 ## Current Scope
 
-The current implementation covers authentication, Supabase-backed listing search, server-side OpenStreetMap destination lookup, browser current-location search with reverse geocoding, distance-aware ranking, natural-language search parsing, explainable AI-style ranking, date-aware guest reservations, persisted favorites, recommendation event logging, payment-record architecture, and a host listing dashboard. Ratings/reviews are intentionally not displayed until the real review UI is implemented.
+The current implementation covers authentication, Supabase-filtered listing search, server-side OpenStreetMap destination lookup, browser current-location search with reverse geocoding, distance-aware ranking, natural-language search parsing, explainable AI-style ranking, date-aware guest reservations, persisted favorites, recommendation event logging, payment-record architecture, and a host listing dashboard. Ratings/reviews are intentionally not displayed until the real review UI is implemented.
 
 ## Known Limitations
 
 - Listings can come from host-created rows or the provided synthetic seed data; production should not silently fall back to hardcoded listing arrays.
-- Location search verifies submitted destinations and supports current-location searches through server-side OpenStreetMap/Nominatim lookup and reverse geocoding. The next search phase is moving listing filtering fully server-side with pagination.
+- Listing search now runs server-side filters for destination, current location, dates, guests, price, property type, bedrooms/beds, bathrooms, amenities, and page state before the UI ranks and displays results.
+- Phase 9 will continue hardening availability-specific search behavior and date-range empty states.
 - Maps currently use OpenStreetMap embeds. A synchronized interactive marker map is planned for later phases.
 - Guest-host messaging, review UI, Supabase Storage image uploads, profile settings UI, real payment provider checkout/webhooks, and automated browser tests are still roadmap items.
 - Any Supabase key that was shared during setup should be rotated before final presentation.

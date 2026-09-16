@@ -16,7 +16,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import {
+  ListingFacts,
   ListingCardMedia,
+  ListingLocationLine,
   ListingSaveButton,
 } from "@/components/listing-card-primitives";
 import {
@@ -166,92 +168,102 @@ export function SearchResultsSection({
           )}
 
           <div className={clsx("grid gap-5 md:grid-cols-2", showMapPanel && "hidden xl:grid")}>
-            {displayedListings.map((listing, index) => (
-              <Surface
-                as="article"
-                key={listing.id}
-                className={clsx(
-                  "group overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md",
-                  selectedListing?.id === listing.id && "border-[#ff385c]",
-                )}
-              >
-                <button
-                  type="button"
-                  className="block w-full text-left"
-                  aria-label={`View details for ${listing.title}`}
-                  onClick={() => onSelectListing(listing.id)}
-                >
-                  <ListingCardMedia
-                    imageClassName="transition duration-500 group-hover:scale-105"
-                    listing={listing}
-                    priority={index === 0}
-                    sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
-                  >
-                    <Badge
-                      tone="neutral"
-                      className="absolute left-3 top-3 bg-white/95 text-sm font-semibold shadow-sm"
-                    >
-                      {listing.matchScore}% match
-                    </Badge>
-                  </ListingCardMedia>
+            {displayedListings.map((listing, index) => {
+              const listingHref = `/listings/${listing.id}${
+                listingDetailQuery ? `?${listingDetailQuery}` : ""
+              }`;
 
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="line-clamp-2 text-base font-semibold">
-                          {listing.title}
-                        </h3>
-                        <p className="mt-1 text-sm text-[#786a60]">
-                          {listing.neighborhood}, {listing.city}
-                          {listing.distanceMiles !== null
-                            ? ` · ${formatDistanceMiles(listing.distanceMiles)} away`
-                            : ""}
+              return (
+                <Surface
+                  as="article"
+                  key={listing.id}
+                  className={clsx(
+                    "group overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md",
+                    selectedListing?.id === listing.id && "border-[#ff385c]",
+                  )}
+                >
+                  <Link
+                    href={listingHref}
+                    className="block"
+                    aria-label={`View ${listing.title}`}
+                    onFocus={() => onSelectListing(listing.id)}
+                    onMouseEnter={() => onSelectListing(listing.id)}
+                  >
+                    <ListingCardMedia
+                      imageClassName="transition duration-500 group-hover:scale-105"
+                      listing={listing}
+                      priority={index === 0}
+                      sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
+                    >
+                      <Badge
+                        tone="neutral"
+                        className="absolute left-3 top-3 bg-white/95 text-sm font-semibold shadow-sm"
+                      >
+                        {listing.matchScore}% match
+                      </Badge>
+                    </ListingCardMedia>
+
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h3 className="line-clamp-2 text-base font-extrabold leading-6">
+                            {listing.title}
+                          </h3>
+                          <ListingLocationLine
+                            listing={listing}
+                            distanceMiles={listing.distanceMiles}
+                            className="mt-1"
+                          />
+                        </div>
+                        <Badge tone="neutral" className="shrink-0">
+                          Live
+                        </Badge>
+                      </div>
+
+                      <ListingFacts listing={listing} className="mt-3" />
+
+                      <div className="mt-4 flex items-end justify-between gap-3">
+                        <p className="text-sm">
+                          <Price amount={listing.pricePerNight} />
+                        </p>
+                        <p className="line-clamp-2 text-right text-xs font-semibold leading-5 text-[#315d3b]">
+                          {listing.matchReasons[0]}
                         </p>
                       </div>
-                      <Badge tone="neutral" className="shrink-0">
-                        Live
-                      </Badge>
                     </div>
+                  </Link>
 
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-[#5f5148]">
-                      <span>{listing.propertyType}</span>
-                      <span>{listing.bedrooms} bed</span>
-                      <span>{listing.capacity} guests</span>
-                    </div>
-
-                    <div className="mt-4 flex items-center justify-between gap-3">
-                      <p className="text-sm">
-                        <Price amount={listing.pricePerNight} />
-                      </p>
-                      <p className="text-xs font-semibold text-[#315d3b]">
-                        {listing.matchReasons[0]}
-                      </p>
+                  <div className="flex items-center justify-between border-t border-[#f0e7df] px-4 py-3">
+                    <ListingSaveButton
+                      className="flex h-9 items-center gap-2 rounded-full px-3 text-sm font-semibold hover:bg-[#fff3f5]"
+                      iconClassName="h-4 w-4"
+                      listingTitle={listing.title}
+                      onClick={() => onToggleSaved(listing.id)}
+                      saved={savedIds.includes(listing.id)}
+                      showLabel
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => onSelectListing(listing.id)}
+                      >
+                        Preview
+                      </Button>
+                      <ButtonLink
+                        href={listingHref}
+                        aria-label={`Reserve ${listing.title}`}
+                        size="sm"
+                        variant="secondary"
+                      >
+                        Reserve
+                      </ButtonLink>
                     </div>
                   </div>
-                </button>
-
-                <div className="flex items-center justify-between border-t border-[#f0e7df] px-4 py-3">
-                  <ListingSaveButton
-                    className="flex h-9 items-center gap-2 rounded-full px-3 text-sm font-semibold hover:bg-[#fff3f5]"
-                    iconClassName="h-4 w-4"
-                    listingTitle={listing.title}
-                    onClick={() => onToggleSaved(listing.id)}
-                    saved={savedIds.includes(listing.id)}
-                    showLabel
-                  />
-                  <ButtonLink
-                    href={`/listings/${listing.id}${
-                      listingDetailQuery ? `?${listingDetailQuery}` : ""
-                    }`}
-                    aria-label={`Reserve ${listing.title}`}
-                    size="sm"
-                    variant="secondary"
-                  >
-                    Reserve
-                  </ButtonLink>
-                </div>
-              </Surface>
-            ))}
+                </Surface>
+              );
+            })}
           </div>
 
           {selectedListing && (

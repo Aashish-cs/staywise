@@ -7,13 +7,16 @@ import {
   CheckCircle2,
   Heart,
   Home,
-  MapPin,
   ReceiptText,
   Sparkles,
   Timer,
 } from "lucide-react";
 import { cancelReservationAction } from "@/app/dashboard/actions";
-import { ListingCardMedia } from "@/components/listing-card-primitives";
+import {
+  ListingFacts,
+  ListingCardMedia,
+  ListingLocationLine,
+} from "@/components/listing-card-primitives";
 import { StayWiseHeader } from "@/components/staywise-header";
 import {
   getCurrentUserProfile,
@@ -260,11 +263,15 @@ export default async function DashboardPage() {
                       />
                       <div className="p-4">
                         <div className="flex items-start justify-between gap-3">
-                          <h3 className="font-semibold">{listing.title}</h3>
+                          <h3 className="line-clamp-2 font-extrabold leading-5">
+                            {listing.title}
+                          </h3>
                           <span className="rounded-full bg-[#fff3f5] px-2 py-1 text-xs font-semibold text-[#bd1740]">
                             {listing.matchScore}%
                           </span>
                         </div>
+                        <ListingLocationLine listing={listing} className="mt-2" />
+                        <ListingFacts listing={listing} className="mt-2" />
                         <p className="mt-2 text-sm text-[#5f5148]">{listing.matchReasons[0]}</p>
                         <p className="mt-3 text-sm">
                           <span className="font-semibold">{formatMoney(listing.pricePerNight)}</span>{" "}
@@ -315,13 +322,11 @@ export default async function DashboardPage() {
                             {listing.title}
                           </h3>
                           <span className="shrink-0 rounded-full bg-[#f7f3ee] px-3 py-1 text-xs font-extrabold text-[#5f5148]">
-                            {listing.capacity} guests
+                            Live
                           </span>
                         </div>
-                        <p className="mt-2 flex items-center gap-1 text-sm font-semibold text-[#5f5148]">
-                          <MapPin className="h-4 w-4 text-[#ff385c]" aria-hidden="true" />
-                          {listing.city}, {listing.state}
-                        </p>
+                        <ListingLocationLine listing={listing} className="mt-2" />
+                        <ListingFacts listing={listing} className="mt-2" />
                         <p className="mt-3 text-sm">
                           <span className="font-extrabold">
                             {formatMoney(listing.pricePerNight)}

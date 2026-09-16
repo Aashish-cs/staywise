@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import {
+  ListingFacts,
   ListingCardMedia,
+  ListingLocationLine,
   ListingSaveButton,
 } from "@/components/listing-card-primitives";
 import { Badge, Price } from "@/components/ui/primitives";
@@ -149,16 +151,13 @@ function MarketplaceListingCard({
             <h3 className="line-clamp-2 text-sm font-extrabold leading-5">
               {listing.title}
             </h3>
-            <p className="mt-1 text-sm font-semibold text-[#786a60]">
-              {listing.neighborhood}, {listing.city}
-            </p>
+            <ListingLocationLine listing={listing} className="mt-1" />
           </div>
-          <Badge tone="neutral" className="shrink-0">
-            {listing.capacity} guests
-          </Badge>
+          <Badge tone="neutral" className="shrink-0">Live</Badge>
         </div>
+        <ListingFacts listing={listing} className="mt-2" />
         <p className="mt-2 text-sm text-[#5f5148]">
-          <Price amount={listing.pricePerNight} /> · {listing.propertyType}
+          <Price amount={listing.pricePerNight} />
         </p>
         <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-[#315d3b]">
           {listing.matchReasons[0]}

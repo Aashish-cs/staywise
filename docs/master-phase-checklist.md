@@ -97,10 +97,11 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Use a real map system, listing price markers, current location marker, hover/click sync, fit bounds, loading/error states, zoom/pan, and responsive sizing.
   - Current pass: replaced the search iframe with a Leaflet/OpenStreetMap interactive map, added price markers, fit bounds, current-location marker support, marker/list selection sync, loading/error states, mobile map QA, and `docs/phase-13-interactive-map.md`.
 
-- [~] Phase 14: Listing cards
+- [x] Phase 14: Listing cards
   - Mature card design with image, heart, location, title, facts, real rating only when available, price, optional distance, card navigation, consistent ratio, Next Image, and image fallback.
+  - Current pass: added shared listing location/fact primitives, image fallback handling, real card navigation, separated Save/Preview/Reserve actions, consistent guest card metadata across search/home/dashboard/host cards, no fabricated ratings, and `docs/phase-14-listing-cards.md`.
 
-- [ ] Phase 15: Listing detail page
+- [~] Phase 15: Listing detail page
   - Serious listing detail with title, location, share/save, gallery/lightbox, summary, host, description, amenities, rules, availability, reviews, map, sticky booking panel, and mobile reserve CTA.
 
 - [ ] Phase 16: Booking engine

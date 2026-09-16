@@ -17,7 +17,9 @@ import {
   Wifi,
 } from "lucide-react";
 import {
+  ListingFacts,
   ListingCardMedia,
+  ListingLocationLine,
   ListingSaveButton,
 } from "@/components/listing-card-primitives";
 import { MarketplaceListingRails } from "@/components/marketplace-listing-rails";
@@ -575,13 +577,12 @@ function SpotlightStayCard({
           <h3 className="mt-3 line-clamp-2 text-base font-extrabold leading-6">
             {listing.title}
           </h3>
-          <p className="mt-1 text-sm font-semibold text-[#786a60]">
-            {listing.neighborhood}, {listing.city}
-          </p>
+          <ListingLocationLine listing={listing} className="mt-1" />
+          <ListingFacts listing={listing} className="mt-3" />
         </span>
         <span className="mt-3 flex items-center justify-between gap-3 text-sm">
-          <span className="font-semibold text-[#5f5148]">
-            {listing.capacity} guests
+          <span className="line-clamp-1 font-semibold text-[#315d3b]">
+            {listing.matchReasons[0]}
           </span>
           <Price amount={listing.pricePerNight} />
         </span>

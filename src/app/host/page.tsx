@@ -9,7 +9,11 @@ import {
   WalletCards,
 } from "lucide-react";
 import { HostListingForm } from "@/components/host-listing-form";
-import { ListingCardMedia } from "@/components/listing-card-primitives";
+import {
+  ListingFacts,
+  ListingCardMedia,
+  ListingLocationLine,
+} from "@/components/listing-card-primitives";
 import { StayWiseHeader } from "@/components/staywise-header";
 import {
   getCurrentUserProfile,
@@ -262,10 +266,8 @@ function HostListingRow({ listing }: { listing: Listing }) {
       </Link>
       <div>
         <h3 className="font-semibold">{listing.title}</h3>
-        <p className="mt-1 flex items-center gap-1 text-sm text-[#5f5148]">
-          <MapPin className="h-4 w-4 text-[#ff385c]" aria-hidden="true" />
-          {listing.neighborhood}, {listing.city}
-        </p>
+        <ListingLocationLine listing={listing} className="mt-1" />
+        <ListingFacts listing={listing} className="mt-3" />
         <div className="mt-3 flex flex-wrap gap-2">
           {listing.amenities.slice(0, 3).map((amenity) => (
             <span key={amenity} className="rounded-full bg-[#f7f3ee] px-3 py-1 text-xs font-semibold text-[#5f5148]">
@@ -276,9 +278,6 @@ function HostListingRow({ listing }: { listing: Listing }) {
         <div className="mt-3 flex flex-wrap gap-2 text-xs font-extrabold">
           <span className="rounded-full bg-[#e7f2e4] px-3 py-1 text-[#315d3b]">
             {qualityScore}% quality
-          </span>
-          <span className="rounded-full bg-[#edf6f8] px-3 py-1 text-[#23515a]">
-            {listing.capacity} guests
           </span>
           <span className="rounded-full bg-[#fff3f5] px-3 py-1 text-[#bd1740]">
             {listing.images.length} image

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
@@ -23,6 +22,7 @@ import {
   Wifi,
 } from "lucide-react";
 import { ListingActions } from "@/components/listing-actions";
+import { ListingPhotoGallery } from "@/components/listing-photo-gallery";
 import { ReservationPanel } from "@/components/reservation-panel";
 import { StayWiseHeader } from "@/components/staywise-header";
 import {
@@ -40,6 +40,7 @@ import {
   tripPurposeLabels,
 } from "@/lib/listings";
 import { rankListings } from "@/lib/recommendations";
+import { formatMoney } from "@/lib/reservation-utils";
 import {
   buildSearchQueryString,
   firstParam,
@@ -142,7 +143,7 @@ export default async function ListingPage({
   ];
 
   return (
-    <main className="min-h-screen bg-white text-[#201a18]">
+    <main className="min-h-screen bg-white pb-24 text-[#201a18] lg:pb-0">
       <StayWiseHeader
         center={
           <Link
@@ -216,7 +217,7 @@ export default async function ListingPage({
           />
         </div>
 
-        <PhotoGallery listing={listing} />
+        <ListingPhotoGallery listing={listing} />
 
         <div className="mt-9 grid gap-10 lg:grid-cols-[minmax(0,1fr)_390px]">
           <div className="min-w-0">
@@ -383,16 +384,20 @@ export default async function ListingPage({
             </section>
           </div>
 
-          <ReservationPanel
-            listing={listing}
-            isSignedIn={Boolean(user)}
-            initialGuests={search.guests}
-            initialCheckIn={search.checkIn || undefined}
-            initialCheckOut={search.checkOut || undefined}
-            signInHref={signInHref}
-          />
+          <div id="reserve" className="scroll-mt-24">
+            <ReservationPanel
+              listing={listing}
+              isSignedIn={Boolean(user)}
+              initialGuests={search.guests}
+              initialCheckIn={search.checkIn || undefined}
+              initialCheckOut={search.checkOut || undefined}
+              signInHref={signInHref}
+            />
+          </div>
         </div>
       </section>
+
+      <MobileReserveBar listing={listing} />
 
       <footer className="border-t border-[#ebe3dd] bg-[#fbfaf8]">
         <div className="mx-auto flex max-w-[1536px] flex-col gap-3 px-5 py-6 text-sm font-semibold text-[#786a60] md:flex-row md:items-center md:justify-between lg:px-8">
@@ -414,71 +419,26 @@ export default async function ListingPage({
   );
 }
 
-function PhotoGallery({ listing }: { listing: Listing }) {
-  const galleryImages = listing.images.length
-    ? listing.images
-    : [{ alt: listing.imageAlt, url: listing.imageUrl }];
-
-  if (galleryImages.length === 1) {
-    return (
-      <div
-        id="photos"
-        className="mt-6 overflow-hidden rounded-[28px] border border-[#eadfd6] bg-[#e8dfd6]"
-      >
-        <div className="relative aspect-[16/9] min-h-[300px]">
-          <Image
-            src={galleryImages[0].url}
-            alt={galleryImages[0].alt}
-            fill
-            priority
-            sizes="(min-width: 1024px) 1440px, 100vw"
-            className="object-cover"
-          />
+function MobileReserveBar({ listing }: { listing: Listing }) {
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#eadfd6] bg-white/95 px-4 py-3 shadow-[0_-10px_30px_rgba(32,26,24,0.12)] backdrop-blur lg:hidden">
+      <div className="mx-auto flex max-w-[1536px] items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-sm font-extrabold">
+            {formatMoney(listing.pricePerNight)}
+            <span className="font-semibold text-[#5f5148]"> night</span>
+          </p>
+          <p className="truncate text-xs font-semibold text-[#786a60]">
+            {listing.neighborhood}, {listing.city}
+          </p>
         </div>
+        <Link
+          href="#reserve"
+          className="flex h-11 shrink-0 items-center justify-center rounded-full bg-[#ff385c] px-5 text-sm font-extrabold text-white shadow-sm hover:bg-[#df2348]"
+        >
+          Reserve
+        </Link>
       </div>
-    );
-  }
-
-  return (
-    <div
-      id="photos"
-      className="mt-6 grid gap-2 overflow-hidden rounded-[28px] bg-[#eadfd6] md:grid-cols-4 md:grid-rows-2"
-    >
-      <ImageTile
-        image={galleryImages[0]}
-        priority
-        className="aspect-[4/3] md:col-span-2 md:row-span-2 md:aspect-auto md:min-h-[440px]"
-      />
-      {galleryImages.slice(1, 5).map((image) => (
-        <ImageTile
-          key={`${image.url}-${image.alt}`}
-          image={image}
-          className="hidden min-h-[216px] md:block"
-        />
-      ))}
-    </div>
-  );
-}
-
-function ImageTile({
-  className,
-  image,
-  priority,
-}: {
-  className: string;
-  image: Listing["images"][number];
-  priority?: boolean;
-}) {
-  return (
-    <div className={`relative bg-[#e8dfd6] ${className}`}>
-      <Image
-        src={image.url}
-        alt={image.alt}
-        fill
-        priority={priority}
-        sizes="(min-width: 1024px) 720px, 100vw"
-        className="object-cover transition duration-500 hover:scale-[1.03]"
-      />
     </div>
   );
 }

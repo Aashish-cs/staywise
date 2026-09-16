@@ -101,10 +101,11 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Mature card design with image, heart, location, title, facts, real rating only when available, price, optional distance, card navigation, consistent ratio, Next Image, and image fallback.
   - Current pass: added shared listing location/fact primitives, image fallback handling, real card navigation, separated Save/Preview/Reserve actions, consistent guest card metadata across search/home/dashboard/host cards, no fabricated ratings, and `docs/phase-14-listing-cards.md`.
 
-- [~] Phase 15: Listing detail page
+- [x] Phase 15: Listing detail page
   - Serious listing detail with title, location, share/save, gallery/lightbox, summary, host, description, amenities, rules, availability, reviews, map, sticky booking panel, and mobile reserve CTA.
+  - Current pass: added `ListingPhotoGallery` with lightbox, added mobile sticky reserve CTA linked to `#reserve`, verified the existing serious detail sections/booking/map/review-placeholder behavior, and documented `docs/phase-15-listing-detail-page.md`.
 
-- [ ] Phase 16: Booking engine
+- [~] Phase 16: Booking engine
   - Validate dates, minimum/maximum rules, guests, status, ownership, availability, overlap, price consistency, and listing existence.
   - Use trusted server prices and database/RPC/constraint strategy.
 

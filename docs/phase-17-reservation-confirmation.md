@@ -26,7 +26,13 @@
   - Signed-out `/reservations/:id` redirects to `/auth?mode=signin&next=/reservations/:id`.
   - Invalid reservation IDs return 404.
   - Build output includes the dynamic `/reservations/[id]` route.
-- Production deployment pending.
+- Vercel production deployment:
+  - `https://staywise-pcw6tog3x-ashishmishra1.vercel.app`
+  - Aliased to `https://staywise-tau.vercel.app`
+- Live smoke tests:
+  - Signed-out `/reservations/:id` redirects to sign-in with the reservation return path.
+  - Invalid reservation IDs return 404.
+  - Listing detail page still returns 200 after the confirmation-route deployment.
 
 ## Notes
 

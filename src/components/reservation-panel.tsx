@@ -24,6 +24,8 @@ import {
   getFutureIso,
   getTodayIso,
   isValidIsoDate,
+  maximumReservationNights,
+  validateReservationDateRange,
 } from "@/lib/reservation-utils";
 
 const initialState: ReservationActionState = {
@@ -68,13 +70,19 @@ export function ReservationPanel({
     createReservationAction,
     initialState,
   );
-  const nights = Math.max(0, countNights(checkIn, checkOut));
-  const totals = useMemo(
-    () => calculateReservationTotal(listing.pricePerNight, nights),
-    [listing.pricePerNight, nights],
+  const dateValidation = useMemo(
+    () => validateReservationDateRange(checkIn, checkOut),
+    [checkIn, checkOut],
   );
-  const shouldCheckSelectedDates =
-    nights >= 1 && isValidIsoDate(checkIn) && isValidIsoDate(checkOut);
+  const nights = dateValidation.ok
+    ? dateValidation.nights
+    : Math.max(0, countNights(checkIn, checkOut));
+  const pricedNights = dateValidation.ok ? dateValidation.nights : 0;
+  const totals = useMemo(
+    () => calculateReservationTotal(listing.pricePerNight, pricedNights),
+    [listing.pricePerNight, pricedNights],
+  );
+  const shouldCheckSelectedDates = dateValidation.ok;
   const availabilityKey = `${listing.id}:${checkIn}:${checkOut}`;
   const displayedAvailability: AvailabilityState = shouldCheckSelectedDates
     ? availability.key === availabilityKey
@@ -92,9 +100,20 @@ export function ReservationPanel({
   const reserveDisabled =
     isPending ||
     state.ok ||
-    nights < 1 ||
+    !dateValidation.ok ||
     displayedAvailability.status === "checking" ||
     displayedAvailability.status === "unavailable";
+  const reserveButtonLabel = state.ok
+    ? "Reserved"
+    : isPending
+      ? "Reserving"
+      : !dateValidation.ok
+        ? "Choose valid dates"
+        : displayedAvailability.status === "checking"
+          ? "Checking dates"
+          : displayedAvailability.status === "unavailable"
+            ? "Choose different dates"
+            : "Reserve this stay";
 
   useEffect(() => {
     if (!shouldCheckSelectedDates) {
@@ -213,6 +232,7 @@ export function ReservationPanel({
                 type="date"
                 name="checkOut"
                 min={addDaysToIso(checkIn, 1)}
+                max={addDaysToIso(checkIn, maximumReservationNights)}
                 value={checkOut}
                 onChange={(event) => setCheckOut(event.target.value)}
                 className="field-input"
@@ -262,14 +282,32 @@ export function ReservationPanel({
 
         <div className="space-y-3 rounded-2xl bg-[#f7f3ee] p-4 text-sm">
           <PriceRow
-            label={`${formatMoney(listing.pricePerNight)} x ${nights || 0} nights`}
-            value={formatMoney(totals.stayTotal)}
+            label={
+              dateValidation.ok
+                ? `${formatMoney(listing.pricePerNight)} x ${nights} nights`
+                : "Valid dates required"
+            }
+            value={dateValidation.ok ? formatMoney(totals.stayTotal) : "Not priced"}
           />
-          <PriceRow label="StayWise service estimate" value={formatMoney(totals.serviceFee)} />
+          <PriceRow
+            label="StayWise service estimate"
+            value={dateValidation.ok ? formatMoney(totals.serviceFee) : "Not priced"}
+          />
           <div className="border-t border-[#eadfd6] pt-3">
-            <PriceRow label="Total" value={formatMoney(totals.total)} strong />
+            <PriceRow
+              label="Total"
+              value={dateValidation.ok ? formatMoney(totals.total) : "Not priced"}
+              strong
+            />
           </div>
         </div>
+
+        {!dateValidation.ok && (
+          <p className="rounded-2xl bg-[#fff3f5] p-3 text-sm font-semibold text-[#bd1740]">
+            <ShieldAlert className="mr-2 inline h-4 w-4" aria-hidden="true" />
+            {dateValidation.message}
+          </p>
+        )}
 
         {displayedAvailability.status !== "idle" && (
           <p
@@ -309,8 +347,17 @@ export function ReservationPanel({
             disabled={reserveDisabled}
             className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#ff385c] px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#df2348] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {state.ok ? "Reserved" : isPending ? "Reserving" : "Reserve this stay"}
+            {reserveButtonLabel}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </button>
+        ) : reserveDisabled ? (
+          <button
+            type="button"
+            disabled
+            className="flex h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-full bg-[#ff385c] px-5 text-sm font-semibold text-white opacity-60 shadow-sm"
+          >
+            {reserveButtonLabel}
+            <ShieldCheck className="h-4 w-4" aria-hidden="true" />
           </button>
         ) : (
           <Link
@@ -329,7 +376,7 @@ export function ReservationPanel({
           />
           <TrustLine
             icon={CalendarDays}
-            text="Dates are checked against existing reservations."
+            text={`Dates are checked against existing reservations. Maximum stay is ${maximumReservationNights} nights.`}
           />
           <TrustLine
             icon={ReceiptText}

@@ -1,5 +1,19 @@
 const dayInMilliseconds = 24 * 60 * 60 * 1000;
 
+export const minimumReservationNights = 1;
+export const maximumReservationNights = 30;
+export const maximumReservationGuests = 16;
+
+export type ReservationDateValidation =
+  | {
+      ok: true;
+      nights: number;
+    }
+  | {
+      ok: false;
+      message: string;
+    };
+
 export function getTodayIso() {
   return toIsoDate(new Date());
 }
@@ -30,6 +44,46 @@ export function countNights(startDate: string, endDate: string) {
   }
 
   return Math.round((end.getTime() - start.getTime()) / dayInMilliseconds);
+}
+
+export function validateReservationDateRange(
+  startDate: string,
+  endDate: string,
+): ReservationDateValidation {
+  if (!isValidIsoDate(startDate) || !isValidIsoDate(endDate)) {
+    return {
+      ok: false,
+      message: "Choose valid dates to check availability.",
+    };
+  }
+
+  if (startDate < getTodayIso()) {
+    return {
+      ok: false,
+      message: "Choose a check-in date in the future.",
+    };
+  }
+
+  const nights = countNights(startDate, endDate);
+
+  if (nights < minimumReservationNights) {
+    return {
+      ok: false,
+      message: "Check-out must be after check-in.",
+    };
+  }
+
+  if (nights > maximumReservationNights) {
+    return {
+      ok: false,
+      message: `StayWise currently supports reservations up to ${maximumReservationNights} nights.`,
+    };
+  }
+
+  return {
+    ok: true,
+    nights,
+  };
 }
 
 export function formatStayDate(date: string) {
@@ -67,11 +121,26 @@ function toIsoDate(date: Date) {
 }
 
 function parseIsoDate(value: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+
+  if (!match) {
     return null;
   }
 
-  const date = new Date(`${value}T00:00:00`);
+  const year = Number(match[1]);
+  const month = Number(match[2]) - 1;
+  const day = Number(match[3]);
+  const date = new Date(year, month, day);
+  date.setHours(0, 0, 0, 0);
 
-  return Number.isNaN(date.getTime()) ? null : date;
+  if (
+    Number.isNaN(date.getTime()) ||
+    date.getFullYear() !== year ||
+    date.getMonth() !== month ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return date;
 }

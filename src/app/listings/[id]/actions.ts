@@ -2,7 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { countNights, getTodayIso } from "@/lib/reservation-utils";
+import {
+  maximumReservationNights,
+  maximumReservationGuests,
+  validateReservationDateRange,
+} from "@/lib/reservation-utils";
 import { recordRecommendationEvent } from "@/lib/recommendation-events";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -16,7 +20,7 @@ const reservationSchema = z.object({
   listingId: z.string().uuid(),
   checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  guests: z.coerce.number().int().min(1).max(16),
+  guests: z.coerce.number().int().min(1).max(maximumReservationGuests),
 });
 
 export async function createReservationAction(
@@ -38,19 +42,12 @@ export async function createReservationAction(
   }
 
   const { listingId, checkIn, checkOut, guests } = parsed.data;
-  const nights = countNights(checkIn, checkOut);
+  const dateValidation = validateReservationDateRange(checkIn, checkOut);
 
-  if (checkIn < getTodayIso()) {
+  if (!dateValidation.ok) {
     return {
       ok: false,
-      message: "Choose a check-in date in the future.",
-    };
-  }
-
-  if (nights < 1) {
-    return {
-      ok: false,
-      message: "Check-out must be after check-in.",
+      message: dateValidation.message,
     };
   }
 
@@ -109,7 +106,7 @@ export async function createReservationAction(
       checkIn,
       checkOut,
       guests,
-      nights,
+      nights: dateValidation.nights,
     },
   });
 
@@ -131,6 +128,10 @@ function getReservationErrorMessage(errorMessage: string) {
 
   if (errorMessage.includes("invalid_date_range")) {
     return "Check-out must be after check-in.";
+  }
+
+  if (errorMessage.includes("maximum_stay_exceeded")) {
+    return `StayWise currently supports reservations up to ${maximumReservationNights} nights.`;
   }
 
   if (errorMessage.includes("invalid_guest_count")) {

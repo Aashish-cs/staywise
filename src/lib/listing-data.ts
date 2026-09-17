@@ -1,8 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  countNights,
-  getTodayIso,
-  isValidIsoDate,
+  validateReservationDateRange,
 } from "@/lib/reservation-utils";
 import {
   fallbackListingImage,
@@ -512,12 +510,7 @@ function emptyListingSearchResult(
 }
 
 function shouldCheckAvailability(checkIn: string, checkOut: string) {
-  return (
-    isValidIsoDate(checkIn) &&
-    isValidIsoDate(checkOut) &&
-    checkIn >= getTodayIso() &&
-    countNights(checkIn, checkOut) > 0
-  );
+  return validateReservationDateRange(checkIn, checkOut).ok;
 }
 
 function getDestinationSearchTerms(

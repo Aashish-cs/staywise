@@ -105,11 +105,12 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Serious listing detail with title, location, share/save, gallery/lightbox, summary, host, description, amenities, rules, availability, reviews, map, sticky booking panel, and mobile reserve CTA.
   - Current pass: added `ListingPhotoGallery` with lightbox, added mobile sticky reserve CTA linked to `#reserve`, verified the existing serious detail sections/booking/map/review-placeholder behavior, and documented `docs/phase-15-listing-detail-page.md`.
 
-- [~] Phase 16: Booking engine
+- [x] Phase 16: Booking engine
   - Validate dates, minimum/maximum rules, guests, status, ownership, availability, overlap, price consistency, and listing existence.
   - Use trusted server prices and database/RPC/constraint strategy.
+  - Current pass: added centralized reservation date/guest limits, strict date parsing, max 30-night enforcement in UI/server/API/search availability, trusted RPC max-stay enforcement in `supabase/phase7_booking_hardening.sql`, and `docs/phase-16-booking-engine.md`.
 
-- [ ] Phase 17: Reservation confirmation
+- [~] Phase 17: Reservation confirmation
   - Add polished confirmation with property, dates, guests, id, total, status, and actions.
 
 - [ ] Phase 18: Trips

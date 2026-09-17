@@ -646,6 +646,12 @@ begin
     raise exception 'invalid_date_range' using errcode = 'P0001';
   end if;
 
+  nights := requested_end_date - requested_start_date;
+
+  if nights > 30 then
+    raise exception 'maximum_stay_exceeded' using errcode = 'P0001';
+  end if;
+
   if requested_guests < 1 then
     raise exception 'invalid_guest_count' using errcode = 'P0001';
   end if;
@@ -690,7 +696,6 @@ begin
     raise exception 'listing_blocked' using errcode = 'P0001';
   end if;
 
-  nights := requested_end_date - requested_start_date;
   stay_total := listing_record.price_per_night * nights;
   service_fee := round(stay_total::numeric * 0.12)::integer;
   reservation_total := stay_total + service_fee;
@@ -757,6 +762,7 @@ as $$
       and listings.is_active = true
       and requested_start_date >= current_date
       and requested_end_date > requested_start_date
+      and requested_end_date <= requested_start_date + 30
       and not exists (
         select 1
         from public.reservations
@@ -792,6 +798,7 @@ as $$
   where listings.is_active = true
     and requested_start_date >= current_date
     and requested_end_date > requested_start_date
+    and requested_end_date <= requested_start_date + 30
     and not exists (
       select 1
       from public.reservations

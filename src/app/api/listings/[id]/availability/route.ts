@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { checkListingAvailability } from "@/lib/listing-data";
+import { validateReservationDateRange } from "@/lib/reservation-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,22 @@ export async function GET(request: Request, { params }: AvailabilityRouteContext
       {
         available: null,
         message: "Choose valid dates to check availability.",
+        status: "unknown",
+      },
+      { status: 400 },
+    );
+  }
+
+  const dateValidation = validateReservationDateRange(
+    parsed.data.checkIn,
+    parsed.data.checkOut,
+  );
+
+  if (!dateValidation.ok) {
+    return NextResponse.json(
+      {
+        available: null,
+        message: dateValidation.message,
         status: "unknown",
       },
       { status: 400 },

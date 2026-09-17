@@ -299,9 +299,9 @@ export default async function DashboardPage() {
               </div>
               <Link
                 className="hidden text-sm font-extrabold text-[#5f5148] hover:text-[#ff385c] md:block"
-                href="/search"
+                href="/favorites"
               >
-                Find more
+                Open saved stays
               </Link>
             </div>
 
@@ -609,6 +609,12 @@ function DashboardHeader({ email }: { email?: string }) {
             className="hidden rounded-full px-4 py-2 text-sm font-extrabold hover:bg-[#f7f3ee] sm:block"
           >
             Host
+          </Link>
+          <Link
+            href="/favorites"
+            className="hidden rounded-full px-4 py-2 text-sm font-extrabold hover:bg-[#f7f3ee] md:block"
+          >
+            Saved
           </Link>
           {email ? (
             <form action="/auth/signout" method="post">

@@ -126,6 +126,13 @@ export function StayWiseAccountMenu({
                   My trips
                 </Link>
                 <Link
+                  href="/favorites"
+                  className="block px-4 py-3 hover:bg-[#fff3f5]"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Saved stays
+                </Link>
+                <Link
                   href="/host"
                   className="block px-4 py-3 hover:bg-[#fff3f5]"
                   onClick={() => setIsOpen(false)}

@@ -68,6 +68,12 @@ type AvailableListingIdRow = {
   listing_id: string;
 };
 
+type FavoriteListingRow = {
+  created_at: string;
+  listing?: ListingRow | ListingRow[] | null;
+  listing_id: string;
+};
+
 type ListingAmenityMatchRow = {
   amenity: string;
   listing_id: string;
@@ -660,6 +666,38 @@ export async function getFavoriteListingIds(userId: string) {
   }
 
   return (data ?? []).map((row) => row.listing_id as string);
+}
+
+export async function getFavoriteListings(userId: string) {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("favorites")
+    .select(
+      `
+        listing_id,
+        created_at,
+        listing:listings (
+          ${listingSelect}
+        )
+      `,
+    )
+    .eq("guest_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Unable to load favorite listings", error);
+    return [];
+  }
+
+  return ((data ?? []) as unknown as FavoriteListingRow[])
+    .map((row) => (Array.isArray(row.listing) ? row.listing[0] : row.listing))
+    .filter((listing): listing is ListingRow => Boolean(listing?.is_active))
+    .map(mapListingRow);
 }
 
 export async function getHostListings(userId: string) {

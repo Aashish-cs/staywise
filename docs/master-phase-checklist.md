@@ -118,10 +118,11 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Build upcoming, past, and cancelled trip sections with reservation cards and status-based cancellation.
   - Current pass: rebuilt guest dashboard trips into upcoming/past/cancelled sections, added rich trip cards with confirmation links and status-aware cancellation, hardened the cancel RPC in `supabase/phase8_trip_management.sql`, and documented `docs/phase-18-trips.md`.
 
-- [~] Phase 19: Favorites
+- [x] Phase 19: Favorites
   - Ensure real persisted favorite toggles, optimistic rollback, unique relationship, favorites page, refresh/login persistence.
+  - Current pass: added protected `/favorites`, direct persisted favorite-listing loading, optimistic remove UI with shared saved-stays hook, `/favorites` revalidation, dashboard/account-menu navigation, and `docs/phase-19-favorites.md`.
 
-- [ ] Phase 20: Reviews
+- [~] Phase 20: Reviews
   - Implement legitimate reviews only from eligible completed reservations.
   - Prevent duplicates and calculate real listing average.
   - Show New/No reviews yet when no reviews exist.

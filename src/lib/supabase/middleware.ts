@@ -56,6 +56,8 @@ function isProtectedWorkspace(pathname: string) {
   return (
     pathname === "/dashboard" ||
     pathname.startsWith("/dashboard/") ||
+    pathname === "/favorites" ||
+    pathname.startsWith("/favorites/") ||
     pathname === "/host" ||
     pathname.startsWith("/host/")
   );

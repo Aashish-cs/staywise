@@ -40,7 +40,13 @@ This updates the trusted cancellation RPC used by the dashboard.
   - Signed-out `/dashboard` redirects to `/auth?mode=signin&next=/dashboard`.
   - Signed-out `/reservations/:id` still redirects to sign-in with the reservation return path.
   - Listing detail page still returns 200 after the trip-dashboard changes.
-- Production deployment pending.
+- Vercel production deployment:
+  - `https://staywise-62q1ljwcl-ashishmishra1.vercel.app`
+  - Aliased to `https://staywise-tau.vercel.app`
+- Live smoke tests:
+  - Signed-out `/dashboard` redirects to sign-in with the dashboard return path.
+  - Signed-out `/reservations/:id` redirects to sign-in with the reservation return path.
+  - Listing detail page returns 200.
 
 ## Notes
 

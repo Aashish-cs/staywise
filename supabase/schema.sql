@@ -831,7 +831,8 @@ begin
       updated_at = now()
   where id = reservation_id
     and guest_id = auth.uid()
-    and status = 'confirmed';
+    and status = 'confirmed'
+    and start_date >= current_date;
 end;
 $$;
 

@@ -114,10 +114,11 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Add polished confirmation with property, dates, guests, id, total, status, and actions.
   - Current pass: added protected `/reservations/[id]`, direct post-booking confirmation links, dashboard reservation detail links, confirmation pricing/status/trust summary, and `docs/phase-17-reservation-confirmation.md`.
 
-- [~] Phase 18: Trips
+- [x] Phase 18: Trips
   - Build upcoming, past, and cancelled trip sections with reservation cards and status-based cancellation.
+  - Current pass: rebuilt guest dashboard trips into upcoming/past/cancelled sections, added rich trip cards with confirmation links and status-aware cancellation, hardened the cancel RPC in `supabase/phase8_trip_management.sql`, and documented `docs/phase-18-trips.md`.
 
-- [ ] Phase 19: Favorites
+- [~] Phase 19: Favorites
   - Ensure real persisted favorite toggles, optimistic rollback, unique relationship, favorites page, refresh/login persistence.
 
 - [ ] Phase 20: Reviews

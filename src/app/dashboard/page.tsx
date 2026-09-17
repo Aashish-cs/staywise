@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  ArrowRight,
   BriefcaseBusiness,
   CalendarDays,
   CheckCircle2,
   Heart,
   Home,
+  MapPin,
   ReceiptText,
   Sparkles,
   Timer,
@@ -56,17 +58,17 @@ export default async function DashboardPage() {
     publicListings,
   ).slice(0, 3);
   const today = getTodayIso();
-  const upcomingReservations = reservations.filter(
-    (reservation) => reservation.status === "confirmed" && reservation.endDate >= today,
-  );
+  const upcomingReservations = reservations
+    .filter((reservation) => isUpcomingReservation(reservation, today))
+    .sort((a, b) => a.startDate.localeCompare(b.startDate));
   const nextTrip = upcomingReservations[0];
+  const pastReservations = reservations
+    .filter((reservation) => isPastReservation(reservation, today))
+    .sort((a, b) => b.endDate.localeCompare(a.endDate));
   const savedListings = publicListings.filter((listing) => favoriteIds.includes(listing.id));
-  const completedReservations = reservations.filter(
-    (reservation) => reservation.status === "completed",
-  );
-  const cancelledReservations = reservations.filter(
-    (reservation) => reservation.status === "cancelled",
-  );
+  const cancelledReservations = reservations
+    .filter((reservation) => reservation.status === "cancelled")
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   const activeTripSpend = upcomingReservations.reduce(
     (total, reservation) => total + reservation.totalAmount,
     0,
@@ -81,7 +83,7 @@ export default async function DashboardPage() {
           <div>
             <p className="text-sm font-extrabold text-[#ff385c]">Guest workspace</p>
             <h1 className="mt-2 max-w-2xl text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
-            {user ? "Your StayWise trips" : "Sign in to view trips"}
+              {user ? "Your StayWise trips" : "Sign in to view trips"}
             </h1>
             <p className="mt-4 max-w-xl text-base font-semibold leading-7 text-[#5f5148]">
               {user
@@ -230,7 +232,7 @@ export default async function DashboardPage() {
                 }
               />
               <ReadinessItem
-                done={cancelledReservations.length + completedReservations.length > 0}
+                done={cancelledReservations.length + pastReservations.length > 0}
                 text="History tracks completed and cancelled trips"
               />
             </div>
@@ -343,62 +345,252 @@ export default async function DashboardPage() {
             )}
           </section>
 
-          <section className="rounded-[24px] border border-[#eadfd6] bg-[#fffaf5] p-5 shadow-sm">
-            <h2 className="text-2xl font-semibold tracking-tight">Reservation history</h2>
-            <div className="mt-4 divide-y divide-[#eadfd6]">
-              {reservations.length > 0 ? (
-                reservations.map((reservation) => (
-                  <ReservationRow key={reservation.id} reservation={reservation} />
-                ))
-              ) : (
-                <EmptyState text="No reservations yet. Choose a stay and reserve it to test the full flow." />
-              )}
-            </div>
-          </section>
+          <TripSection
+            description="Trips that can still be managed from your guest account."
+            emptyText="No upcoming trips yet. Choose a stay and reserve it to test the full flow."
+            reservations={upcomingReservations}
+            title="Upcoming trips"
+            variant="upcoming"
+          />
+
+          <TripSection
+            description="Completed stays and older confirmed reservations move here for history."
+            emptyText="Past trips will appear here after a stay ends or is marked completed."
+            reservations={pastReservations}
+            title="Past trips"
+            variant="past"
+          />
+
+          <TripSection
+            description="Cancelled reservations stay visible so the project has a real audit trail."
+            emptyText="Cancelled trips will appear here after a confirmed stay is cancelled."
+            reservations={cancelledReservations}
+            title="Cancelled trips"
+            variant="cancelled"
+          />
       </section>
     </main>
   );
 }
 
-function ReservationRow({ reservation }: { reservation: Reservation }) {
-  const listing = reservation.listing;
-
+function TripSection({
+  description,
+  emptyText,
+  reservations,
+  title,
+  variant,
+}: {
+  description: string;
+  emptyText: string;
+  reservations: Reservation[];
+  title: string;
+  variant: "upcoming" | "past" | "cancelled";
+}) {
   return (
-    <div className="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between">
-      <div className="flex items-center gap-3">
-        <Home className="h-5 w-5 shrink-0 text-[#ff385c]" aria-hidden="true" />
+    <section className="rounded-[28px] border border-[#eadfd6] bg-[#fffaf5] p-5 shadow-sm">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="font-semibold">{listing?.title ?? "Listing unavailable"}</p>
-          <p className="text-sm text-[#5f5148]">
-            {formatStayDate(reservation.startDate)} to {formatStayDate(reservation.endDate)} ·{" "}
-            {reservation.guests} guests · {formatMoney(reservation.totalAmount)}
+          <p className="text-sm font-extrabold text-[#ff385c]">Trips</p>
+          <h2 className="mt-1 text-2xl font-extrabold tracking-tight">{title}</h2>
+          <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#5f5148]">
+            {description}
           </p>
         </div>
-      </div>
-      <div className="flex items-center gap-3 md:justify-end">
-        <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold capitalize text-[#5f5148]">
-          {reservation.status}
+        <span className="w-fit rounded-full bg-white px-3 py-1 text-sm font-extrabold text-[#5f5148]">
+          {reservations.length} {reservations.length === 1 ? "trip" : "trips"}
         </span>
-        <Link
-          href={`/reservations/${reservation.id}`}
-          className="rounded-full border border-[#eadfd6] bg-white px-3 py-1 text-sm font-semibold hover:border-[#ff385c] hover:text-[#df2348]"
-        >
-          Details
+      </div>
+
+      {reservations.length > 0 ? (
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          {reservations.map((reservation) => (
+            <TripCard key={reservation.id} reservation={reservation} variant={variant} />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-5">
+          <EmptyState text={emptyText} />
+        </div>
+      )}
+    </section>
+  );
+}
+
+function TripCard({
+  reservation,
+  variant,
+}: {
+  reservation: Reservation;
+  variant: "upcoming" | "past" | "cancelled";
+}) {
+  const listing = reservation.listing;
+  const nights = Math.max(1, countReservationNights(reservation));
+  const status = getReservationStatusPresentation(reservation, variant);
+  const canCancel = variant === "upcoming" && reservation.status === "confirmed";
+
+  return (
+    <article className="overflow-hidden rounded-[24px] border border-[#eadfd6] bg-white shadow-sm">
+      {listing ? (
+        <Link href={`/listings/${listing.id}`} className="block">
+          <ListingCardMedia
+            frameClassName="rounded-none"
+            listing={listing}
+            sizes="(min-width: 1024px) 50vw, 100vw"
+          />
         </Link>
-        {reservation.status === "confirmed" && (
-          <form action={cancelReservationAction}>
-            <input type="hidden" name="reservationId" value={reservation.id} />
-            <button
-              type="submit"
-              className="rounded-full border border-[#eadfd6] bg-white px-3 py-1 text-sm font-semibold hover:border-[#ff385c] hover:text-[#df2348]"
+      ) : (
+        <div className="flex aspect-[4/3] items-center justify-center bg-[#201a18] text-white">
+          <Home className="h-10 w-10" aria-hidden="true" />
+        </div>
+      )}
+
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h3 className="line-clamp-2 text-lg font-extrabold tracking-tight">
+              {listing?.title ?? "Listing unavailable"}
+            </h3>
+            <p className="mt-2 flex items-center gap-1 text-sm font-semibold text-[#5f5148]">
+              <MapPin className="h-4 w-4 shrink-0 text-[#ff385c]" aria-hidden="true" />
+              {listing
+                ? `${listing.neighborhood}, ${listing.city}, ${listing.state}`
+                : "StayWise reservation"}
+            </p>
+          </div>
+          <span
+            className={`shrink-0 rounded-full px-3 py-1 text-xs font-extrabold capitalize ${status.className}`}
+          >
+            {status.label}
+          </span>
+        </div>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <TripFact
+            icon={CalendarDays}
+            label="Dates"
+            value={`${formatStayDate(reservation.startDate)} - ${formatStayDate(
+              reservation.endDate,
+            )}`}
+          />
+          <TripFact
+            icon={Home}
+            label="Stay length"
+            value={`${nights} ${nights === 1 ? "night" : "nights"}`}
+          />
+          <TripFact icon={Sparkles} label="Guests" value={`${reservation.guests}`} />
+          <TripFact icon={ReceiptText} label="Total" value={formatMoney(reservation.totalAmount)} />
+        </div>
+
+        <div className="mt-5 rounded-2xl bg-[#f7f3ee] p-4">
+          <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">
+            Reservation ID
+          </p>
+          <p className="mt-2 break-all font-mono text-xs font-semibold text-[#201a18]">
+            {reservation.id}
+          </p>
+        </div>
+
+        <div className="mt-5 flex flex-wrap gap-2">
+          <Link
+            href={`/reservations/${reservation.id}`}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-full bg-[#201a18] px-4 text-sm font-extrabold text-white hover:bg-black"
+          >
+            Details
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+          {listing && (
+            <Link
+              href={`/listings/${listing.id}?checkIn=${reservation.startDate}&checkOut=${reservation.endDate}&guests=${reservation.guests}`}
+              className="inline-flex h-10 items-center justify-center rounded-full border border-[#eadfd6] px-4 text-sm font-extrabold hover:border-[#ff385c]"
             >
-              Cancel
-            </button>
-          </form>
+              Open stay
+            </Link>
+          )}
+          {canCancel && (
+            <form action={cancelReservationAction}>
+              <input type="hidden" name="reservationId" value={reservation.id} />
+              <button
+                type="submit"
+                className="inline-flex h-10 items-center justify-center rounded-full border border-[#eadfd6] bg-white px-4 text-sm font-extrabold hover:border-[#ff385c] hover:text-[#df2348]"
+              >
+                Cancel trip
+              </button>
+            </form>
+          )}
+        </div>
+
+        {!canCancel && variant === "upcoming" && (
+          <p className="mt-4 text-sm font-semibold leading-6 text-[#786a60]">
+            Cancellation is only available for confirmed upcoming trips.
+          </p>
+        )}
+        {variant === "past" && (
+          <p className="mt-4 text-sm font-semibold leading-6 text-[#786a60]">
+            This trip is kept for history and confirmation records.
+          </p>
+        )}
+        {variant === "cancelled" && (
+          <p className="mt-4 text-sm font-semibold leading-6 text-[#786a60]">
+            This cancelled reservation remains visible for audit and project review.
+          </p>
         )}
       </div>
-    </div>
+    </article>
   );
+}
+
+function getReservationStatusPresentation(
+  reservation: Reservation,
+  variant: "upcoming" | "past" | "cancelled",
+) {
+  if (variant === "cancelled") {
+    return {
+      className: "bg-[#fff3f5] text-[#bd1740]",
+      label: "Cancelled",
+    };
+  }
+
+  if (reservation.status === "completed" || variant === "past") {
+    return {
+      className: "bg-[#edf6f8] text-[#23515a]",
+      label: reservation.status === "completed" ? "Completed" : "Past",
+    };
+  }
+
+  if (reservation.status === "confirmed") {
+    return {
+      className: "bg-[#e7f2e4] text-[#315d3b]",
+      label: "Confirmed",
+    };
+  }
+
+  return {
+    className: "bg-[#fff7e6] text-[#7a4a00]",
+    label: reservation.status.replace("_", " "),
+  };
+}
+
+function isUpcomingReservation(reservation: Reservation, today: string) {
+  return (
+    reservation.status !== "cancelled" &&
+    reservation.status !== "completed" &&
+    reservation.endDate >= today
+  );
+}
+
+function isPastReservation(reservation: Reservation, today: string) {
+  return (
+    reservation.status === "completed" ||
+    (reservation.status !== "cancelled" && reservation.endDate < today)
+  );
+}
+
+function countReservationNights(reservation: Reservation) {
+  const start = new Date(`${reservation.startDate}T00:00:00`);
+  const end = new Date(`${reservation.endDate}T00:00:00`);
+  const nights = Math.round((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
+
+  return Number.isFinite(nights) ? nights : 0;
 }
 
 function DashboardHeader({ email }: { email?: string }) {

@@ -25,7 +25,13 @@
   - Signed-out `/favorites` redirects to `/auth?mode=signin&next=/favorites`.
   - Listing detail page still returns 200.
   - Search page still returns 200.
-- Production deployment pending.
+- Vercel production deployment:
+  - `https://staywise-l7p96f3z8-ashishmishra1.vercel.app`
+  - Aliased to `https://staywise-tau.vercel.app`
+- Live smoke tests:
+  - Signed-out `/favorites` redirects to sign-in with the favorites return path.
+  - Search page returns 200.
+  - Listing detail page returns 200.
 
 ## Notes
 

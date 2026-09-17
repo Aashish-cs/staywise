@@ -609,6 +609,40 @@ export async function getGuestReservations(userId: string) {
   return ((data ?? []) as unknown as ReservationRow[]).map(mapReservationRow);
 }
 
+export async function getReservationById(reservationId: string) {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase
+    .from("reservations")
+    .select(
+      `
+        id,
+        start_date,
+        end_date,
+        guests,
+        nightly_rate,
+        total_amount,
+        status,
+        created_at,
+        listing:listings (
+          ${listingSelect}
+        )
+      `,
+    )
+    .eq("id", reservationId)
+    .maybeSingle();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return mapReservationRow(data as unknown as ReservationRow);
+}
+
 export async function getFavoriteListingIds(userId: string) {
   const supabase = await createSupabaseServerClient();
 

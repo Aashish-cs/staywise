@@ -385,12 +385,32 @@ export function ReservationPanel({
         </div>
 
         {state.ok && (
-          <Link
-            href="/dashboard"
-            className="flex h-11 w-full items-center justify-center rounded-full border border-[#eadfd6] text-sm font-semibold hover:border-[#ff385c] hover:text-[#df2348]"
-          >
-            View my trips
-          </Link>
+          <div className="space-y-3 rounded-2xl border border-[#eadfd6] bg-[#fbfaf8] p-4">
+            {state.reservationId && (
+              <p className="text-xs font-semibold leading-5 text-[#5f5148]">
+                Reservation ID{" "}
+                <span className="break-all font-mono text-[#201a18]">
+                  {state.reservationId}
+                </span>
+              </p>
+            )}
+            <div className="grid gap-2 sm:grid-cols-2">
+              {state.reservationId && (
+                <Link
+                  href={`/reservations/${state.reservationId}`}
+                  className="flex h-11 items-center justify-center rounded-full bg-[#201a18] px-4 text-sm font-semibold text-white hover:bg-black"
+                >
+                  View confirmation
+                </Link>
+              )}
+              <Link
+                href="/dashboard"
+                className="flex h-11 items-center justify-center rounded-full border border-[#eadfd6] bg-white px-4 text-sm font-semibold hover:border-[#ff385c] hover:text-[#df2348]"
+              >
+                View my trips
+              </Link>
+            </div>
+          </div>
         )}
       </form>
     </aside>

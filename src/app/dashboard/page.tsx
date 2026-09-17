@@ -379,6 +379,12 @@ function ReservationRow({ reservation }: { reservation: Reservation }) {
         <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold capitalize text-[#5f5148]">
           {reservation.status}
         </span>
+        <Link
+          href={`/reservations/${reservation.id}`}
+          className="rounded-full border border-[#eadfd6] bg-white px-3 py-1 text-sm font-semibold hover:border-[#ff385c] hover:text-[#df2348]"
+        >
+          Details
+        </Link>
         {reservation.status === "confirmed" && (
           <form action={cancelReservationAction}>
             <input type="hidden" name="reservationId" value={reservation.id} />

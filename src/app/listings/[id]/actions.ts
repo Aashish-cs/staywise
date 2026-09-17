@@ -98,6 +98,7 @@ export async function createReservationAction(
   revalidatePath("/host");
   revalidatePath("/search");
   revalidatePath(`/listings/${listingId}`);
+  revalidatePath(`/reservations/${reservationId}`);
 
   await recordRecommendationEvent({
     eventName: "reservation_confirmed",

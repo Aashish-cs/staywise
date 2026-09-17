@@ -110,10 +110,11 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Use trusted server prices and database/RPC/constraint strategy.
   - Current pass: added centralized reservation date/guest limits, strict date parsing, max 30-night enforcement in UI/server/API/search availability, trusted RPC max-stay enforcement in `supabase/phase7_booking_hardening.sql`, and `docs/phase-16-booking-engine.md`.
 
-- [~] Phase 17: Reservation confirmation
+- [x] Phase 17: Reservation confirmation
   - Add polished confirmation with property, dates, guests, id, total, status, and actions.
+  - Current pass: added protected `/reservations/[id]`, direct post-booking confirmation links, dashboard reservation detail links, confirmation pricing/status/trust summary, and `docs/phase-17-reservation-confirmation.md`.
 
-- [ ] Phase 18: Trips
+- [~] Phase 18: Trips
   - Build upcoming, past, and cancelled trip sections with reservation cards and status-based cancellation.
 
 - [ ] Phase 19: Favorites

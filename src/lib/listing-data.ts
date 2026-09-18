@@ -945,6 +945,7 @@ function mapListingRow(row: ListingRow): Listing {
     images: galleryImages,
     imageUrl: image?.image_url ?? fallbackListingImage,
     imageAlt: image?.alt_text ?? row.title,
+    isActive: row.is_active,
     pricePerNight: row.price_per_night,
     capacity: row.capacity,
     bedrooms: row.bedrooms,

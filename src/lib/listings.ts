@@ -29,6 +29,7 @@ export type Listing = {
   }[];
   imageUrl: string;
   imageAlt: string;
+  isActive: boolean;
   pricePerNight: number;
   capacity: number;
   bedrooms: number;

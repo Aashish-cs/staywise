@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { toggleHostListingAction } from "@/app/host/actions";
 import {
   CalendarDays,
   CheckCircle2,
@@ -300,6 +301,9 @@ function HostListingRow({ listing }: { listing: Listing }) {
           <span className="rounded-full bg-[#e7f2e4] px-3 py-1 text-[#315d3b]">
             {qualityScore}% quality
           </span>
+          <span className={`rounded-full px-3 py-1 ${listing.isActive ? "bg-[#edf6f8] text-[#23515a]" : "bg-[#f7f3ee] text-[#786a60]"}`}>
+            {listing.isActive ? "Published" : "Unpublished"}
+          </span>
           <span className="rounded-full bg-[#fff3f5] px-3 py-1 text-[#bd1740]">
             {listing.images.length} image
             {listing.images.length === 1 ? "" : "s"}
@@ -310,14 +314,25 @@ function HostListingRow({ listing }: { listing: Listing }) {
         <p className="font-semibold">{formatMoney(listing.pricePerNight)}/night</p>
         <p className="mt-1 flex items-center gap-1 text-sm font-semibold text-[#5f5148] md:justify-end">
           <CheckCircle2 className="h-4 w-4 text-[#315d3b]" aria-hidden="true" />
-          Live listing
+          {listing.isActive ? "Visible in search" : "Hidden from search"}
         </p>
-        <Link
-          href={`/listings/${listing.id}`}
-          className="mt-3 hidden rounded-full border border-[#eadfd6] px-4 py-2 text-sm font-extrabold hover:border-[#ff385c] hover:text-[#df2348] md:inline-flex"
-        >
-          View
-        </Link>
+        <div className="mt-3 flex flex-wrap gap-2 md:justify-end">
+          <Link
+            href={`/listings/${listing.id}`}
+            className="rounded-full border border-[#eadfd6] px-4 py-2 text-sm font-extrabold hover:border-[#ff385c] hover:text-[#df2348]"
+          >
+            View
+          </Link>
+          <form action={toggleHostListingAction}>
+            <input type="hidden" name="listingId" value={listing.id} />
+            <button
+              type="submit"
+              className="rounded-full border border-[#eadfd6] px-4 py-2 text-sm font-extrabold hover:border-[#ff385c] hover:text-[#df2348]"
+            >
+              {listing.isActive ? "Unpublish" : "Publish"}
+            </button>
+          </form>
+        </div>
       </div>
     </article>
   );

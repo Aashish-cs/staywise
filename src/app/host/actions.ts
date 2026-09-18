@@ -61,6 +61,61 @@ export async function activateHostAccountAction(
   redirect("/host");
 }
 
+const hostListingIdSchema = z.object({
+  listingId: z.string().uuid(),
+});
+
+export async function toggleHostListingAction(formData: FormData) {
+  const parsed = hostListingIdSchema.safeParse({
+    listingId: formData.get("listingId"),
+  });
+
+  if (!parsed.success) {
+    return;
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return;
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return;
+  }
+
+  const { data: listing } = await supabase
+    .from("listings")
+    .select("is_active")
+    .eq("id", parsed.data.listingId)
+    .eq("host_id", user.id)
+    .maybeSingle();
+
+  if (!listing) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from("listings")
+    .update({ is_active: !listing.is_active })
+    .eq("id", parsed.data.listingId)
+    .eq("host_id", user.id);
+
+  if (error) {
+    console.error("Unable to update host listing status", error);
+    return;
+  }
+
+  revalidatePath("/");
+  revalidatePath("/search");
+  revalidatePath("/host");
+  revalidatePath(`/listings/${parsed.data.listingId}`);
+}
+
 const listingSchema = z.object({
   title: z.string().trim().min(8),
   description: z.string().trim().min(24),

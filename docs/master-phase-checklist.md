@@ -145,8 +145,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Host can view, edit, publish/unpublish, archive where supported, change price/amenities/photos/location carefully, and review reservations only for owned listings.
   - Current pass: added owner-scoped publish/unpublish controls, visible inventory status, and a protected edit route for core listing details. Archive and asset-management surfaces remain in this phase.
 
-- [ ] Phase 25: Host reservation management
+- [x] Phase 25: Host reservation management
   - Host reservation page with guest, listing, dates, status, total, created date, and supported actions.
+  - Current pass: added host-owned reservation detail routing, privacy-safe guest context, booking timeline, listing links, and reservation-feed navigation.
 
 - [ ] Phase 26: Image system
   - Supabase Storage bucket strategy, owner-only listing uploads, optimization, type/size/count validation, ordering, delete, primary photo, and alt text/fallbacks.

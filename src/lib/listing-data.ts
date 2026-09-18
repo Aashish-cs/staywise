@@ -834,6 +834,11 @@ export async function getHostReservations(userId: string) {
   return ((data ?? []) as unknown as ReservationRow[]).map(mapReservationRow);
 }
 
+export async function getHostReservationById(userId: string, reservationId: string) {
+  const reservations = await getHostReservations(userId);
+  return reservations.find((reservation) => reservation.id === reservationId) ?? null;
+}
+
 export async function getCurrentUserProfile() {
   const supabase = await createSupabaseServerClient();
 

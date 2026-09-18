@@ -359,10 +359,16 @@ function HostReservationRow({ reservation }: { reservation: Reservation }) {
           {reservation.status}
         </span>
       </div>
-      <p className="mt-3 text-sm font-semibold text-[#315d3b]">
-        {formatMoney(reservation.totalAmount)} total
-      </p>
-    </div>
+        <p className="mt-3 text-sm font-semibold text-[#315d3b]">
+          {formatMoney(reservation.totalAmount)} total
+        </p>
+        <Link
+          href={`/host/reservations/${reservation.id}`}
+          className="mt-3 inline-flex rounded-full border border-[#eadfd6] px-4 py-2 text-sm font-extrabold hover:border-[#ff385c] hover:text-[#df2348]"
+        >
+          View reservation
+        </Link>
+      </div>
   );
 }
 

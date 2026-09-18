@@ -135,6 +135,7 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
 
 - [ ] Phase 22: Host create listing wizard
   - Multi-step flow: property type, room type, real address/map, basics, amenities, Supabase Storage photos, title, description, price, review, publish, and draft persistence.
+  - Current pass: added the five-step host listing wizard, step readiness checks, review-before-publish summary, live quality preview, and browser draft persistence. Storage uploads, provider-backed coordinates, and durable server drafts remain for the next host phases.
 
 - [ ] Phase 23: Host dashboard
   - Professional dashboard with real active/draft listings, reservations, revenue estimate, occupancy, counts, and recent activity.

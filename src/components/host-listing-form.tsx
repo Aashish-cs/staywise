@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   BadgeCheck,
@@ -58,6 +58,7 @@ export function HostListingForm() {
     initialState,
   );
   const [draft, setDraft] = useState<ListingDraft>(initialDraft);
+  const [step, setStep] = useState(0);
   const imageUrls = useMemo(() => parseDraftUrls(draft.imageUrls), [draft.imageUrls]);
   const amenities = useMemo(
     () =>
@@ -77,6 +78,45 @@ export function HostListingForm() {
   function updateDraft<K extends keyof ListingDraft>(key: K, value: ListingDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
   }
+
+  useEffect(() => {
+    const savedDraft = window.localStorage.getItem("staywise-host-listing-draft");
+
+    if (!savedDraft) {
+      return;
+    }
+
+    try {
+      // Hydrate the browser-only draft after SSR so the initial HTML stays stable.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setDraft({ ...initialDraft, ...(JSON.parse(savedDraft) as Partial<ListingDraft>) });
+    } catch {
+      window.localStorage.removeItem("staywise-host-listing-draft");
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("staywise-host-listing-draft", JSON.stringify(draft));
+  }, [draft]);
+
+  useEffect(() => {
+    if (state.ok) {
+      window.localStorage.removeItem("staywise-host-listing-draft");
+    }
+  }, [state.ok]);
+
+  const stepReady = [
+    draft.title.trim().length >= 8 && draft.description.trim().length >= 24,
+    Boolean(draft.city.trim() && draft.state.trim() && draft.neighborhood.trim()),
+    Number(draft.pricePerNight) >= 50 &&
+      Number(draft.capacity) >= 1 &&
+      Number(draft.bedrooms) >= 0 &&
+      Number(draft.bathrooms) >= 0.5,
+    imageUrls.length >= 1 && amenities.length >= 1,
+    qualityScore >= 70,
+  ];
+
+  const steps = ["Basics", "Location", "Pricing", "Amenities", "Review"];
 
   return (
     <form
@@ -100,14 +140,37 @@ export function HostListingForm() {
         </span>
       </div>
 
+      <ol className="mt-6 grid grid-cols-5 gap-2" aria-label="Listing creation steps">
+        {steps.map((label, index) => (
+          <li key={label}>
+            <button
+              type="button"
+              onClick={() => index <= step && setStep(index)}
+              className={`w-full border-t-4 pt-2 text-left text-xs font-extrabold sm:text-sm ${
+                index === step
+                  ? "border-[#ff385c] text-[#201a18]"
+                  : index < step
+                    ? "border-[#315d3b] text-[#315d3b]"
+                    : "border-[#eadfd6] text-[#786a60]"
+              }`}
+              aria-current={index === step ? "step" : undefined}
+            >
+              <span className="mr-1">{index + 1}.</span>
+              {label}
+            </button>
+          </li>
+        ))}
+      </ol>
+
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-5">
-          <FormSection
+          <div className={step === 0 ? "" : "hidden"}>
+            <FormSection
             icon={Home}
             kicker="Step 1"
             title="Basics"
             body="Name the stay clearly so guests understand the place before opening the listing."
-          >
+            >
             <div className="grid gap-4 md:grid-cols-2">
               <TextField
                 name="title"
@@ -132,14 +195,16 @@ export function HostListingForm() {
               value={draft.description}
               onChange={(value) => updateDraft("description", value)}
             />
-          </FormSection>
+            </FormSection>
+          </div>
 
-          <FormSection
+          <div className={step === 1 ? "" : "hidden"}>
+            <FormSection
             icon={MapPin}
             kicker="Step 2"
             title="Location"
             body="Keep the location specific enough for search and recommendations."
-          >
+            >
             <div className="grid gap-4 md:grid-cols-3">
               <TextField
                 name="city"
@@ -164,14 +229,16 @@ export function HostListingForm() {
                 onChange={(value) => updateDraft("neighborhood", value)}
               />
             </div>
-          </FormSection>
+            </FormSection>
+          </div>
 
-          <FormSection
+          <div className={step === 2 ? "" : "hidden"}>
+            <FormSection
             icon={DollarSign}
             kicker="Step 3"
             title="Pricing and capacity"
             body="These values are used by search ranking, reservation totals, and guest filters."
-          >
+            >
             <div className="grid gap-4 md:grid-cols-4">
               <TextField
                 name="pricePerNight"
@@ -207,14 +274,16 @@ export function HostListingForm() {
                 onChange={(value) => updateDraft("bathrooms", value)}
               />
             </div>
-          </FormSection>
+            </FormSection>
+          </div>
 
-          <FormSection
+          <div className={step === 3 ? "" : "hidden"}>
+            <FormSection
             icon={Sparkles}
             kicker="Step 4"
             title="Amenities and photos"
             body="Use comma-separated amenities and put each image URL on its own line."
-          >
+            >
             <TextareaField
               name="amenities"
               label="Amenities"
@@ -231,7 +300,35 @@ export function HostListingForm() {
               value={draft.imageUrls}
               onChange={(value) => updateDraft("imageUrls", value)}
             />
-          </FormSection>
+            </FormSection>
+          </div>
+
+          <div className={step === 4 ? "" : "hidden"}>
+            <FormSection
+              icon={CheckCircle2}
+              kicker="Step 5"
+              title="Review and publish"
+              body="Check the guest-facing preview and quality checklist before publishing."
+            >
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  ["Title", draft.title || "Missing"],
+                  ["Location", `${draft.neighborhood || "Missing"}, ${draft.city || ""} ${draft.state || ""}`],
+                  ["Price", draft.pricePerNight ? `$${draft.pricePerNight} per night` : "Missing"],
+                  ["Photos", `${imageUrls.length} ready`],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-2xl bg-[#f7f3ee] p-4">
+                    <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">{label}</p>
+                    <p className="mt-2 text-sm font-extrabold">{value}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="rounded-2xl bg-[#edf6f8] p-4 text-sm font-semibold leading-6 text-[#23515a]">
+                Publishing creates a real active listing owned by this host account. Guests will
+                see it in search only after the server validates every field.
+              </p>
+            </FormSection>
+          </div>
         </div>
 
         <aside className="self-start xl:sticky xl:top-24">
@@ -259,18 +356,42 @@ export function HostListingForm() {
         </div>
       )}
 
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-5 flex flex-col gap-3 border-t border-[#eadfd6] pt-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm font-semibold text-[#786a60]">
-          Quality score: <span className="font-extrabold text-[#201a18]">{qualityScore}%</span>
+          Step {step + 1} of {steps.length} · Quality score: {" "}
+          <span className="font-extrabold text-[#201a18]">{qualityScore}%</span>
         </p>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#ff385c] px-6 text-sm font-extrabold text-white hover:bg-[#df2348] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          {isPending ? "Publishing" : "Publish listing"}
-        </button>
+        <div className="flex flex-wrap gap-2 sm:justify-end">
+          {step > 0 && (
+            <button
+              type="button"
+              onClick={() => setStep((current) => current - 1)}
+              className="inline-flex h-12 items-center justify-center rounded-full border border-[#eadfd6] bg-white px-5 text-sm font-extrabold hover:border-[#ff385c]"
+            >
+              Back
+            </button>
+          )}
+          {step < steps.length - 1 ? (
+            <button
+              type="button"
+              onClick={() => setStep((current) => current + 1)}
+              disabled={!stepReady[step]}
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#201a18] px-6 text-sm font-extrabold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Continue
+              <Plus className="h-4 w-4 rotate-45" aria-hidden="true" />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={isPending || !stepReady[step]}
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#ff385c] px-6 text-sm font-extrabold text-white hover:bg-[#df2348] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              {isPending ? "Publishing" : "Publish listing"}
+            </button>
+          )}
+        </div>
       </div>
     </form>
   );

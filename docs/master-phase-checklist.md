@@ -174,6 +174,7 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
 
 - [ ] Phase 31: Date picker
   - Professional check-in/check-out selection, unavailable date disabling, invalid range prevention, mobile dialog, desktop popover, keyboard support, and URL/state sync.
+  - Current pass: added a shared range calendar for reservation and search filters with month navigation, past-date and maximum-stay guards, range highlighting, Escape/outside-click close, hidden ISO form fields, and existing live availability validation. Provider-backed unavailable-date cells remain after the calendar RPC migration.
 
 - [ ] Phase 32: Guest selector
   - Adults/children/infants/pets where supported and max guest enforcement.

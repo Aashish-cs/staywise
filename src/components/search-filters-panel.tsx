@@ -4,7 +4,6 @@ import { useState } from "react";
 import clsx from "clsx";
 import {
   BriefcaseBusiness,
-  CalendarDays,
   Heart,
   Home,
   Loader2,
@@ -17,6 +16,7 @@ import {
   Users,
   Wifi,
 } from "lucide-react";
+import { DateRangePicker } from "@/components/date-range-picker";
 import {
   featuredAmenities,
   type PropertyType,
@@ -317,33 +317,15 @@ export function SearchFiltersPanel({
           </div>
         )}
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <span className="field-label">Check in</span>
-            <span className="field-shell">
-              <CalendarDays className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-              <input
-                type="date"
-                value={search.checkIn}
-                onChange={(event) => onUpdateSearch("checkIn", event.target.value)}
-                className="field-input"
-              />
-            </span>
-          </label>
-
-          <label className="block">
-            <span className="field-label">Check out</span>
-            <span className="field-shell">
-              <CalendarDays className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-              <input
-                type="date"
-                value={search.checkOut}
-                onChange={(event) => onUpdateSearch("checkOut", event.target.value)}
-                className="field-input"
-              />
-            </span>
-          </label>
-        </div>
+        <DateRangePicker
+          checkIn={search.checkIn}
+          checkOut={search.checkOut}
+          label="Stay dates"
+          onChange={(checkIn, checkOut) => {
+            onUpdateSearch("checkIn", checkIn);
+            onUpdateSearch("checkOut", checkOut);
+          }}
+        />
 
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block">

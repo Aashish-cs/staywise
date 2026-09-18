@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { createReservationAction, type ReservationActionState } from "@/app/listings/[id]/actions";
+import { DateRangePicker } from "@/components/date-range-picker";
 import type { Listing } from "@/lib/listings";
 import {
   addDaysToIso,
@@ -22,7 +23,6 @@ import {
   countNights,
   formatMoney,
   getFutureIso,
-  getTodayIso,
   isValidIsoDate,
   maximumReservationNights,
   validateReservationDateRange,
@@ -200,47 +200,17 @@ export function ReservationPanel({
       <form action={formAction} className="mt-5 space-y-4">
         <input type="hidden" name="listingId" value={listing.id} />
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <span className="field-label">Check in</span>
-            <span className="field-shell">
-              <CalendarDays className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-              <input
-                type="date"
-                name="checkIn"
-                min={getTodayIso()}
-                value={checkIn}
-                onChange={(event) => {
-                  const nextCheckIn = event.target.value;
-                  setCheckIn(nextCheckIn);
-
-                  if (countNights(nextCheckIn, checkOut) < 1) {
-                    setCheckOut(addDaysToIso(nextCheckIn, 1));
-                  }
-                }}
-                className="field-input"
-                required
-              />
-            </span>
-          </label>
-
-          <label className="block">
-            <span className="field-label">Check out</span>
-            <span className="field-shell">
-              <CalendarDays className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-              <input
-                type="date"
-                name="checkOut"
-                min={addDaysToIso(checkIn, 1)}
-                max={addDaysToIso(checkIn, maximumReservationNights)}
-                value={checkOut}
-                onChange={(event) => setCheckOut(event.target.value)}
-                className="field-input"
-                required
-              />
-            </span>
-          </label>
-        </div>
+        <DateRangePicker
+          checkIn={checkIn}
+          checkOut={checkOut}
+          maxNights={maximumReservationNights}
+          onChange={(nextCheckIn, nextCheckOut) => {
+            setCheckIn(nextCheckIn);
+            setCheckOut(nextCheckOut || addDaysToIso(nextCheckIn, 1));
+          }}
+        />
+        <input type="hidden" name="checkIn" value={checkIn} required />
+        <input type="hidden" name="checkOut" value={checkOut} required />
 
         <div>
           <span className="field-label">Guests</span>

@@ -153,8 +153,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Supabase Storage bucket strategy, owner-only listing uploads, optimization, type/size/count validation, ordering, delete, primary photo, and alt text/fallbacks.
   - Current pass: added host upload validation, owner-scoped Storage paths, public listing image URLs, listing image rows, upload cleanup on failure, owner-only delete/primary-photo controls, and `supabase/phase10_storage.sql`. Image optimization and applying the Storage migration remain.
 
-- [ ] Phase 27: Profile
+- [x] Phase 27: Profile
   - Profile settings for display name, avatar, bio, phone if used, security, favorites, trips, and hosting.
+  - Current pass: added protected `/profile`, owner-scoped display-name and notification preference saves, password-reset entry point, and signed-in account-menu navigation. Avatar and public host bio remain follow-up work.
 
 - [ ] Phase 28: Recommendation system
   - Improve deterministic explainable ranking with real signals: geography, distance, price, capacity, amenities, favorites, history, property type, popularity, real rating, and recency.

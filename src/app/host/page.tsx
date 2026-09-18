@@ -107,10 +107,10 @@ export default async function HostPage() {
             </span>
           ) : (
             <Link
-              href="/auth?mode=signup&role=host"
+              href={user ? "/host/onboarding" : "/auth?mode=signup&role=host"}
               className="inline-flex h-12 items-center justify-center rounded-full border border-[#eadfd6] bg-white px-5 text-sm font-extrabold hover:border-[#ff385c]"
             >
-              Create host account
+              {user ? "Start host onboarding" : "Create host account"}
             </Link>
           )}
         </div>
@@ -128,10 +128,10 @@ export default async function HostPage() {
 
         {user && !isHost && (
           <GateMessage
-            title="This account is a guest account"
-            body="Use a host account to publish stays and manage reservations."
-            action="Back to trips"
-            href="/dashboard"
+            title="Ready to host?"
+            body="Complete the short host onboarding flow before publishing your first StayWise listing."
+            action="Start onboarding"
+            href="/host/onboarding"
           />
         )}
 

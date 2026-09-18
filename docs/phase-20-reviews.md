@@ -11,7 +11,7 @@
 
 ## Database dependency
 
-The canonical schema and `supabase/phase5_marketplace_foundation.sql` already contain the `reviews` table, review constraints, indexes, and eligibility policies. Run that marketplace foundation migration in Supabase if it has not already been applied to the project.
+The canonical schema and `supabase/phase5_marketplace_foundation.sql` already contain the `reviews` table, review constraints, indexes, and eligibility policies. The smaller idempotent `supabase/phase9_reviews.sql` migration is also provided for an existing project that only needs the review table and policies. Run one of these in the Supabase SQL Editor before testing review submission.
 
 ## Verification
 

@@ -126,10 +126,11 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Implement legitimate reviews only from eligible completed reservations.
   - Prevent duplicates and calculate real listing average.
   - Show New/No reviews yet when no reviews exist.
-  - Current pass: added real listing review reads and averages, completed-trip review submission, duplicate protection through the existing unique constraint and RLS, privacy-safe verified guest labels, and `docs/phase-20-reviews.md`.
+  - Current pass: added real listing review reads and averages, completed-trip review submission, duplicate protection through the existing unique constraint and RLS, privacy-safe verified guest labels, `supabase/phase9_reviews.sql`, and `docs/phase-20-reviews.md`. The live Supabase project still needs this migration applied.
 
-- [~] Phase 21: Become a host
+- [x] Phase 21: Become a host
   - Build serious onboarding before listing creation.
+  - Current pass: added protected host onboarding, account activation into the host role, ownership/trust expectations, and a guided transition into the host workspace.
 
 
 - [ ] Phase 22: Host create listing wizard

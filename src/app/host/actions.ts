@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -9,6 +10,56 @@ export type HostListingActionState = {
   ok: boolean;
   message: string;
 };
+
+export type HostOnboardingActionState = {
+  ok: boolean;
+  message: string;
+};
+
+export async function activateHostAccountAction(
+  _state: HostOnboardingActionState,
+  _formData: FormData,
+): Promise<HostOnboardingActionState> {
+  void _state;
+  void _formData;
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return {
+      ok: false,
+      message: "Supabase is not configured for host onboarding yet.",
+    };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      ok: false,
+      message: "Sign in before starting host onboarding.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ role: "host" })
+    .eq("id", user.id);
+
+  if (error) {
+    console.error("Unable to activate host account", error);
+    return {
+      ok: false,
+      message: "We could not activate hosting for this account. Try again.",
+    };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/dashboard");
+  revalidatePath("/host");
+  redirect("/host");
+}
 
 const listingSchema = z.object({
   title: z.string().trim().min(8),

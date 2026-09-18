@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { HostEditListingForm } from "@/components/host-edit-listing-form";
+import { HostImageManager } from "@/components/host-image-manager";
 import { StayWiseHeader } from "@/components/staywise-header";
-import { getCurrentUserProfile, getHostListings } from "@/lib/listing-data";
+import {
+  getCurrentUserProfile,
+  getHostListingImages,
+  getHostListings,
+} from "@/lib/listing-data";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +34,8 @@ export default async function EditHostListingPage({
     notFound();
   }
 
+  const images = await getHostListingImages(user.id, listing.id);
+
   return (
     <main className="min-h-screen bg-white text-[#201a18]">
       <StayWiseHeader
@@ -51,6 +58,7 @@ export default async function EditHostListingPage({
       </section>
       <section className="mx-auto max-w-[1100px] px-5 py-8 lg:px-8">
         <HostEditListingForm listing={listing} />
+        <HostImageManager images={images} listingId={listing.id} />
       </section>
     </main>
   );

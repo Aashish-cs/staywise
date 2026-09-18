@@ -151,6 +151,7 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
 
 - [ ] Phase 26: Image system
   - Supabase Storage bucket strategy, owner-only listing uploads, optimization, type/size/count validation, ordering, delete, primary photo, and alt text/fallbacks.
+  - Current pass: added host upload validation, owner-scoped Storage paths, public listing image URLs, listing image rows, upload cleanup on failure, owner-only delete/primary-photo controls, and `supabase/phase10_storage.sql`. Image optimization and applying the Storage migration remain.
 
 - [ ] Phase 27: Profile
   - Profile settings for display name, avatar, bio, phone if used, security, favorites, trips, and hosting.

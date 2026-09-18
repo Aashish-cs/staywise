@@ -111,6 +111,13 @@ export type ListingSearchResult = {
   totalCount: number;
 };
 
+export type HostListingImage = {
+  id: string;
+  url: string;
+  alt: string;
+  sortOrder: number;
+};
+
 const listingSelect = `
   id,
   host_id,
@@ -790,6 +797,43 @@ export async function getHostListings(userId: string) {
   }
 
   return ((data ?? []) as ListingRow[]).map(mapListingRow);
+}
+
+export async function getHostListingImages(userId: string, listingId: string) {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return [];
+  }
+
+  const { data: ownedListing, error: listingError } = await supabase
+    .from("listings")
+    .select("id")
+    .eq("id", listingId)
+    .eq("host_id", userId)
+    .maybeSingle();
+
+  if (listingError || !ownedListing) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("listing_images")
+    .select("id, image_url, alt_text, sort_order")
+    .eq("listing_id", listingId)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("Unable to load host listing images", error);
+    return [];
+  }
+
+  return (data ?? []).map((image) => ({
+    id: image.id as string,
+    url: image.image_url as string,
+    alt: (image.alt_text as string) || "Listing photo",
+    sortOrder: Number(image.sort_order),
+  })) as HostListingImage[];
 }
 
 export async function getHostReservations(userId: string) {

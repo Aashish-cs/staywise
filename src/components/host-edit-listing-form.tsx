@@ -120,8 +120,7 @@ export function HostEditListingForm({ listing }: { listing: Listing }) {
       </div>
 
       <div className="mt-6 rounded-2xl bg-[#edf6f8] p-4 text-sm font-semibold leading-6 text-[#23515a]">
-        Photos and amenities remain unchanged here. They will move to the owner-only asset editor
-        when Supabase Storage uploads are enabled.
+        Save core listing details here. Photo order, primary-photo selection, and removal are managed in the photo tools below.
       </div>
 
       {state.message ? (

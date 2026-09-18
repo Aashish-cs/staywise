@@ -59,6 +59,7 @@ export function HostListingForm() {
   );
   const [draft, setDraft] = useState<ListingDraft>(initialDraft);
   const [step, setStep] = useState(0);
+  const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
   const imageUrls = useMemo(() => parseDraftUrls(draft.imageUrls), [draft.imageUrls]);
   const amenities = useMemo(
     () =>
@@ -69,8 +70,8 @@ export function HostListingForm() {
     [draft.amenities],
   );
   const qualityItems = useMemo(
-    () => buildQualityItems(draft, imageUrls.length, amenities),
-    [amenities, draft, imageUrls.length],
+    () => buildQualityItems(draft, imageUrls.length + selectedImageFiles.length, amenities),
+    [amenities, draft, imageUrls.length, selectedImageFiles.length],
   );
   const completedQualityItems = qualityItems.filter((item) => item.done).length;
   const qualityScore = Math.round((completedQualityItems / qualityItems.length) * 100);
@@ -112,7 +113,7 @@ export function HostListingForm() {
       Number(draft.capacity) >= 1 &&
       Number(draft.bedrooms) >= 0 &&
       Number(draft.bathrooms) >= 0.5,
-    imageUrls.length >= 1 && amenities.length >= 1,
+    imageUrls.length + selectedImageFiles.length >= 1 && amenities.length >= 1,
     qualityScore >= 70,
   ];
 
@@ -297,9 +298,27 @@ export function HostListingForm() {
               label="Image URLs"
               placeholder={`https://images.unsplash.com/photo-...\nhttps://images.unsplash.com/photo-...`}
               rows={4}
+              required={false}
               value={draft.imageUrls}
               onChange={(value) => updateDraft("imageUrls", value)}
             />
+            <label className="block">
+              <span className="field-label">Upload photos</span>
+              <input
+                type="file"
+                name="imageFiles"
+                accept="image/jpeg,image/png,image/webp,image/heic"
+                multiple
+                onChange={(event) => setSelectedImageFiles(Array.from(event.target.files ?? []))}
+                className="block w-full rounded-2xl border border-dashed border-[#d7c8bd] bg-[#fbfaf8] px-4 py-4 text-sm font-semibold text-[#5f5148] file:mr-4 file:rounded-full file:border-0 file:bg-[#201a18] file:px-4 file:py-2 file:font-extrabold file:text-white"
+              />
+              <span className="mt-2 block text-xs font-semibold text-[#786a60]">
+                Up to six JPEG, PNG, WebP, or HEIC files. Each file must be under 8 MB.
+                {selectedImageFiles.length > 0
+                  ? ` ${selectedImageFiles.length} file${selectedImageFiles.length === 1 ? "" : "s"} selected.`
+                  : ""}
+              </span>
+            </label>
             </FormSection>
           </div>
 
@@ -572,12 +591,14 @@ function TextareaField({
   onChange,
   placeholder,
   rows,
+  required = true,
   value,
 }: {
   label: string;
   name: keyof ListingDraft;
   onChange: (value: string) => void;
   placeholder: string;
+  required?: boolean;
   rows: number;
   value: string;
 }) {
@@ -591,7 +612,7 @@ function TextareaField({
         rows={rows}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        required
+        required={required}
       />
     </label>
   );

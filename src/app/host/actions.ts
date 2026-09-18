@@ -133,7 +133,7 @@ const listingSchema = z.object({
   capacity: z.coerce.number().int().min(1).max(16),
   bedrooms: z.coerce.number().int().min(0).max(12),
   bathrooms: z.coerce.number().min(0.5).max(12),
-  imageUrls: z.string().trim().min(10),
+  imageUrls: z.string().trim().optional().default(""),
   amenities: z.string().trim().min(3),
 });
 
@@ -229,6 +229,72 @@ export async function updateHostListingAction(
   };
 }
 
+const hostListingImageActionSchema = z.object({
+  listingId: z.string().uuid(),
+  imageId: z.string().uuid(),
+});
+
+export async function deleteHostListingImageAction(formData: FormData) {
+  const parsed = hostListingImageActionSchema.safeParse({
+    listingId: formData.get("listingId"),
+    imageId: formData.get("imageId"),
+  });
+
+  if (!parsed.success) {
+    return;
+  }
+
+  const context = await getOwnedListingImageContext(parsed.data.listingId, parsed.data.imageId);
+
+  if (!context || context.images.length <= 1) {
+    return;
+  }
+
+  const { error } = await context.supabase
+    .from("listing_images")
+    .delete()
+    .eq("id", parsed.data.imageId)
+    .eq("listing_id", parsed.data.listingId);
+
+  if (error) {
+    console.error("Unable to delete host listing image", error);
+    return;
+  }
+
+  const storagePath = extractListingStoragePath(context.image.image_url);
+
+  if (storagePath) {
+    await context.supabase.storage.from("listing-images").remove([storagePath]);
+  }
+
+  await normalizeListingImageOrder(context.supabase, parsed.data.listingId, context.images);
+  revalidateHostImagePaths(parsed.data.listingId);
+}
+
+export async function setPrimaryHostListingImageAction(formData: FormData) {
+  const parsed = hostListingImageActionSchema.safeParse({
+    listingId: formData.get("listingId"),
+    imageId: formData.get("imageId"),
+  });
+
+  if (!parsed.success) {
+    return;
+  }
+
+  const context = await getOwnedListingImageContext(parsed.data.listingId, parsed.data.imageId);
+
+  if (!context) {
+    return;
+  }
+
+  const orderedImages = [
+    context.image,
+    ...context.images.filter((image) => image.id !== context.image.id),
+  ];
+  await normalizeListingImageOrder(context.supabase, parsed.data.listingId, orderedImages);
+  revalidateHostImagePaths(parsed.data.listingId);
+}
+
 export async function createHostListingAction(
   _state: HostListingActionState,
   formData: FormData,
@@ -244,7 +310,7 @@ export async function createHostListingAction(
     capacity: formData.get("capacity"),
     bedrooms: formData.get("bedrooms"),
     bathrooms: formData.get("bathrooms"),
-    imageUrls: formData.get("imageUrls"),
+    imageUrls: formData.get("imageUrls") ?? "",
     amenities: formData.get("amenities"),
   });
 
@@ -290,15 +356,36 @@ export async function createHostListingAction(
 
   const values = parsed.data;
   const imageUrls = parseImageUrls(values.imageUrls);
+  const imageFiles = formData
+    .getAll("imageFiles")
+    .filter((value): value is File => value instanceof File && value.size > 0);
   const amenities = values.amenities
     .split(",")
     .map((amenity) => amenity.trim())
     .filter(Boolean);
 
-  if (imageUrls.length === 0) {
+  if (imageUrls.length + imageFiles.length === 0) {
     return {
       ok: false,
-      message: "Add at least one valid image URL.",
+      message: "Add at least one image file or valid image URL.",
+    };
+  }
+
+  if (imageUrls.length + imageFiles.length > 6) {
+    return {
+      ok: false,
+      message: "Add no more than six listing images.",
+    };
+  }
+
+  const invalidFile = imageFiles.find(
+    (file) => !isSupportedImage(file) || file.size > 8 * 1024 * 1024,
+  );
+
+  if (invalidFile) {
+    return {
+      ok: false,
+      message: "Images must be JPEG, PNG, WebP, or HEIC files under 8 MB.",
     };
   }
 
@@ -331,16 +418,42 @@ export async function createHostListingAction(
 
   const listingId = listing.id as string;
 
+  const uploadedImages = await uploadListingImages(
+    supabase,
+    user.id,
+    listingId,
+    values.title,
+    imageFiles,
+  );
+
+  if (!uploadedImages.ok) {
+    await supabase.from("listings").delete().eq("id", listingId);
+
+    return {
+      ok: false,
+      message: uploadedImages.message,
+    };
+  }
+
   const { error: imageError } = await supabase.from("listing_images").insert(
-    imageUrls.map((imageUrl, index) => ({
-      listing_id: listingId,
-      image_url: imageUrl,
-      alt_text: `${values.title} photo ${index + 1}`,
-      sort_order: index,
-    })),
+    [
+      ...imageUrls.map((imageUrl, index) => ({
+        listing_id: listingId,
+        image_url: imageUrl,
+        alt_text: `${values.title} photo ${index + 1}`,
+        sort_order: index,
+      })),
+      ...uploadedImages.images.map((image, index) => ({
+        listing_id: listingId,
+        image_url: image.url,
+        alt_text: `${values.title} uploaded photo ${imageUrls.length + index + 1}`,
+        sort_order: imageUrls.length + index,
+      })),
+    ],
   );
 
   if (imageError) {
+    await removeUploadedListingImages(supabase, uploadedImages.paths);
     await supabase.from("listings").delete().eq("id", listingId);
 
     return {
@@ -358,6 +471,7 @@ export async function createHostListingAction(
     );
 
     if (amenityError) {
+      await removeUploadedListingImages(supabase, uploadedImages.paths);
       await supabase.from("listings").delete().eq("id", listingId);
 
       return {
@@ -391,4 +505,144 @@ function parseImageUrls(value: string) {
       }
     })
     .slice(0, 6);
+}
+
+function isSupportedImage(file: File) {
+  return ["image/jpeg", "image/png", "image/webp", "image/heic"].includes(file.type);
+}
+
+async function uploadListingImages(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  userId: string,
+  listingId: string,
+  title: string,
+  files: File[],
+) {
+  if (!supabase || files.length === 0) {
+    return { images: [], message: "", ok: true as const, paths: [] };
+  }
+
+  const uploaded: { path: string; url: string }[] = [];
+
+  for (const [index, file] of files.entries()) {
+    const path = `${userId}/${listingId}/${crypto.randomUUID()}-${sanitizeFileName(file.name)}`;
+    const { error } = await supabase.storage.from("listing-images").upload(path, file, {
+      cacheControl: "31536000",
+      contentType: file.type,
+      upsert: false,
+    });
+
+    if (error) {
+      await removeUploadedListingImages(supabase, uploaded.map((item) => item.path));
+      return {
+        images: [],
+        message: `Photo ${index + 1} could not be uploaded. Apply the Storage migration and try again.`,
+        ok: false as const,
+        paths: [],
+      };
+    }
+
+    const { data } = supabase.storage.from("listing-images").getPublicUrl(path);
+    uploaded.push({ path, url: data.publicUrl });
+  }
+
+  return {
+    images: uploaded.map(({ url }) => ({ title, url })),
+    message: "",
+    ok: true as const,
+    paths: uploaded.map(({ path }) => path),
+  };
+}
+
+async function removeUploadedListingImages(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  paths: string[],
+) {
+  if (!supabase || paths.length === 0) {
+    return;
+  }
+
+  await supabase.storage.from("listing-images").remove(paths);
+}
+
+function sanitizeFileName(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9.-]+/g, "-").slice(-80) || "photo";
+}
+
+async function getOwnedListingImageContext(listingId: string, imageId: string) {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return null;
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const { data: listing } = await supabase
+    .from("listings")
+    .select("id")
+    .eq("id", listingId)
+    .eq("host_id", user.id)
+    .maybeSingle();
+
+  if (!listing) {
+    return null;
+  }
+
+  const { data: imageRows, error } = await supabase
+    .from("listing_images")
+    .select("id, image_url, alt_text, sort_order")
+    .eq("listing_id", listingId)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    return null;
+  }
+
+  const images = (imageRows ?? []).map((image) => ({
+    id: image.id as string,
+    image_url: image.image_url as string,
+    alt_text: image.alt_text as string,
+    sort_order: Number(image.sort_order),
+  }));
+  const image = images.find((item) => item.id === imageId);
+
+  return image ? { image, images, supabase } : null;
+}
+
+async function normalizeListingImageOrder(
+  supabase: NonNullable<Awaited<ReturnType<typeof createSupabaseServerClient>>>,
+  listingId: string,
+  images: Array<{ id: string }>,
+) {
+  await Promise.all(
+    images.map((image, index) =>
+      supabase
+        .from("listing_images")
+        .update({ sort_order: index })
+        .eq("id", image.id)
+        .eq("listing_id", listingId),
+    ),
+  );
+}
+
+function extractListingStoragePath(value: string) {
+  const marker = "/storage/v1/object/public/listing-images/";
+  const markerIndex = value.indexOf(marker);
+
+  return markerIndex === -1
+    ? null
+    : decodeURIComponent(value.slice(markerIndex + marker.length));
+}
+
+function revalidateHostImagePaths(listingId: string) {
+  revalidatePath("/host");
+  revalidatePath(`/host/listings/${listingId}/edit`);
+  revalidatePath(`/listings/${listingId}`);
 }

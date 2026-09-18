@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SearchExperience } from "@/components/search-experience";
 import {
   getCurrentUserProfile,
+  getGuestRecentTripCities,
   getFavoriteListingIds,
   searchPublicListings,
 } from "@/lib/listing-data";
@@ -27,6 +28,13 @@ type SearchPageProps = {
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const query = await searchParams;
   const search = parseSearchParams(query);
+  const { user, profile } = await getCurrentUserProfile();
+  const [favoriteIds, preferredCities] = user
+    ? await Promise.all([
+        getFavoriteListingIds(user.id),
+        getGuestRecentTripCities(user.id),
+      ])
+    : [[], []];
   const location = search.destination
     ? await resolveLocationForPage(search.destination)
     : null;
@@ -34,9 +42,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     location,
     page: parseSearchPage(query),
     pageSize: 24,
+    recommendationContext: {
+      favoriteListingIds: favoriteIds,
+      preferredCities,
+    },
   });
-  const { user, profile } = await getCurrentUserProfile();
-  const favoriteIds = user ? await getFavoriteListingIds(user.id) : [];
   const accountRole =
     profile?.role === "host" ? "host" : profile?.role === "guest" ? "guest" : null;
   const currentQuery = buildSearchPageQueryString(search, listingResult.page);

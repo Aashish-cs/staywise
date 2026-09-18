@@ -93,8 +93,11 @@ export function MarketplaceHome({
     [initialListings],
   );
   const rankedListings = useMemo(
-    () => rankListings(broadMarketplaceSearchInput, initialListings),
-    [initialListings],
+    () =>
+      rankListings(broadMarketplaceSearchInput, initialListings, {
+        favoriteListingIds: initialFavoriteIds,
+      }),
+    [initialFavoriteIds, initialListings],
   );
   const sections = useMemo(
     () => buildListingSections(rankedListings, topCity, makeSearchHref),

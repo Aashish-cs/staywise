@@ -61,6 +61,12 @@ export default async function DashboardPage() {
       ...workReadySearchPreset,
     },
     publicListings,
+    {
+      favoriteListingIds: favoriteIds,
+      preferredCities: reservations
+        .map((reservation) => reservation.listing?.city ?? "")
+        .filter(Boolean),
+    },
   ).slice(0, 3);
   const today = getTodayIso();
   const upcomingReservations = reservations

@@ -14,7 +14,11 @@ import {
 } from "@/lib/listings";
 import { hasSearchCoordinates, nearbySearchRadiusMiles } from "@/lib/location-distance";
 import type { LocationLookupResult } from "@/lib/location-service";
-import { rankListings, type SearchInput } from "@/lib/recommendations";
+import {
+  rankListings,
+  type RecommendationContext,
+  type SearchInput,
+} from "@/lib/recommendations";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type ListingImageRow = {
@@ -74,6 +78,11 @@ type ReviewRow = {
   rating: number;
   body: string;
   created_at: string;
+};
+
+type ReviewSignalRow = {
+  listing_id: string;
+  rating: number;
 };
 
 type AvailableListingIdRow = {
@@ -163,7 +172,10 @@ export async function getPublicListings() {
     const { data, error } = await loadPublicListingRows(supabase);
 
     if (!error) {
-      return ((data ?? []) as ListingRow[]).map(mapListingRow);
+      return enrichListingsWithReviewSignals(
+        supabase,
+        ((data ?? []) as ListingRow[]).map(mapListingRow),
+      );
     }
 
     if (
@@ -187,6 +199,7 @@ export async function getPublicListings() {
 export async function searchPublicListings(
   search: SearchInput,
   options: {
+    recommendationContext?: RecommendationContext;
     location?: LocationLookupResult | null;
     page?: number;
     pageSize?: number;
@@ -245,10 +258,11 @@ export async function searchPublicListings(
       return emptyListingSearchResult(page, pageSize);
     }
 
-    const rankedListings = rankListings(
-      search,
+    const candidates = await enrichListingsWithReviewSignals(
+      supabase,
       ((data ?? []) as ListingRow[]).map(mapListingRow),
     );
+    const rankedListings = rankListings(search, candidates, options.recommendationContext);
     const offset = (page - 1) * pageSize;
     const listings = rankedListings.slice(offset, offset + pageSize);
 
@@ -266,8 +280,8 @@ export async function searchPublicListings(
     query = query.or(buildDestinationOrFilter(term));
   }
 
-  const offset = (page - 1) * pageSize;
-  const { count, data, error } = await query.range(offset, offset + pageSize - 1);
+  const candidateLimit = 200;
+  const { count, data, error } = await query.limit(candidateLimit);
 
   if (error) {
     if (error.code === "PGRST103") {
@@ -285,10 +299,21 @@ export async function searchPublicListings(
     return emptyListingSearchResult(page, pageSize);
   }
 
+  const candidates = await enrichListingsWithReviewSignals(
+    supabase,
+    ((data ?? []) as ListingRow[]).map(mapListingRow),
+  );
+  const rankedListings = rankListings(
+    search,
+    candidates,
+    options.recommendationContext,
+  );
+  const offset = (page - 1) * pageSize;
+
   return {
-    hasNextPage: count !== null ? offset + pageSize < count : false,
+    hasNextPage: count !== null ? offset + pageSize < count : offset + pageSize < rankedListings.length,
     hasPreviousPage: page > 1,
-    listings: rankListings(search, ((data ?? []) as ListingRow[]).map(mapListingRow)),
+    listings: rankedListings.slice(offset, offset + pageSize),
     page,
     pageSize,
     totalCount: count ?? data?.length ?? 0,
@@ -503,6 +528,56 @@ async function loadPublicListingRows(supabase: SupabaseClient) {
     .eq("is_active", true)
     .order("created_at", { ascending: false })
     .limit(80);
+}
+
+async function enrichListingsWithReviewSignals(
+  supabase: SupabaseClient,
+  listings: Listing[],
+) {
+  if (listings.length === 0) {
+    return listings;
+  }
+
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("listing_id, rating")
+    .in("listing_id", listings.map((listing) => listing.id));
+
+  if (error) {
+    // The reviews migration is optional during local setup. Ranking still works
+    // with the non-review signals when the table is not in the schema cache.
+    if (!isMissingTableError(error)) {
+      console.warn("Unable to load review signals for recommendations", error.message);
+    }
+    return listings;
+  }
+
+  const ratingsByListing = new Map<string, number[]>();
+  for (const row of (data ?? []) as ReviewSignalRow[]) {
+    const ratings = ratingsByListing.get(row.listing_id) ?? [];
+    ratings.push(Number(row.rating));
+    ratingsByListing.set(row.listing_id, ratings);
+  }
+
+  return listings.map((listing) => {
+    const ratings = ratingsByListing.get(listing.id) ?? [];
+    if (ratings.length === 0) {
+      return listing;
+    }
+
+    return {
+      ...listing,
+      ratingAverage:
+        Math.round((ratings.reduce((total, rating) => total + rating, 0) / ratings.length) * 10) /
+        10,
+      reviewCount: ratings.length,
+    };
+  });
+}
+
+function isMissingTableError(error: SupabaseQueryError) {
+  const message = error.message?.toLowerCase() ?? "";
+  return message.includes("schema cache") || message.includes("could not find") || message.includes("does not exist");
 }
 
 function isTransientSupabaseError(error: SupabaseQueryError) {
@@ -744,6 +819,29 @@ export async function getFavoriteListingIds(userId: string) {
   }
 
   return (data ?? []).map((row) => row.listing_id as string);
+}
+
+export async function getGuestRecentTripCities(userId: string) {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("trips")
+    .select("destination")
+    .eq("guest_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(8);
+
+  if (error) {
+    return [];
+  }
+
+  return (data ?? [])
+    .map((row) => row.destination as string)
+    .filter(Boolean);
 }
 
 export async function getFavoriteListings(userId: string) {
@@ -1011,6 +1109,7 @@ function mapListingRow(row: ListingRow): Listing {
     traits: inferTraits(row, amenities),
     bestFor: inferBestFor(row, amenities),
     description: row.description,
+    createdAt: row.created_at,
   };
 }
 

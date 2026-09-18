@@ -46,6 +46,9 @@ export type Listing = {
   traits: string[];
   bestFor: TripPurpose[];
   description: string;
+  createdAt?: string;
+  ratingAverage?: number | null;
+  reviewCount?: number;
 };
 
 export type ReservationStatus =

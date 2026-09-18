@@ -67,6 +67,11 @@ export type RankedListing = Listing & {
   tradeoffs: string[];
 };
 
+export type RecommendationContext = {
+  favoriteListingIds?: string[];
+  preferredCities?: string[];
+};
+
 const purposeSignals: Record<TripPurpose, string[]> = {
   business: ["Fast Wi-Fi", "Workspace", "Self check-in"],
   family: ["Kitchen", "Parking", "Washer", "Pet friendly"],
@@ -80,6 +85,7 @@ const purposeSignals: Record<TripPurpose, string[]> = {
 export function rankListings(
   rawInput: Partial<SearchInput>,
   listings: Listing[] = [],
+  context: RecommendationContext = {},
 ): RankedListing[] {
   const input = searchSchema.parse(rawInput);
   const destination = normalizeSearchText(input.destination);
@@ -128,14 +134,22 @@ export function rankListings(
         hasBathrooms
       );
     })
-    .map(({ distanceMiles, listing }) => scoreListing(listing, input, distanceMiles))
-    .sort((a, b) => b.matchScore - a.matchScore);
+    .map(({ distanceMiles, listing }) =>
+      scoreListing(listing, input, distanceMiles, context),
+    )
+    .sort(
+      (a, b) =>
+        b.matchScore - a.matchScore ||
+        (b.reviewCount ?? 0) - (a.reviewCount ?? 0) ||
+        a.pricePerNight - b.pricePerNight,
+    );
 }
 
 function scoreListing(
   listing: Listing,
   input: SearchInput,
   distanceMiles: number | null,
+  context: RecommendationContext,
 ): RankedListing {
   let score = 36;
   const reasons: string[] = [];
@@ -172,6 +186,16 @@ function scoreListing(
     reasons.push(`Strong match for ${input.tripPurpose.replace("-", " ")} travel`);
   }
 
+  if (listing.ratingAverage && (listing.reviewCount ?? 0) > 0) {
+    const ratingScore = Math.min(10, Math.round(listing.ratingAverage * 2));
+    score += ratingScore;
+    reasons.push(
+      `${listing.ratingAverage.toFixed(1)} guest rating from ${listing.reviewCount} ${
+        listing.reviewCount === 1 ? "review" : "reviews"
+      }`,
+    );
+  }
+
   const amenityMatches = input.amenities.filter((amenity) =>
     listing.amenities.includes(amenity),
   );
@@ -199,6 +223,25 @@ function scoreListing(
     reasons.push("Comfortable space for the group");
   } else if (capacityBuffer === 0 && input.guests > 2) {
     tradeoffs.push("Capacity is exact with little extra room");
+  }
+
+  if (context.favoriteListingIds?.includes(listing.id)) {
+    score += 7;
+    reasons.push("Saved in your StayWise stays");
+  }
+
+  if (
+    context.preferredCities?.some(
+      (city) => normalizeSearchText(city) === normalizeSearchText(listing.city),
+    )
+  ) {
+    score += 5;
+    reasons.push("In a city from your recent trips");
+  }
+
+  if (listing.createdAt && isRecentlyAdded(listing.createdAt)) {
+    score += 3;
+    reasons.push("Recently added to StayWise");
   }
 
   if (reasons.length === 0) {
@@ -239,4 +282,15 @@ function normalizeSearchText(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
+}
+
+function isRecentlyAdded(createdAt: string) {
+  const createdAtMs = Date.parse(createdAt);
+
+  if (!Number.isFinite(createdAtMs)) {
+    return false;
+  }
+
+  const ageMs = Date.now() - createdAtMs;
+  return ageMs >= 0 && ageMs <= 1000 * 60 * 60 * 24 * 45;
 }

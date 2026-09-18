@@ -8,9 +8,11 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const listings = await getPublicListings();
   const { user, profile } = await getCurrentUserProfile();
-  const favoriteIds = user ? await getFavoriteListingIds(user.id) : [];
+  const [listings, favoriteIds] = await Promise.all([
+    getPublicListings(),
+    user ? getFavoriteListingIds(user.id) : Promise.resolve([]),
+  ]);
   const accountRole =
     profile?.role === "host" ? "host" : profile?.role === "guest" ? "guest" : null;
 

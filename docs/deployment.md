@@ -41,6 +41,9 @@ Use Resend as the SMTP provider for Supabase Auth emails:
    - `NOMINATIM_EMAIL` (optional but recommended)
    - `NOMINATIM_BASE_URL` (optional, defaults to OpenStreetMap Nominatim)
    - `NOMINATIM_REVERSE_BASE_URL` (optional, defaults to OpenStreetMap Nominatim reverse geocoding)
+   - `STAYWISE_AI_API_KEY` (optional, server-only; deterministic AI search works without it)
+   - `STAYWISE_AI_BASE_URL` (optional, defaults to `https://api.openai.com/v1`)
+   - `STAYWISE_AI_MODEL` (optional, defaults to `gpt-5`)
 3. Deploy from `main`.
 4. Copy the deployment URL back into Supabase Auth redirect settings.
 

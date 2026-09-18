@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getPublicListings } from "@/lib/listing-data";
-import { parseNaturalLanguageSearch } from "@/lib/natural-language-search";
+import { parseNaturalLanguageSearchWithFallback } from "@/lib/natural-language-search";
 import { recordRecommendationEvent } from "@/lib/recommendation-events";
 import { type SearchInput } from "@/lib/recommendations";
 
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     !Array.isArray(parsed.data.currentSearch)
       ? (parsed.data.currentSearch as Partial<SearchInput>)
       : {};
-  const interpretedSearch = parseNaturalLanguageSearch(
+  const interpretedSearch = await parseNaturalLanguageSearchWithFallback(
     parsed.data.prompt,
     currentSearch,
     listings,

@@ -7,11 +7,40 @@ import { searchSchema, type SearchInput } from "@/lib/recommendations";
 
 type FeaturedAmenity = (typeof featuredAmenities)[number];
 
-type NaturalLanguageSearchResult = {
+export type NaturalLanguageSearchResult = {
   detected: string[];
   search: SearchInput;
   summary: string;
 };
+
+const llmSearchSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    destination: { type: "string" },
+    checkIn: { type: "string" },
+    checkOut: { type: "string" },
+    guests: { type: "integer", minimum: 1, maximum: 16 },
+    maxNightlyBudget: { type: "integer", minimum: 50, maximum: 1200 },
+    tripPurpose: {
+      type: "string",
+      enum: ["business", "family", "remote-work", "romantic", "solo", "group", "outdoor"],
+    },
+    amenities: {
+      type: "array",
+      items: { type: "string", enum: featuredAmenities },
+    },
+  },
+  required: [
+    "destination",
+    "checkIn",
+    "checkOut",
+    "guests",
+    "maxNightlyBudget",
+    "tripPurpose",
+    "amenities",
+  ],
+} as const;
 
 const numberWords: Record<string, number> = {
   one: 1,
@@ -200,6 +229,139 @@ export function parseNaturalLanguageSearch(
     search,
     summary: buildSummary(detected),
   };
+}
+
+export async function parseNaturalLanguageSearchWithFallback(
+  prompt: string,
+  currentSearch: Partial<SearchInput> = {},
+  listings: Listing[] = [],
+): Promise<NaturalLanguageSearchResult> {
+  const deterministic = parseNaturalLanguageSearch(prompt, currentSearch, listings);
+
+  if (!getLlmConfig()) {
+    return deterministic;
+  }
+
+  try {
+    const parsed = await parseWithConfiguredLlm(prompt, currentSearch);
+    return parsed ?? deterministic;
+  } catch (error) {
+    console.warn("Optional AI search provider failed; using deterministic parser", error);
+    return deterministic;
+  }
+}
+
+function getLlmConfig() {
+  const apiKey = process.env.STAYWISE_AI_API_KEY ?? process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    return null;
+  }
+
+  return {
+    apiKey,
+    baseUrl: (process.env.STAYWISE_AI_BASE_URL ?? "https://api.openai.com/v1").replace(/\/$/, ""),
+    model: process.env.STAYWISE_AI_MODEL ?? process.env.OPENAI_MODEL ?? "gpt-5",
+  };
+}
+
+async function parseWithConfiguredLlm(
+  prompt: string,
+  currentSearch: Partial<SearchInput>,
+) {
+  const config = getLlmConfig();
+
+  if (!config) {
+    return null;
+  }
+
+  const response = await fetch(`${config.baseUrl}/responses`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${config.apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: config.model,
+      store: false,
+      instructions:
+        "You interpret travel search requests for StayWise. Return only structured search filters. Never invent amenities outside the allowed enum. Do not output addresses, prices not requested by the user, availability claims, ratings, or recommendations.",
+      input: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: JSON.stringify({
+                currentSearch: searchSchema.parse(currentSearch),
+                request: prompt,
+              }),
+            },
+          ],
+        },
+      ],
+      text: {
+        format: {
+          type: "json_schema",
+          name: "staywise_search_filters",
+          strict: true,
+          schema: llmSearchSchema,
+        },
+      },
+    }),
+    signal: AbortSignal.timeout(8000),
+  });
+
+  if (!response.ok) {
+    throw new Error(`AI search provider returned ${response.status}`);
+  }
+
+  const body = (await response.json()) as { output_text?: string };
+  const outputText = body.output_text?.trim();
+
+  if (!outputText) {
+    return null;
+  }
+
+  const parsedOutput = JSON.parse(outputText) as Record<string, unknown>;
+  const parsedSearch = searchSchema.safeParse({
+    ...searchSchema.parse(currentSearch),
+    ...parsedOutput,
+    nearLat: null,
+    nearLng: null,
+  });
+
+  if (!parsedSearch.success) {
+    return null;
+  }
+
+  const detected = getChangedSearchLabels(searchSchema.parse(currentSearch), parsedSearch.data);
+
+  return {
+    detected,
+    search: parsedSearch.data,
+    summary:
+      detected.length > 0
+        ? `I updated the search for ${formatDetected(detected)}.`
+        : "I kept the current filters and searched the live listings.",
+  };
+}
+
+function getChangedSearchLabels(previous: SearchInput, next: SearchInput) {
+  const changed: string[] = [];
+
+  if (next.destination && next.destination !== previous.destination) changed.push(next.destination);
+  if (next.checkIn && next.checkIn !== previous.checkIn) changed.push(`check in ${next.checkIn}`);
+  if (next.checkOut && next.checkOut !== previous.checkOut) changed.push(`check out ${next.checkOut}`);
+  if (next.guests !== previous.guests) changed.push(`${next.guests} guests`);
+  if (next.maxNightlyBudget !== previous.maxNightlyBudget) changed.push(`$${next.maxNightlyBudget}/night`);
+  if (next.tripPurpose !== previous.tripPurpose) changed.push(next.tripPurpose.replace("-", " "));
+
+  for (const amenity of next.amenities) {
+    if (!previous.amenities.includes(amenity)) changed.push(amenity);
+  }
+
+  return Array.from(new Set(changed)).slice(0, 6);
 }
 
 function inferDestination(prompt: string, listings: Listing[]) {

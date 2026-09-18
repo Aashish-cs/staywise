@@ -162,9 +162,10 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Never fabricate recommendation reasons.
   - Current pass: rank up to 200 live candidates before pagination, add live review averages/counts when the reviews table is available, use real saved-stay and recent-trip-city context for signed-in guests, and add honest recency signals. Popularity aggregation still needs a privacy-safe public aggregate query.
 
-- [ ] Phase 29: Optional LLM layer
+- [x] Phase 29: Optional LLM layer
   - Server-only AI abstraction for natural language search, host description assistance, explanations, and smart search interpretation.
   - App must work without `OPENAI_API_KEY`.
+  - Current pass: added an optional server-only structured-output adapter using `STAYWISE_AI_*` or `OPENAI_*` variables, strict schema validation, an eight-second timeout, and deterministic fallback when no key/provider is configured or the provider fails.
 
 - [ ] Phase 30: Stripe payment architecture
   - Payment-ready architecture with Checkout or Payment Intent when credentials exist.

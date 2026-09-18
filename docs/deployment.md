@@ -44,6 +44,9 @@ Use Resend as the SMTP provider for Supabase Auth emails:
    - `STAYWISE_AI_API_KEY` (optional, server-only; deterministic AI search works without it)
    - `STAYWISE_AI_BASE_URL` (optional, defaults to `https://api.openai.com/v1`)
    - `STAYWISE_AI_MODEL` (optional, defaults to `gpt-5`)
+   - `STRIPE_SECRET_KEY` (optional, server-only; enables hosted Checkout when payment-required reservations are enabled)
+   - `STRIPE_WEBHOOK_SECRET` (optional, server-only; verifies `/api/payments/webhook`)
+   - `SUPABASE_SERVICE_ROLE_KEY` (optional, server-only; required for webhook ledger updates)
 3. Deploy from `main`.
 4. Copy the deployment URL back into Supabase Auth redirect settings.
 

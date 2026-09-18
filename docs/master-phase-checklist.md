@@ -170,6 +170,7 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
 - [ ] Phase 30: Stripe payment architecture
   - Payment-ready architecture with Checkout or Payment Intent when credentials exist.
   - Webhook verification, statuses, no card storage, and development mode without fake payment success.
+  - Current pass: added server-only Stripe Checkout session creation for `requires_payment` ledgers, signed webhook verification, payment status updates, reservation confirmation/cancellation transitions, and explicit no-provider MVP responses. The current reserve-now/pay-later flow remains unchanged until the payment-required reservation migration is applied.
 
 - [ ] Phase 31: Date picker
   - Professional check-in/check-out selection, unavailable date disabling, invalid range prevention, mobile dialog, desktop popover, keyboard support, and URL/state sync.

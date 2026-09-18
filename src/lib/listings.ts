@@ -66,6 +66,22 @@ export type Reservation = {
   createdAt: string;
 };
 
+export type ListingReview = {
+  id: string;
+  reservationId: string;
+  listingId: string;
+  guestId: string;
+  guestName: string;
+  rating: number;
+  body: string;
+  createdAt: string;
+};
+
+export type ListingReviewSummary = {
+  average: number | null;
+  count: number;
+};
+
 export const tripPurposeLabels: Record<TripPurpose, string> = {
   business: "Business",
   family: "Family",

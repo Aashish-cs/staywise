@@ -2,11 +2,11 @@
 
 ## Completed
 
-- Confirmed the listing detail page already includes the core production surface:
+- Confirmed the listing detail page includes the core production surface:
   - Title, verified listing status, location, save/share actions.
   - Host badge.
   - Description, traits, highlights, amenities, house rules, safety, booking notes.
-  - StayWise fit signals and non-fabricated review messaging.
+  - StayWise fit signals and real review summary/review cards.
   - OpenStreetMap location section with approximate-area language.
   - Sticky desktop reservation panel with date, guests, pricing, availability check, auth handling, and trust notes.
 - Replaced the static photo grid with `ListingPhotoGallery`, a client-side gallery with:
@@ -34,4 +34,4 @@
 
 ## Notes
 
-The page still intentionally says real guest reviews are planned for a later sprint. Phase 20 should add real review data and only then surface ratings/reviews on detail pages and cards.
+Phase 20 now loads persisted review data and only shows ratings after completed-reservation reviews exist. New listings display `New · No reviews yet` until a legitimate review is submitted.

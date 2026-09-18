@@ -5,6 +5,8 @@ import {
 import {
   fallbackListingImage,
   type Listing,
+  type ListingReview,
+  type ListingReviewSummary,
   type PropertyType,
   type Reservation,
   type ReservationStatus,
@@ -62,6 +64,16 @@ type ReservationRow = {
   status: ReservationStatus;
   created_at: string;
   listing?: ListingRow | ListingRow[] | null;
+};
+
+type ReviewRow = {
+  id: string;
+  reservation_id: string;
+  listing_id: string;
+  guest_id: string;
+  rating: number;
+  body: string;
+  created_at: string;
 };
 
 type AvailableListingIdRow = {
@@ -649,6 +661,65 @@ export async function getReservationById(reservationId: string) {
   return mapReservationRow(data as unknown as ReservationRow);
 }
 
+export async function getListingReviews(listingId: string): Promise<ListingReview[]> {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("id, reservation_id, listing_id, guest_id, rating, body, created_at")
+    .eq("listing_id", listingId)
+    .order("created_at", { ascending: false })
+    .limit(20);
+
+  if (error) {
+    console.error("Unable to load listing reviews", error);
+    return [];
+  }
+
+  return ((data ?? []) as ReviewRow[]).map(mapReviewRow);
+}
+
+export async function getReviewedReservationIds(userId: string) {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("reservation_id")
+    .eq("guest_id", userId);
+
+  if (error) {
+    console.error("Unable to load reviewed reservations", error);
+    return [];
+  }
+
+  return (data ?? [])
+    .map((row) => row.reservation_id as string)
+    .filter(Boolean);
+}
+
+export function summarizeListingReviews(
+  reviews: ListingReview[],
+): ListingReviewSummary {
+  if (reviews.length === 0) {
+    return { average: null, count: 0 };
+  }
+
+  const average = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+
+  return {
+    average: Math.round(average * 10) / 10,
+    count: reviews.length,
+  };
+}
+
 export async function getFavoriteListingIds(userId: string) {
   const supabase = await createSupabaseServerClient();
 
@@ -823,6 +894,19 @@ function mapReservationRow(row: ReservationRow): Reservation {
     nightlyRate: row.nightly_rate,
     totalAmount: row.total_amount,
     status: row.status,
+    createdAt: row.created_at,
+  };
+}
+
+function mapReviewRow(row: ReviewRow): ListingReview {
+  return {
+    id: row.id,
+    reservationId: row.reservation_id,
+    listingId: row.listing_id,
+    guestId: row.guest_id,
+    guestName: "Verified guest",
+    rating: Number(row.rating),
+    body: row.body,
     createdAt: row.created_at,
   };
 }

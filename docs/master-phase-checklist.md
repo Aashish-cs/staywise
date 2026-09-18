@@ -122,13 +122,15 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Ensure real persisted favorite toggles, optimistic rollback, unique relationship, favorites page, refresh/login persistence.
   - Current pass: added protected `/favorites`, direct persisted favorite-listing loading, optimistic remove UI with shared saved-stays hook, `/favorites` revalidation, dashboard/account-menu navigation, and `docs/phase-19-favorites.md`.
 
-- [~] Phase 20: Reviews
+- [x] Phase 20: Reviews
   - Implement legitimate reviews only from eligible completed reservations.
   - Prevent duplicates and calculate real listing average.
   - Show New/No reviews yet when no reviews exist.
+  - Current pass: added real listing review reads and averages, completed-trip review submission, duplicate protection through the existing unique constraint and RLS, privacy-safe verified guest labels, and `docs/phase-20-reviews.md`.
 
-- [ ] Phase 21: Become a host
+- [~] Phase 21: Become a host
   - Build serious onboarding before listing creation.
+
 
 - [ ] Phase 22: Host create listing wizard
   - Multi-step flow: property type, room type, real address/map, basics, amenities, Supabase Storage photos, title, description, price, review, publish, and draft persistence.

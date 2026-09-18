@@ -16,6 +16,7 @@ import {
   MessageCircle,
   PawPrint,
   Sparkles,
+  Star,
   Utensils,
   WashingMachine,
   Waves,
@@ -29,6 +30,8 @@ import {
   getCurrentUserProfile,
   getFavoriteListingIds,
   getListingById,
+  getListingReviews,
+  summarizeListingReviews,
 } from "@/lib/listing-data";
 import {
   getOpenStreetMapEmbedUrl,
@@ -37,6 +40,8 @@ import {
 import {
   featuredAmenities,
   type Listing,
+  type ListingReview,
+  type ListingReviewSummary,
   tripPurposeLabels,
 } from "@/lib/listings";
 import { rankListings } from "@/lib/recommendations";
@@ -122,6 +127,8 @@ export default async function ListingPage({
   )[0];
   const { user, profile } = await getCurrentUserProfile();
   const favoriteIds = user ? await getFavoriteListingIds(user.id) : [];
+  const reviews = await getListingReviews(listing.id);
+  const reviewSummary = summarizeListingReviews(reviews);
   const accountRole =
     profile?.role === "host" ? "host" : profile?.role === "guest" ? "guest" : null;
   const accountHref = user
@@ -204,6 +211,7 @@ export default async function ListingPage({
                 <MapPin className="h-4 w-4 text-[#ff385c]" aria-hidden="true" />
                 {listing.neighborhood}, {listing.city}, {listing.state}
               </span>
+              <ReviewSummary summary={reviewSummary} compact />
             </div>
           </div>
 
@@ -267,8 +275,8 @@ export default async function ListingPage({
                     StayWise fit signals
                   </h2>
                   <p className="mt-2 text-sm font-semibold text-[#5f5148]">
-                    These are derived from listing details, amenities, and availability.
-                    Real guest reviews are planned for a later sprint.
+                    These are derived from listing details, amenities, availability, and verified
+                    guest activity.
                   </p>
                 </div>
                 <span className="rounded-full bg-[#fff3f5] px-3 py-1 text-sm font-extrabold text-[#bd1740]">
@@ -288,6 +296,8 @@ export default async function ListingPage({
                 ))}
               </div>
             </section>
+
+            <ListingReviews reviews={reviews} summary={reviewSummary} />
 
             <section className="border-b border-[#eadfd6] py-8">
               <h2 className="text-2xl font-extrabold tracking-tight">
@@ -417,6 +427,104 @@ export default async function ListingPage({
       </footer>
     </main>
   );
+}
+
+function ListingReviews({
+  reviews,
+  summary,
+}: {
+  reviews: ListingReview[];
+  summary: ListingReviewSummary;
+}) {
+  return (
+    <section className="border-b border-[#eadfd6] py-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-extrabold tracking-tight">Guest reviews</h2>
+          <p className="mt-2 text-sm font-semibold text-[#5f5148]">
+            Only reviews from completed reservations appear here.
+          </p>
+        </div>
+        <ReviewSummary summary={summary} />
+      </div>
+
+      {reviews.length > 0 ? (
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {reviews.map((review) => (
+            <article
+              key={review.id}
+              className="rounded-[22px] border border-[#eadfd6] bg-white p-5"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-extrabold">{review.guestName}</p>
+                  <div className="mt-2 flex items-center gap-1" aria-label={`${review.rating} out of 5 stars`}>
+                    {Array.from({ length: 5 }, (_, index) => (
+                      <Star
+                        key={index}
+                        className={`h-4 w-4 ${
+                          index < review.rating
+                            ? "fill-[#ffb84d] text-[#ffb84d]"
+                            : "text-[#d7c8bd]"
+                        }`}
+                        aria-hidden="true"
+                      />
+                    ))}
+                  </div>
+                </div>
+                <time
+                  dateTime={review.createdAt}
+                  className="shrink-0 text-xs font-extrabold text-[#786a60]"
+                >
+                  {formatReviewDate(review.createdAt)}
+                </time>
+              </div>
+              <p className="mt-4 text-sm font-semibold leading-7 text-[#5f5148]">
+                {review.body}
+              </p>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-6 rounded-[22px] border border-dashed border-[#d7c8bd] bg-[#fbfaf8] p-5">
+          <p className="font-extrabold">No reviews yet</p>
+          <p className="mt-2 text-sm font-semibold leading-6 text-[#5f5148]">
+            This listing is new to StayWise. The first review will appear after a guest completes a stay.
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ReviewSummary({
+  compact = false,
+  summary,
+}: {
+  compact?: boolean;
+  summary: ListingReviewSummary;
+}) {
+  if (summary.average === null) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-[#f7f3ee] px-3 py-1 text-sm font-extrabold text-[#5f5148]">
+        New · No reviews yet
+      </span>
+    );
+  }
+
+  return (
+    <span className={`inline-flex items-center gap-1 text-sm font-extrabold ${compact ? "text-[#5f5148]" : "rounded-full bg-[#f7f3ee] px-3 py-1"}`}>
+      <Star className="h-4 w-4 fill-[#ffb84d] text-[#ffb84d]" aria-hidden="true" />
+      {summary.average.toFixed(1)} · {summary.count} {summary.count === 1 ? "review" : "reviews"}
+    </span>
+  );
+}
+
+function formatReviewDate(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
 }
 
 function MobileReserveBar({ listing }: { listing: Listing }) {

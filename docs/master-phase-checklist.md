@@ -139,6 +139,7 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
 
 - [ ] Phase 23: Host dashboard
   - Professional dashboard with real active/draft listings, reservations, revenue estimate, occupancy, counts, and recent activity.
+  - Current pass: added real host metrics for active listings, reservations, projected confirmed revenue, markets, average booking value, and 90-day occupancy. Listing editing and deeper recent-activity management continue in the next host phases.
 
 - [ ] Phase 24: Host listing management
   - Host can view, edit, publish/unpublish, archive where supported, change price/amenities/photos/location carefully, and review reservations only for owned listings.

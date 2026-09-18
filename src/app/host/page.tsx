@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Home,
   MapPin,
+  Percent,
   Timer,
   WalletCards,
 } from "lucide-react";
@@ -50,6 +51,14 @@ export default async function HostPage() {
             hostListings.length,
         )
       : 0;
+  const averageReservationValue =
+    reservations.length > 0
+      ? Math.round(
+          reservations.reduce((total, reservation) => total + reservation.totalAmount, 0) /
+            reservations.length,
+        )
+      : 0;
+  const occupancyRate = calculateHostOccupancy(hostListings.length, reservations);
 
   return (
     <main className="min-h-screen bg-white text-[#201a18]">
@@ -151,7 +160,7 @@ export default async function HostPage() {
               />
             </div>
 
-            <section className="mt-6 grid gap-4 lg:grid-cols-4">
+            <section className="mt-6 grid gap-4 lg:grid-cols-6">
               <HostSignal
                 icon={CheckCircle2}
                 label="Confirmed stays"
@@ -175,6 +184,18 @@ export default async function HostPage() {
                 label="Markets"
                 value={`${new Set(hostListings.map((listing) => listing.city)).size}`}
                 tone="blue"
+              />
+              <HostSignal
+                icon={Percent}
+                label="90-day occupancy"
+                value={`${occupancyRate}%`}
+                tone="blue"
+              />
+              <HostSignal
+                icon={WalletCards}
+                label="Average booking"
+                value={averageReservationValue ? formatMoney(averageReservationValue) : "$0"}
+                tone="green"
               />
             </section>
 
@@ -419,4 +440,49 @@ function getListingQualityScore(listing: Listing) {
   if (listing.amenities.length >= 5) score += 10;
 
   return Math.min(99, score);
+}
+
+function calculateHostOccupancy(listingCount: number, reservations: Reservation[]) {
+  if (listingCount === 0) {
+    return 0;
+  }
+
+  const today = startOfDay(new Date());
+  const windowEnd = new Date(today);
+  windowEnd.setDate(windowEnd.getDate() + 90);
+  const bookedNights = reservations.reduce(
+    (total, reservation) =>
+      total +
+      (reservation.status === "confirmed" || reservation.status === "completed"
+        ? countNightsWithinWindow(reservation, today, windowEnd)
+        : 0),
+    0,
+  );
+  const availableNights = listingCount * 90;
+
+  return Math.min(100, Math.round((bookedNights / availableNights) * 100));
+}
+
+function countNightsWithinWindow(
+  reservation: Reservation,
+  windowStart: Date,
+  windowEnd: Date,
+) {
+  const start = new Date(`${reservation.startDate}T00:00:00`);
+  const end = new Date(`${reservation.endDate}T00:00:00`);
+  const clippedStart = start > windowStart ? start : windowStart;
+  const clippedEnd = end < windowEnd ? end : windowEnd;
+
+  if (clippedEnd <= clippedStart) {
+    return 0;
+  }
+
+  return Math.max(
+    0,
+    Math.round((clippedEnd.getTime() - clippedStart.getTime()) / (24 * 60 * 60 * 1000)),
+  );
+}
+
+function startOfDay(value: Date) {
+  return new Date(value.getFullYear(), value.getMonth(), value.getDate());
 }

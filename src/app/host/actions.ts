@@ -16,6 +16,12 @@ export type HostOnboardingActionState = {
   message: string;
 };
 
+export type HostEditListingActionState = {
+  listingId?: string;
+  ok: boolean;
+  message: string;
+};
+
 export async function activateHostAccountAction(
   _state: HostOnboardingActionState,
   _formData: FormData,
@@ -130,6 +136,98 @@ const listingSchema = z.object({
   imageUrls: z.string().trim().min(10),
   amenities: z.string().trim().min(3),
 });
+
+const editListingSchema = listingSchema
+  .omit({ imageUrls: true, amenities: true })
+  .extend({
+    listingId: z.string().uuid(),
+  });
+
+export async function updateHostListingAction(
+  _state: HostEditListingActionState,
+  formData: FormData,
+): Promise<HostEditListingActionState> {
+  void _state;
+  const parsed = editListingSchema.safeParse({
+    listingId: formData.get("listingId"),
+    title: formData.get("title"),
+    description: formData.get("description"),
+    city: formData.get("city"),
+    state: formData.get("state"),
+    neighborhood: formData.get("neighborhood"),
+    propertyType: formData.get("propertyType"),
+    pricePerNight: formData.get("pricePerNight"),
+    capacity: formData.get("capacity"),
+    bedrooms: formData.get("bedrooms"),
+    bathrooms: formData.get("bathrooms"),
+  });
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Check the listing details and try again.",
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return {
+      ok: false,
+      message: "Supabase is not configured for listing edits yet.",
+    };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      ok: false,
+      message: "Sign in as a host before editing a listing.",
+    };
+  }
+
+  const values = parsed.data;
+  const { error } = await supabase
+    .from("listings")
+    .update({
+      title: values.title,
+      description: values.description,
+      city: values.city,
+      state: values.state,
+      neighborhood: values.neighborhood,
+      property_type: values.propertyType,
+      price_per_night: values.pricePerNight,
+      capacity: values.capacity,
+      bedrooms: values.bedrooms,
+      bathrooms: values.bathrooms,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", values.listingId)
+    .eq("host_id", user.id);
+
+  if (error) {
+    console.error("Unable to update host listing", error);
+    return {
+      ok: false,
+      message: "The listing could not be updated. Try again.",
+    };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/search");
+  revalidatePath("/host");
+  revalidatePath(`/host/listings/${values.listingId}/edit`);
+  revalidatePath(`/listings/${values.listingId}`);
+
+  return {
+    listingId: values.listingId,
+    ok: true,
+    message: "Listing details updated.",
+  };
+}
 
 export async function createHostListingAction(
   _state: HostListingActionState,

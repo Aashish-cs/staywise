@@ -323,6 +323,12 @@ function HostListingRow({ listing }: { listing: Listing }) {
           >
             View
           </Link>
+          <Link
+            href={`/host/listings/${listing.id}/edit`}
+            className="rounded-full border border-[#eadfd6] px-4 py-2 text-sm font-extrabold hover:border-[#ff385c] hover:text-[#df2348]"
+          >
+            Edit
+          </Link>
           <form action={toggleHostListingAction}>
             <input type="hidden" name="listingId" value={listing.id} />
             <button

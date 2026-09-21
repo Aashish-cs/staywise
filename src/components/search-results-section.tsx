@@ -304,8 +304,8 @@ export function SearchResultsSection({
           title="No stays match this trip yet."
           body={
             availabilityFilterApplied
-              ? "Those dates may already be booked or blocked by hosts. Try nearby dates, widen the budget, or clear advanced filters."
-              : "StayWise can loosen the filters, widen the budget, or use AI search to translate the trip into a better set of matches."
+              ? "Those dates may already be booked or blocked by hosts. Try nearby dates, widen the nightly budget, or clear advanced filters."
+              : "StayWise can loosen the filters, widen the nightly budget, or use AI search to translate the trip into a better set of matches."
           }
           actions={
             <>
@@ -317,7 +317,7 @@ export function SearchResultsSection({
                 Clear advanced filters
               </Button>
               <Button
-              type="button"
+                type="button"
                 variant="outline"
                 onClick={onFocusSearch}
               >

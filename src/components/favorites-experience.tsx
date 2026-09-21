@@ -9,6 +9,10 @@ import {
   ListingSaveButton,
 } from "@/components/listing-card-primitives";
 import { useSavedListings } from "@/hooks/use-saved-listings";
+import {
+  ButtonLink,
+  EmptyState,
+} from "@/components/ui/primitives";
 import type { Listing } from "@/lib/listings";
 import { formatMoney } from "@/lib/reservation-utils";
 
@@ -82,15 +86,23 @@ export function FavoritesExperience({
       )}
 
       {accountRole !== "guest" ? (
-        <div className="mt-8 rounded-[28px] border border-dashed border-[#d7c8bd] bg-white p-8">
-          <h2 className="text-2xl font-extrabold tracking-tight">
-            Use a guest account to save stays.
-          </h2>
-          <p className="mt-3 max-w-2xl text-sm font-semibold leading-7 text-[#5f5148]">
-            Host accounts manage listings and reservations. Guest accounts keep saved
-            homes, trips, and reservation confirmations.
-          </p>
-        </div>
+        <EmptyState
+          className="mt-8 text-left sm:text-center"
+          icon={Heart}
+          title="Saved stays are for guest accounts."
+          body="Host accounts manage listings and reservations. A guest account keeps saved homes, trips, and reservation confirmations in one private workspace."
+          actions={
+            <>
+              <ButtonLink href="/search" variant="secondary">
+                Browse stays
+                <Search className="h-4 w-4" aria-hidden="true" />
+              </ButtonLink>
+              <ButtonLink href="/dashboard" variant="outline">
+                Open trips
+              </ButtonLink>
+            </>
+          }
+        />
       ) : visibleListings.length > 0 ? (
         <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {visibleListings.map((listing, index) => (
@@ -103,22 +115,18 @@ export function FavoritesExperience({
           ))}
         </div>
       ) : (
-        <div className="mt-8 rounded-[28px] border border-dashed border-[#d7c8bd] bg-white p-8">
-          <h2 className="text-2xl font-extrabold tracking-tight">
-            No saved stays yet.
-          </h2>
-          <p className="mt-3 max-w-2xl text-sm font-semibold leading-7 text-[#5f5148]">
-            Tap the heart on a listing to build a shortlist. Your saved stays will
-            appear here as real persisted favorites.
-          </p>
-          <Link
-            href="/search"
-            className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#201a18] px-5 text-sm font-extrabold text-white hover:bg-black"
-          >
-            Search stays
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
-        </div>
+        <EmptyState
+          className="mt-8 text-left sm:text-center"
+          icon={Heart}
+          title="No saved stays yet."
+          body="Tap the heart on a listing to build a shortlist. Your saved stays will appear here as real persisted favorites after refresh and across devices."
+          actions={
+            <ButtonLink href="/search" variant="secondary">
+              Search stays
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </ButtonLink>
+          }
+        />
       )}
     </section>
   );

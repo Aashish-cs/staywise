@@ -10,6 +10,7 @@ import {
   Home,
   MapPin,
   ReceiptText,
+  Search,
   Sparkles,
   Timer,
 } from "lucide-react";
@@ -23,6 +24,10 @@ import {
   ListingLocationLine,
 } from "@/components/listing-card-primitives";
 import { StayWiseHeader } from "@/components/staywise-header";
+import {
+  ButtonLink,
+  EmptyState as UiEmptyState,
+} from "@/components/ui/primitives";
 import {
   getCurrentUserProfile,
   getFavoriteListingIds,
@@ -296,7 +301,18 @@ export default async function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <EmptyState text="Recommendations will appear after matching stays are live." />
+              <UiEmptyState
+                className="mt-5"
+                icon={Sparkles}
+                title="No smart matches yet."
+                body="StayWise needs live listings, saved stays, or trip history before this panel can explain personalized recommendations."
+                actions={
+                  <ButtonLink href="/search" variant="secondary">
+                    Search live stays
+                    <Search className="h-4 w-4" aria-hidden="true" />
+                  </ButtonLink>
+                }
+              />
             )}
           </section>
 
@@ -352,7 +368,18 @@ export default async function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <EmptyState text="Saved stays will appear here after you tap Save on a listing." />
+              <UiEmptyState
+                className="mt-5"
+                icon={Heart}
+                title="No saved stays yet."
+                body="Use the heart button on search and listing pages to build a shortlist that stays synced to your guest account."
+                actions={
+                  <ButtonLink href="/search" variant="secondary">
+                    Find stays to save
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </ButtonLink>
+                }
+              />
             )}
           </section>
 
@@ -402,6 +429,27 @@ function TripSection({
   title: string;
   variant: "upcoming" | "past" | "cancelled";
 }) {
+  const emptyState = {
+    cancelled: {
+      actionHref: "/search",
+      actionLabel: "Plan a new stay",
+      icon: Timer,
+      title: "No cancelled trips.",
+    },
+    past: {
+      actionHref: "/search",
+      actionLabel: "Plan another trip",
+      icon: ReceiptText,
+      title: "No past trips yet.",
+    },
+    upcoming: {
+      actionHref: "/search",
+      actionLabel: "Find a stay",
+      icon: CalendarDays,
+      title: "No upcoming trips yet.",
+    },
+  }[variant];
+
   return (
     <section className="rounded-[28px] border border-[#eadfd6] bg-[#fffaf5] p-5 shadow-sm">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -430,7 +478,18 @@ function TripSection({
         </div>
       ) : (
         <div className="mt-5">
-          <EmptyState text={emptyText} />
+          <UiEmptyState
+            className="bg-white"
+            icon={emptyState.icon}
+            title={emptyState.title}
+            body={emptyText}
+            actions={
+              <ButtonLink href={emptyState.actionHref} variant="secondary">
+                {emptyState.actionLabel}
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </ButtonLink>
+            }
+          />
         </div>
       )}
     </section>
@@ -781,14 +840,6 @@ function DashboardMetric({
       <Icon className="h-5 w-5 text-[#ff385c]" aria-hidden="true" />
       <p className="mt-4 text-sm font-semibold text-[#5f5148]">{label}</p>
       <p className="mt-1 text-3xl font-semibold tracking-tight">{value}</p>
-    </div>
-  );
-}
-
-function EmptyState({ text }: { text: string }) {
-  return (
-    <div className="rounded-[22px] border border-dashed border-[#d7c8bd] bg-white p-5 text-sm font-semibold text-[#5f5148]">
-      {text}
     </div>
   );
 }

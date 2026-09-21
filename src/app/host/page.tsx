@@ -18,6 +18,10 @@ import {
 } from "@/components/listing-card-primitives";
 import { StayWiseHeader } from "@/components/staywise-header";
 import {
+  ButtonLink,
+  EmptyState as UiEmptyState,
+} from "@/components/ui/primitives";
+import {
   getCurrentUserProfile,
   getHostListings,
   getHostReservations,
@@ -220,10 +224,18 @@ export default async function HostPage() {
                       <HostListingRow key={listing.id} listing={listing} />
                     ))
                   ) : (
-                    <p className="rounded-[22px] border border-dashed border-[#d7c8bd] bg-[#fffaf5] p-5 text-sm font-semibold text-[#5f5148]">
-                      No host-owned listings yet. Publish one below and it appears in
-                      search immediately.
-                    </p>
+                    <div className="py-5">
+                      <UiEmptyState
+                        icon={Home}
+                        title="No host listings yet."
+                        body="Create your first StayWise listing with photos, pricing, amenities, and publishing controls. Once it is live, it can appear in guest search."
+                        actions={
+                          <ButtonLink href="#create-listing" variant="secondary">
+                            Start listing
+                          </ButtonLink>
+                        }
+                      />
+                    </div>
                   )}
                 </div>
               </section>
@@ -242,7 +254,9 @@ export default async function HostPage() {
             </div>
 
             <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-              <HostListingForm />
+              <div id="create-listing" className="scroll-mt-24">
+                <HostListingForm />
+              </div>
               <section className="rounded-[24px] border border-[#eadfd6] bg-white p-5 shadow-sm">
                 <p className="text-sm font-semibold text-[#315d3b]">Reservation feed</p>
                 <h2 className="mt-1 text-2xl font-semibold tracking-tight">
@@ -257,9 +271,18 @@ export default async function HostPage() {
                       />
                     ))
                   ) : (
-                    <p className="rounded-[22px] border border-dashed border-[#d7c8bd] bg-[#fffaf5] p-5 text-sm font-semibold text-[#5f5148]">
-                      Reservations for your listings will show here.
-                    </p>
+                    <div className="py-5">
+                      <UiEmptyState
+                        icon={CalendarDays}
+                        title="No guest bookings yet."
+                        body="Reservations for your owned listings will appear here with guest count, dates, status, and the host reservation detail link."
+                        actions={
+                          <ButtonLink href="/search" variant="outline">
+                            Preview guest search
+                          </ButtonLink>
+                        }
+                      />
+                    </div>
                   )}
                 </div>
               </section>
@@ -359,16 +382,16 @@ function HostReservationRow({ reservation }: { reservation: Reservation }) {
           {reservation.status}
         </span>
       </div>
-        <p className="mt-3 text-sm font-semibold text-[#315d3b]">
-          {formatMoney(reservation.totalAmount)} total
-        </p>
-        <Link
-          href={`/host/reservations/${reservation.id}`}
-          className="mt-3 inline-flex rounded-full border border-[#eadfd6] px-4 py-2 text-sm font-extrabold hover:border-[#ff385c] hover:text-[#df2348]"
-        >
-          View reservation
-        </Link>
-      </div>
+      <p className="mt-3 text-sm font-semibold text-[#315d3b]">
+        {formatMoney(reservation.totalAmount)} total
+      </p>
+      <Link
+        href={`/host/reservations/${reservation.id}`}
+        className="mt-3 inline-flex rounded-full border border-[#eadfd6] px-4 py-2 text-sm font-extrabold hover:border-[#ff385c] hover:text-[#df2348]"
+      >
+        View reservation
+      </Link>
+    </div>
   );
 }
 

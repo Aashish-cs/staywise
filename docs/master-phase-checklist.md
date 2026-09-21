@@ -204,8 +204,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Add polished skeletons for home, search, listing, trips, and host.
   - Current pass: added shared route-level skeletons and `loading.tsx` files for home, search, listing detail, dashboard/trips, and host workspace.
 
-- [ ] Phase 39: Empty states
+- [x] Phase 39: Empty states
   - Add useful empty states for no search results, favorites, trips, and host listings.
+  - Current pass: replaced placeholder empty boxes with action-oriented states for search recovery, saved stays, trip sections, first host listing creation, and empty host reservation feed.
 
 - [ ] Phase 40: Mobile design
   - Test 375, 390, 430, and 768px. Use drawers, mobile date picker, mobile filters, map toggle, sticky booking CTA, and no horizontal scroll.

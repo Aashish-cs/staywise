@@ -1,10 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { getSafeRedirectPath } from "@/lib/safe-redirect";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const next = parseSafeNext(requestUrl.searchParams.get("next")) ?? "/dashboard";
+  const next = getSafeRedirectPath(requestUrl.searchParams.get("next")) ?? "/dashboard";
   const providerError =
     requestUrl.searchParams.get("error") ?? requestUrl.searchParams.get("error_code");
 
@@ -37,12 +38,4 @@ function buildAuthErrorUrl(requestUrl: URL, error: string, next: string) {
   redirectUrl.searchParams.set("next", next);
 
   return redirectUrl;
-}
-
-function parseSafeNext(value: string | null) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return null;
-  }
-
-  return value;
 }

@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   UserRound,
 } from "lucide-react";
+import { getSafeRedirectPath } from "@/lib/safe-redirect";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { hasSupabaseConfig } from "@/lib/supabase/config";
 
@@ -41,6 +42,7 @@ export function AuthPanel({
   const [error, setError] = useState<string | null>(initialError ?? null);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const safeNext = getSafeRedirectPath(initialNext);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -68,7 +70,7 @@ export function AuthPanel({
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(
-              initialNext ?? (role === "host" ? "/host" : "/dashboard"),
+              safeNext ?? (role === "host" ? "/host" : "/dashboard"),
             )}`,
             data: {
               full_name: fullName,
@@ -103,7 +105,7 @@ export function AuthPanel({
         .maybeSingle();
 
       const roleFromProfile = profile?.role ?? data.user.user_metadata?.role;
-      router.replace(initialNext ?? (roleFromProfile === "host" ? "/host" : "/dashboard"));
+      router.replace(safeNext ?? (roleFromProfile === "host" ? "/host" : "/dashboard"));
     } finally {
       setIsSubmitting(false);
     }

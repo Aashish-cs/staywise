@@ -188,8 +188,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - USD minimum viable strategy using integer cents where appropriate and `Intl.NumberFormat`.
   - Current pass: added a shared USD currency helper, centralized dollar/cent formatting, routed reservation pricing and shared listing price display through it, and kept payment records on integer cents.
 
-- [ ] Phase 35: Security
+- [x] Phase 35: Security
   - Audit SQL injection, XSS, unsafe HTML, auth checks, RLS, storage, server actions, APIs, env vars, CSRF, open redirects, uploads, and rate limits.
+  - Current pass: audited the highest-risk surfaces, added shared same-origin redirect sanitization for auth flows, confirmed no unsafe HTML/eval/raw SQL patterns, and documented remaining rate-limit/storage-policy hardening.
 
 - [ ] Phase 36: Validation
   - Use Zod or equivalent on client and server for listing, description, coordinates, price, guests, dates, reviews, and profile.

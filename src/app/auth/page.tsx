@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AuthPanel } from "@/components/auth-panel";
+import { getSafeRedirectPath } from "@/lib/safe-redirect";
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -9,7 +10,7 @@ export default async function AuthPage({ searchParams }: PageProps<"/auth">) {
   const params = await searchParams;
   const mode = firstParam(params.mode) === "signin" ? "signin" : "signup";
   const role = firstParam(params.role) === "host" ? "host" : "guest";
-  const next = parseSafeNext(firstParam(params.next));
+  const next = getSafeRedirectPath(firstParam(params.next));
   const authError = getAuthErrorMessage(firstParam(params.error));
 
   return (
@@ -25,14 +26,6 @@ export default async function AuthPage({ searchParams }: PageProps<"/auth">) {
 
 function firstParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
-}
-
-function parseSafeNext(value: string | undefined) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return null;
-  }
-
-  return value;
 }
 
 function getAuthErrorMessage(value: string | undefined) {

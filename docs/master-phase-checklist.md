@@ -180,8 +180,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Adults/children/infants/pets where supported and max guest enforcement.
   - Current pass: added a shared selector across homepage search, search filters, and reservation panel; persisted breakdown values in search URLs; and preserved existing total-guest reservation submission until the reservation schema is expanded.
 
-- [ ] Phase 33: Price calculation
+- [x] Phase 33: Price calculation
   - Shared authoritative pricing engine with nights, subtotal, cleaning fee, service fee, tax, total, and decimal-safe handling.
+  - Current pass: added a shared integer-cent pricing engine, wired reservation and confirmation breakdowns to it, and added a trusted RPC refresh with named fee variables. Cleaning and tax remain explicit zero-value policy lines until their supporting schema and rules exist.
 
 - [ ] Phase 34: Real currency strategy
   - USD minimum viable strategy using integer cents where appropriate and `Intl.NumberFormat`.

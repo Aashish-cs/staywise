@@ -18,6 +18,7 @@ import { StayWiseHeader } from "@/components/staywise-header";
 import { getCurrentUserProfile, getReservationById } from "@/lib/listing-data";
 import type { ReservationStatus } from "@/lib/listings";
 import {
+  calculateReservationTotal,
   countNights,
   formatMoney,
   formatStayDate,
@@ -64,8 +65,7 @@ export default async function ReservationConfirmationPage({
   const listing = reservation.listing;
   const status = getStatusPresentation(reservation.status);
   const nights = Math.max(0, countNights(reservation.startDate, reservation.endDate));
-  const staySubtotal = reservation.nightlyRate * nights;
-  const serviceEstimate = Math.max(0, reservation.totalAmount - staySubtotal);
+  const totals = calculateReservationTotal(reservation.nightlyRate, nights);
   const StatusIcon = status.icon;
 
   return (
@@ -236,11 +236,19 @@ export default async function ReservationConfirmationPage({
               label={`${formatMoney(reservation.nightlyRate)} x ${nights} ${
                 nights === 1 ? "night" : "nights"
               }`}
-              value={formatMoney(staySubtotal)}
+              value={formatMoney(totals.stayTotal)}
             />
             <PriceRow
-              label="StayWise service estimate"
-              value={formatMoney(serviceEstimate)}
+              label="Cleaning fee"
+              value={formatMoney(totals.cleaningFee)}
+            />
+            <PriceRow
+              label="StayWise service fee"
+              value={formatMoney(totals.serviceFee)}
+            />
+            <PriceRow
+              label="Estimated taxes"
+              value={formatMoney(totals.tax)}
             />
             <div className="border-t border-[#eadfd6] pt-3">
               <PriceRow label="Total" value={formatMoney(reservation.totalAmount)} strong />

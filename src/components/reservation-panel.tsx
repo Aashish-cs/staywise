@@ -234,8 +234,16 @@ export function ReservationPanel({
             value={dateValidation.ok ? formatMoney(totals.stayTotal) : "Not priced"}
           />
           <PriceRow
-            label="StayWise service estimate"
+            label="Cleaning fee"
+            value={dateValidation.ok ? formatMoney(totals.cleaningFee) : "Not priced"}
+          />
+          <PriceRow
+            label="StayWise service fee"
             value={dateValidation.ok ? formatMoney(totals.serviceFee) : "Not priced"}
+          />
+          <PriceRow
+            label="Estimated taxes"
+            value={dateValidation.ok ? formatMoney(totals.tax) : "Not priced"}
           />
           <div className="border-t border-[#eadfd6] pt-3">
             <PriceRow

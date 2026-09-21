@@ -1,3 +1,5 @@
+import { calculateReservationPricing } from "@/lib/pricing";
+
 const dayInMilliseconds = 24 * 60 * 60 * 1000;
 
 export const minimumReservationNights = 1;
@@ -103,14 +105,7 @@ export function formatMoney(amount: number) {
 }
 
 export function calculateReservationTotal(nightlyRate: number, nights: number) {
-  const stayTotal = nightlyRate * nights;
-  const serviceFee = Math.round(stayTotal * 0.12);
-
-  return {
-    stayTotal,
-    serviceFee,
-    total: stayTotal + serviceFee,
-  };
+  return calculateReservationPricing({ nightlyRate, nights });
 }
 
 function toIsoDate(date: Date) {

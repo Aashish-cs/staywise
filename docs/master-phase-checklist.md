@@ -200,8 +200,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Add safe failure states for Supabase, network, image upload, geocoder, location denial, booking conflicts, auth expiry, and payments.
   - Current pass: audited core failure paths and quieted expected missing-review-table fallbacks while preserving real error logs and existing `New / No reviews yet` UI behavior.
 
-- [ ] Phase 38: Loading states
+- [x] Phase 38: Loading states
   - Add polished skeletons for home, search, listing, trips, and host.
+  - Current pass: added shared route-level skeletons and `loading.tsx` files for home, search, listing detail, dashboard/trips, and host workspace.
 
 - [ ] Phase 39: Empty states
   - Add useful empty states for no search results, favorites, trips, and host listings.

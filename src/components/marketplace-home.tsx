@@ -27,6 +27,7 @@ import { StayWiseAccountMenu, StayWiseHeader } from "@/components/staywise-heade
 import { Badge, Price } from "@/components/ui/primitives";
 import { useAiSearch } from "@/hooks/use-ai-search";
 import { useSavedListings } from "@/hooks/use-saved-listings";
+import { GuestSelector, type GuestSelection } from "@/components/guest-selector";
 import type { Listing } from "@/lib/listings";
 import { rankListings, searchSchema, type SearchInput } from "@/lib/recommendations";
 import {
@@ -66,7 +67,12 @@ export function MarketplaceHome({
   const [destination, setDestination] = useState("");
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [guests, setGuests] = useState(2);
+  const [guestSelection, setGuestSelection] = useState<GuestSelection>({
+    adults: 2,
+    childGuests: 0,
+    infants: 0,
+    pets: 0,
+  });
   const { notice, savedIds, toggleSaved } = useSavedListings({
     accountRole,
     initialSavedIds: initialFavoriteIds,
@@ -131,7 +137,11 @@ export function MarketplaceHome({
       checkIn,
       checkOut,
       destination,
-      guests,
+      adults: guestSelection.adults,
+      children: guestSelection.childGuests,
+      infants: guestSelection.infants,
+      pets: guestSelection.pets,
+      guests: guestSelection.adults + guestSelection.childGuests,
     });
   }
 
@@ -263,17 +273,20 @@ export function MarketplaceHome({
               />
             </label>
 
-            <label className="border-t border-[#efe8e2] px-5 py-4 transition focus-within:bg-[#fff8f9] md:border-r md:border-t-0">
-              <span className="block text-xs font-extrabold text-[#201a18]">Who</span>
-              <input
-                type="number"
-                min="1"
-                max="16"
-                value={guests}
-                onChange={(event) => setGuests(Number(event.target.value))}
-                className="mt-1 w-full bg-transparent text-sm font-semibold text-[#5f5148] outline-none"
+            <div className="border-t border-[#efe8e2] transition focus-within:bg-[#fff8f9] md:border-r md:border-t-0">
+              <GuestSelector
+                compact
+                label="Who"
+                adults={guestSelection.adults}
+                childGuests={guestSelection.childGuests}
+                infants={guestSelection.infants}
+                pets={guestSelection.pets}
+                maxGuests={16}
+                onChange={(selection) => {
+                  setGuestSelection(selection);
+                }}
               />
-            </label>
+            </div>
 
             <div className="flex items-center justify-center border-t border-[#efe8e2] p-3 md:border-t-0">
               <button

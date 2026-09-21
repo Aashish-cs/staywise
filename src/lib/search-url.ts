@@ -18,12 +18,21 @@ export function parseSearchParams(params: RawSearchParams): SearchInput {
   );
   const amenities = allParams(params.amenities).filter(isFeaturedAmenity);
   const propertyTypes = allParams(params.propertyTypes).filter(isPropertyType);
+  const adults = clampNumberParam(firstParam(params.adults), 2, 1, 16);
+  const children = clampNumberParam(firstParam(params.children), 0, 0, 16);
+  const hasGuestBreakdown = Boolean(firstParam(params.adults) || firstParam(params.children));
 
   return searchSchema.parse({
     destination: firstParam(params.destination) ?? "",
     checkIn: parseDateParam(firstParam(params.checkIn)),
     checkOut: parseDateParam(firstParam(params.checkOut)),
-    guests: clampNumberParam(firstParam(params.guests), 2, 1, 16),
+    adults,
+    children,
+    infants: clampNumberParam(firstParam(params.infants), 0, 0, 5),
+    pets: clampNumberParam(firstParam(params.pets), 0, 0, 5),
+    guests: hasGuestBreakdown
+      ? Math.min(16, adults + children)
+      : clampNumberParam(firstParam(params.guests), 2, 1, 16),
     maxNightlyBudget: clampNumberParam(
       firstParam(params.budget) ?? firstParam(params.maxNightlyBudget),
       250,
@@ -66,6 +75,11 @@ export function buildSearchQueryString(input: Partial<SearchInput>) {
 
   params.set("guests", String(parsed.guests));
   params.set("budget", String(parsed.maxNightlyBudget));
+
+  if (parsed.adults !== 2) params.set("adults", String(parsed.adults));
+  if (parsed.children > 0) params.set("children", String(parsed.children));
+  if (parsed.infants > 0) params.set("infants", String(parsed.infants));
+  if (parsed.pets > 0) params.set("pets", String(parsed.pets));
 
   if (parsed.minBedrooms > 0) {
     params.set("minBedrooms", String(parsed.minBedrooms));

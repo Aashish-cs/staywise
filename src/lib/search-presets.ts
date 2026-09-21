@@ -47,6 +47,10 @@ export function createSearchInput(overrides: Partial<SearchInput> = {}): SearchI
     destination: "",
     checkIn: "",
     checkOut: "",
+    adults: 2,
+    children: 0,
+    infants: 0,
+    pets: 0,
     guests: 2,
     maxNightlyBudget: 250,
     minBathrooms: 0,
@@ -58,7 +62,7 @@ export function createSearchInput(overrides: Partial<SearchInput> = {}): SearchI
     amenities: ["Fast Wi-Fi", "Workspace"],
   };
 
-  return {
+  const next = {
     ...base,
     ...overrides,
     amenities: overrides.amenities ? [...overrides.amenities] : [...base.amenities],
@@ -66,6 +70,19 @@ export function createSearchInput(overrides: Partial<SearchInput> = {}): SearchI
       ? [...overrides.propertyTypes]
       : [...base.propertyTypes],
   };
+
+  if (
+    overrides.guests !== undefined &&
+    overrides.adults === undefined &&
+    overrides.children === undefined
+  ) {
+    next.adults = overrides.guests;
+    next.children = 0;
+  }
+
+  next.guests = next.adults + next.children;
+
+  return next;
 }
 
 export function createListingSearchInput(listing: Pick<Listing, "city" | "pricePerNight">) {

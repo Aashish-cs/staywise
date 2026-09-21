@@ -12,11 +12,12 @@ import {
   Search,
   Sparkles,
   Trees,
-  UserRound,
   Users,
+  UserRound,
   Wifi,
 } from "lucide-react";
 import { DateRangePicker } from "@/components/date-range-picker";
+import { GuestSelector } from "@/components/guest-selector";
 import {
   featuredAmenities,
   type PropertyType,
@@ -328,20 +329,20 @@ export function SearchFiltersPanel({
         />
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <span className="field-label">Guests</span>
-            <span className="field-shell">
-              <Users className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-              <input
-                type="number"
-                min="1"
-                max="16"
-                value={search.guests}
-                onChange={(event) => onUpdateSearch("guests", Number(event.target.value))}
-                className="field-input"
-              />
-            </span>
-          </label>
+          <GuestSelector
+            adults={search.adults}
+            childGuests={search.children}
+            infants={search.infants}
+            pets={search.pets}
+            maxGuests={16}
+            onChange={(selection) => {
+              onUpdateSearch("adults", selection.adults);
+              onUpdateSearch("children", selection.childGuests);
+              onUpdateSearch("infants", selection.infants);
+              onUpdateSearch("pets", selection.pets);
+              onUpdateSearch("guests", selection.adults + selection.childGuests);
+            }}
+          />
 
           <label className="block">
             <span className="field-label">Budget</span>

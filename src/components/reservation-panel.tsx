@@ -7,15 +7,13 @@ import {
   BadgeCheck,
   CalendarDays,
   CheckCircle2,
-  Minus,
-  Plus,
   ReceiptText,
   ShieldAlert,
   ShieldCheck,
-  Users,
 } from "lucide-react";
 import { createReservationAction, type ReservationActionState } from "@/app/listings/[id]/actions";
 import { DateRangePicker } from "@/components/date-range-picker";
+import { GuestSelector, type GuestSelection } from "@/components/guest-selector";
 import type { Listing } from "@/lib/listings";
 import {
   addDaysToIso,
@@ -58,9 +56,12 @@ export function ReservationPanel({
   const resolvedCheckOut = resolveInitialCheckOut(resolvedCheckIn, initialCheckOut);
   const [checkIn, setCheckIn] = useState(resolvedCheckIn);
   const [checkOut, setCheckOut] = useState(resolvedCheckOut);
-  const [guests, setGuests] = useState(
-    Math.min(Math.max(initialGuests, 1), listing.capacity),
-  );
+  const [guestSelection, setGuestSelection] = useState<GuestSelection>(() => ({
+    adults: Math.min(Math.max(initialGuests, 1), listing.capacity),
+    childGuests: 0,
+    infants: 0,
+    pets: 0,
+  }));
   const [availability, setAvailability] = useState<AvailabilityState>({
     key: "",
     message: "",
@@ -82,6 +83,7 @@ export function ReservationPanel({
     () => calculateReservationTotal(listing.pricePerNight, pricedNights),
     [listing.pricePerNight, pricedNights],
   );
+  const guests = guestSelection.adults + guestSelection.childGuests;
   const shouldCheckSelectedDates = dateValidation.ok;
   const availabilityKey = `${listing.id}:${checkIn}:${checkOut}`;
   const displayedAvailability: AvailabilityState = shouldCheckSelectedDates
@@ -212,43 +214,15 @@ export function ReservationPanel({
         <input type="hidden" name="checkIn" value={checkIn} required />
         <input type="hidden" name="checkOut" value={checkOut} required />
 
-        <div>
-          <span className="field-label">Guests</span>
-          <div className="field-shell justify-between">
-            <div className="flex min-w-0 items-center gap-3">
-              <Users className="h-4 w-4 shrink-0 text-[#786a60]" aria-hidden="true" />
-              <span className="min-w-0">
-                <span className="block text-sm font-extrabold">{guests} guests</span>
-                <span className="block text-xs font-semibold text-[#786a60]">
-                  {listing.capacity} max
-                </span>
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                aria-label="Decrease guests"
-                disabled={guests <= 1}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d8cbc1] text-[#201a18] disabled:cursor-not-allowed disabled:opacity-40"
-                onClick={() => setGuests((current) => Math.max(1, current - 1))}
-              >
-                <Minus className="h-4 w-4" aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                aria-label="Increase guests"
-                disabled={guests >= listing.capacity}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d8cbc1] text-[#201a18] disabled:cursor-not-allowed disabled:opacity-40"
-                onClick={() =>
-                  setGuests((current) => Math.min(listing.capacity, current + 1))
-                }
-              >
-                <Plus className="h-4 w-4" aria-hidden="true" />
-              </button>
-            </div>
-            <input type="hidden" name="guests" value={guests} />
-          </div>
-        </div>
+        <GuestSelector
+          adults={guestSelection.adults}
+          childGuests={guestSelection.childGuests}
+          infants={guestSelection.infants}
+          pets={guestSelection.pets}
+          maxGuests={listing.capacity}
+          onChange={setGuestSelection}
+        />
+        <input type="hidden" name="guests" value={guests} />
 
         <div className="space-y-3 rounded-2xl bg-[#f7f3ee] p-4 text-sm">
           <PriceRow

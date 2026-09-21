@@ -41,10 +41,14 @@ const optionalLongitude = z
   )
   .default(null);
 
-export const searchSchema = z.object({
+const searchObjectSchema = z.object({
   destination: z.string().trim().min(0).default(""),
   checkIn: optionalIsoDate,
   checkOut: optionalIsoDate,
+  adults: z.coerce.number().int().min(1).max(16).default(2),
+  children: z.coerce.number().int().min(0).max(16).default(0),
+  infants: z.coerce.number().int().min(0).max(5).default(0),
+  pets: z.coerce.number().int().min(0).max(5).default(0),
   guests: z.coerce.number().int().min(1).max(16).default(2),
   maxNightlyBudget: z.coerce.number().int().min(50).max(1200).default(250),
   minBathrooms: z.coerce.number().min(0).max(12).default(0),
@@ -56,6 +60,20 @@ export const searchSchema = z.object({
   amenities: z.array(z.enum(amenityValues)).default([]),
   nearLat: optionalLatitude,
   nearLng: optionalLongitude,
+});
+
+export const searchSchema = searchObjectSchema.transform((input) => {
+  const selectedGuests = input.adults + input.children;
+
+  if (selectedGuests === input.guests) {
+    return input;
+  }
+
+  return {
+    ...input,
+    adults: input.guests,
+    children: 0,
+  };
 });
 
 export type SearchInput = z.infer<typeof searchSchema>;

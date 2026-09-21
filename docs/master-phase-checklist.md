@@ -192,8 +192,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Audit SQL injection, XSS, unsafe HTML, auth checks, RLS, storage, server actions, APIs, env vars, CSRF, open redirects, uploads, and rate limits.
   - Current pass: audited the highest-risk surfaces, added shared same-origin redirect sanitization for auth flows, confirmed no unsafe HTML/eval/raw SQL patterns, and documented remaining rate-limit/storage-policy hardening.
 
-- [ ] Phase 36: Validation
+- [x] Phase 36: Validation
   - Use Zod or equivalent on client and server for listing, description, coordinates, price, guests, dates, reviews, and profile.
+  - Current pass: audited validation coverage and tightened host listing validation with real property-type/amenity enums, bounded text fields, state-code validation, price/capacity ranges, and HTTPS-only image URL parsing.
 
 - [ ] Phase 37: Error handling
   - Add safe failure states for Supabase, network, image upload, geocoder, location denial, booking conflicts, auth expiry, and payments.

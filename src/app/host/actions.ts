@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+import { featuredAmenities, propertyTypes } from "@/lib/listings";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type HostListingActionState = {
@@ -122,19 +123,27 @@ export async function toggleHostListingAction(formData: FormData) {
   revalidatePath(`/listings/${parsed.data.listingId}`);
 }
 
+const featuredAmenitySet = new Set<string>(featuredAmenities);
+
 const listingSchema = z.object({
-  title: z.string().trim().min(8),
-  description: z.string().trim().min(24),
-  city: z.string().trim().min(2),
-  state: z.string().trim().min(2).max(2).transform((value) => value.toUpperCase()),
-  neighborhood: z.string().trim().min(2),
-  propertyType: z.string().trim().min(3),
+  title: z.string().trim().min(8).max(90),
+  description: z.string().trim().min(24).max(1200),
+  city: z.string().trim().min(2).max(80),
+  state: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z]{2}$/)
+    .transform((value) => value.toUpperCase()),
+  neighborhood: z.string().trim().min(2).max(80),
+  propertyType: z.enum(propertyTypes),
   pricePerNight: z.coerce.number().int().min(50).max(1200),
   capacity: z.coerce.number().int().min(1).max(16),
   bedrooms: z.coerce.number().int().min(0).max(12),
   bathrooms: z.coerce.number().min(0.5).max(12),
-  imageUrls: z.string().trim().optional().default(""),
-  amenities: z.string().trim().min(3),
+  imageUrls: z.string().trim().optional().default("").transform(parseImageUrls),
+  amenities: z.string().trim().transform(parseAmenities).pipe(
+    z.array(z.enum(featuredAmenities)).min(1).max(featuredAmenities.length),
+  ),
 });
 
 const editListingSchema = listingSchema
@@ -355,14 +364,11 @@ export async function createHostListingAction(
   }
 
   const values = parsed.data;
-  const imageUrls = parseImageUrls(values.imageUrls);
+  const imageUrls = values.imageUrls;
   const imageFiles = formData
     .getAll("imageFiles")
     .filter((value): value is File => value instanceof File && value.size > 0);
-  const amenities = values.amenities
-    .split(",")
-    .map((amenity) => amenity.trim())
-    .filter(Boolean);
+  const amenities = values.amenities;
 
   if (imageUrls.length + imageFiles.length === 0) {
     return {
@@ -499,12 +505,23 @@ function parseImageUrls(value: string) {
     .filter((item) => {
       try {
         const url = new URL(item);
-        return url.protocol === "https:" || url.protocol === "http:";
+        return url.protocol === "https:";
       } catch {
         return false;
       }
     })
     .slice(0, 6);
+}
+
+function parseAmenities(value: string) {
+  return Array.from(
+    new Set(
+      value
+        .split(",")
+        .map((amenity) => amenity.trim())
+        .filter((amenity) => featuredAmenitySet.has(amenity)),
+    ),
+  );
 }
 
 function isSupportedImage(file: File) {

@@ -7,13 +7,16 @@ export type TripPurpose =
   | "group"
   | "outdoor";
 
-export type PropertyType =
-  | "Apartment"
-  | "House"
-  | "Cabin"
-  | "Loft"
-  | "Townhome"
-  | "Villa";
+export const propertyTypes = [
+  "Apartment",
+  "House",
+  "Cabin",
+  "Loft",
+  "Townhome",
+  "Villa",
+] as const;
+
+export type PropertyType = (typeof propertyTypes)[number];
 
 export type Listing = {
   id: string;

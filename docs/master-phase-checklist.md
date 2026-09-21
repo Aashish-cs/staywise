@@ -196,8 +196,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Use Zod or equivalent on client and server for listing, description, coordinates, price, guests, dates, reviews, and profile.
   - Current pass: audited validation coverage and tightened host listing validation with real property-type/amenity enums, bounded text fields, state-code validation, price/capacity ranges, and HTTPS-only image URL parsing.
 
-- [ ] Phase 37: Error handling
+- [x] Phase 37: Error handling
   - Add safe failure states for Supabase, network, image upload, geocoder, location denial, booking conflicts, auth expiry, and payments.
+  - Current pass: audited core failure paths and quieted expected missing-review-table fallbacks while preserving real error logs and existing `New / No reviews yet` UI behavior.
 
 - [ ] Phase 38: Loading states
   - Add polished skeletons for home, search, listing, trips, and host.

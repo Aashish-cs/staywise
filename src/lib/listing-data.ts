@@ -577,7 +577,11 @@ async function enrichListingsWithReviewSignals(
 
 function isMissingTableError(error: SupabaseQueryError) {
   const message = error.message?.toLowerCase() ?? "";
-  return message.includes("schema cache") || message.includes("could not find") || message.includes("does not exist");
+  return (
+    message.includes("schema cache") ||
+    message.includes("could not find") ||
+    message.includes("does not exist")
+  );
 }
 
 function isTransientSupabaseError(error: SupabaseQueryError) {
@@ -758,7 +762,9 @@ export async function getListingReviews(listingId: string): Promise<ListingRevie
     .limit(20);
 
   if (error) {
-    console.error("Unable to load listing reviews", error);
+    if (!isMissingTableError(error)) {
+      console.error("Unable to load listing reviews", error);
+    }
     return [];
   }
 
@@ -778,7 +784,9 @@ export async function getReviewedReservationIds(userId: string) {
     .eq("guest_id", userId);
 
   if (error) {
-    console.error("Unable to load reviewed reservations", error);
+    if (!isMissingTableError(error)) {
+      console.error("Unable to load reviewed reservations", error);
+    }
     return [];
   }
 

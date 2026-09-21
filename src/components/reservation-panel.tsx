@@ -20,6 +20,7 @@ import {
   calculateReservationTotal,
   countNights,
   formatMoney,
+  formatMoneyFromCents,
   getFutureIso,
   isValidIsoDate,
   maximumReservationNights,
@@ -231,24 +232,24 @@ export function ReservationPanel({
                 ? `${formatMoney(listing.pricePerNight)} x ${nights} nights`
                 : "Valid dates required"
             }
-            value={dateValidation.ok ? formatMoney(totals.stayTotal) : "Not priced"}
+            value={dateValidation.ok ? formatMoneyFromCents(totals.stayTotalCents) : "Not priced"}
           />
           <PriceRow
             label="Cleaning fee"
-            value={dateValidation.ok ? formatMoney(totals.cleaningFee) : "Not priced"}
+            value={dateValidation.ok ? formatMoneyFromCents(totals.cleaningFeeCents) : "Not priced"}
           />
           <PriceRow
             label="StayWise service fee"
-            value={dateValidation.ok ? formatMoney(totals.serviceFee) : "Not priced"}
+            value={dateValidation.ok ? formatMoneyFromCents(totals.serviceFeeCents) : "Not priced"}
           />
           <PriceRow
             label="Estimated taxes"
-            value={dateValidation.ok ? formatMoney(totals.tax) : "Not priced"}
+            value={dateValidation.ok ? formatMoneyFromCents(totals.taxCents) : "Not priced"}
           />
           <div className="border-t border-[#eadfd6] pt-3">
             <PriceRow
               label="Total"
-              value={dateValidation.ok ? formatMoney(totals.total) : "Not priced"}
+              value={dateValidation.ok ? formatMoneyFromCents(totals.totalCents) : "Not priced"}
               strong
             />
           </div>

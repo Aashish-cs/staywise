@@ -184,8 +184,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Shared authoritative pricing engine with nights, subtotal, cleaning fee, service fee, tax, total, and decimal-safe handling.
   - Current pass: added a shared integer-cent pricing engine, wired reservation and confirmation breakdowns to it, and added a trusted RPC refresh with named fee variables. Cleaning and tax remain explicit zero-value policy lines until their supporting schema and rules exist.
 
-- [ ] Phase 34: Real currency strategy
+- [x] Phase 34: Real currency strategy
   - USD minimum viable strategy using integer cents where appropriate and `Intl.NumberFormat`.
+  - Current pass: added a shared USD currency helper, centralized dollar/cent formatting, routed reservation pricing and shared listing price display through it, and kept payment records on integer cents.
 
 - [ ] Phase 35: Security
   - Audit SQL injection, XSS, unsafe HTML, auth checks, RLS, storage, server actions, APIs, env vars, CSRF, open redirects, uploads, and rate limits.

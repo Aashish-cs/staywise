@@ -21,6 +21,7 @@ import {
   calculateReservationTotal,
   countNights,
   formatMoney,
+  formatMoneyFromCents,
   formatStayDate,
 } from "@/lib/reservation-utils";
 
@@ -236,19 +237,19 @@ export default async function ReservationConfirmationPage({
               label={`${formatMoney(reservation.nightlyRate)} x ${nights} ${
                 nights === 1 ? "night" : "nights"
               }`}
-              value={formatMoney(totals.stayTotal)}
+              value={formatMoneyFromCents(totals.stayTotalCents)}
             />
             <PriceRow
               label="Cleaning fee"
-              value={formatMoney(totals.cleaningFee)}
+              value={formatMoneyFromCents(totals.cleaningFeeCents)}
             />
             <PriceRow
               label="StayWise service fee"
-              value={formatMoney(totals.serviceFee)}
+              value={formatMoneyFromCents(totals.serviceFeeCents)}
             />
             <PriceRow
               label="Estimated taxes"
-              value={formatMoney(totals.tax)}
+              value={formatMoneyFromCents(totals.taxCents)}
             />
             <div className="border-t border-[#eadfd6] pt-3">
               <PriceRow label="Total" value={formatMoney(reservation.totalAmount)} strong />

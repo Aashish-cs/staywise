@@ -1,3 +1,4 @@
+import { formatCurrency, formatCurrencyFromCents } from "@/lib/currency";
 import { calculateReservationPricing } from "@/lib/pricing";
 
 const dayInMilliseconds = 24 * 60 * 60 * 1000;
@@ -97,11 +98,11 @@ export function formatStayDate(date: string) {
 }
 
 export function formatMoney(amount: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(amount);
+  return formatCurrency(amount);
+}
+
+export function formatMoneyFromCents(amountCents: number) {
+  return formatCurrencyFromCents(amountCents);
 }
 
 export function calculateReservationTotal(nightlyRate: number, nights: number) {

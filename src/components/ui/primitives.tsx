@@ -10,6 +10,7 @@ import type {
 import Link from "next/link";
 import clsx from "clsx";
 import { Minus, Plus, Star, type LucideIcon } from "lucide-react";
+import { formatCurrency } from "@/lib/currency";
 
 type ButtonVariant = "primary" | "secondary" | "outline" | "ghost" | "danger";
 type ButtonSize = "sm" | "md" | "lg";
@@ -438,7 +439,7 @@ export function Price({
   return (
     <span>
       <span className={clsx("font-extrabold", isInverse ? "text-white" : "text-[#201a18]")}>
-        ${amount}
+        {formatCurrency(amount)}
       </span>{" "}
       <span className={isInverse ? "text-white/85" : "text-[#5f5148]"}>{suffix}</span>
     </span>

@@ -1,3 +1,5 @@
+import { centsToDollars, dollarsToCents } from "@/lib/currency";
+
 export const staywisePricingPolicy = {
   cleaningFeeCents: 0,
   currency: "USD",
@@ -64,14 +66,6 @@ export function calculateReservationPricing({
     total: centsToDollars(totalCents),
     totalCents,
   };
-}
-
-export function dollarsToCents(amount: number) {
-  return Math.round(amount * 100);
-}
-
-export function centsToDollars(amountCents: number) {
-  return amountCents / 100;
 }
 
 function percentageOfCents(amountCents: number, basisPoints: number) {

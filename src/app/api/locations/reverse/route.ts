@@ -8,6 +8,9 @@ const reverseLocationSchema = z.object({
   lat: z.coerce.number().min(-90).max(90),
   lng: z.coerce.number().min(-180).max(180),
 });
+const locationCacheHeaders = {
+  "Cache-Control": "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=86400",
+};
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -32,10 +35,15 @@ export async function GET(request: Request) {
       parsed.data.lng,
     );
 
-    return NextResponse.json({
-      attribution: "Data © OpenStreetMap contributors, ODbL 1.0",
-      location,
-    });
+    return NextResponse.json(
+      {
+        attribution: "Data © OpenStreetMap contributors, ODbL 1.0",
+        location,
+      },
+      {
+        headers: locationCacheHeaders,
+      },
+    );
   } catch (error) {
     console.error("Reverse location lookup failed", error);
 

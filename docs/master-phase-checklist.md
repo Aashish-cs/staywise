@@ -220,8 +220,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Semantic HTML, keyboard nav, focus states, labels, ARIA, dialog focus trapping, Escape close, SR labels, alt text, contrast, and no div-as-button misuse.
   - Current pass: added global focus-visible styling, accessible menu/picker metadata, Escape/focus restoration, modal photo-gallery focus trapping, live status/error regions, labelled repeated actions, mobile filter expanded state, and host wizard step semantics.
 
-- [ ] Phase 43: Performance
+- [x] Phase 43: Performance
   - Optimize images, query patterns, pagination, rendering, server/client boundaries, autocomplete debounce, map loading, and bundle size.
+  - Current pass: split the search map into a lazy client chunk, preserved Leaflet lazy loading, added a map skeleton, deferred client-side result ranking while filters update, and added cache headers to successful location lookup APIs.
 
 - [ ] Phase 44: SEO and metadata
   - Meaningful metadata, listing dynamic title/description/OpenGraph, canonical if appropriate, no private address exposure, favicon/app description.

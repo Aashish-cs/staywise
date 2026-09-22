@@ -7,6 +7,9 @@ export const dynamic = "force-dynamic";
 const locationSearchSchema = z.object({
   query: z.string().trim().min(2).max(120),
 });
+const locationCacheHeaders = {
+  "Cache-Control": "public, max-age=86400, s-maxage=2592000, stale-while-revalidate=86400",
+};
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -27,10 +30,15 @@ export async function GET(request: Request) {
   try {
     const locations = await searchLocations(parsed.data.query);
 
-    return NextResponse.json({
-      attribution: "Data © OpenStreetMap contributors, ODbL 1.0",
-      locations,
-    });
+    return NextResponse.json(
+      {
+        attribution: "Data © OpenStreetMap contributors, ODbL 1.0",
+        locations,
+      },
+      {
+        headers: locationCacheHeaders,
+      },
+    );
   } catch (error) {
     console.error("Location search failed", error);
 

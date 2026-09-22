@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
@@ -107,10 +107,11 @@ export function SearchExperience({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showMapPanel, setShowMapPanel] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const deferredSearch = useDeferredValue(search);
 
   const rankedListings = useMemo(
-    () => rankListings(search, initialListings),
-    [initialListings, search],
+    () => rankListings(deferredSearch, initialListings),
+    [deferredSearch, initialListings],
   );
   const displayedListings = useMemo(
     () => sortRankedListings(rankedListings, sortMode),
@@ -149,9 +150,9 @@ export function SearchExperience({
       setNotice(null);
     },
   });
-  const resultSummary = getSearchResultSummary(displayedListings, search);
+  const resultSummary = getSearchResultSummary(displayedListings, deferredSearch);
   const activeFilterLabels = getActiveSearchFilterLabels(search);
-  const availabilityFilterApplied = hasSearchDateRange(search);
+  const availabilityFilterApplied = hasSearchDateRange(deferredSearch);
   const averageNightlyRate =
     initialListings.length > 0
       ? Math.round(
@@ -375,7 +376,7 @@ export function SearchExperience({
             pagination={pagination}
             resultSummary={resultSummary}
             savedIds={savedIds}
-            search={search}
+            search={deferredSearch}
             selectedListing={selectedListing}
             showMapPanel={showMapPanel}
             sortMode={sortMode}

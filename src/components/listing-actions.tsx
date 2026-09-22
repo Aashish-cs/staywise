@@ -83,7 +83,10 @@ export function ListingActions({
       </div>
 
       {message && (
-        <p className="inline-flex items-center gap-2 rounded-full bg-[#f7f3ee] px-3 py-1 text-xs font-extrabold text-[#5f5148]">
+        <p
+          role="status"
+          className="inline-flex items-center gap-2 rounded-full bg-[#f7f3ee] px-3 py-1 text-xs font-extrabold text-[#5f5148]"
+        >
           <CheckCircle2 className="h-3.5 w-3.5 text-[#315d3b]" aria-hidden="true" />
           {message}
         </p>

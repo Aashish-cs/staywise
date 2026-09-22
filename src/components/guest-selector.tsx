@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Minus, Plus, Users } from "lucide-react";
 import clsx from "clsx";
 
@@ -29,6 +29,8 @@ export function GuestSelector({
   onChange,
 }: GuestSelectorProps) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dialogId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const selectedAdults = clamp(adults, 1, maxGuests);
   const selection: GuestSelection = {
@@ -40,14 +42,15 @@ export function GuestSelector({
 
   useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
+      if (isOpen && !rootRef.current?.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
+      if (isOpen && event.key === "Escape") {
         setIsOpen(false);
+        triggerRef.current?.focus();
       }
     }
 
@@ -57,7 +60,7 @@ export function GuestSelector({
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [isOpen]);
 
   const totalGuests = selection.adults + selection.childGuests;
 
@@ -90,8 +93,10 @@ export function GuestSelector({
         </span>
       )}
       <button
+        ref={triggerRef}
         type="button"
         aria-expanded={isOpen}
+        aria-controls={isOpen ? dialogId : undefined}
         aria-haspopup="dialog"
         className={clsx(
           "flex w-full items-center gap-3 text-left transition",
@@ -119,7 +124,9 @@ export function GuestSelector({
 
       {isOpen && (
         <div
+          id={dialogId}
           role="dialog"
+          aria-modal="false"
           aria-label="Choose guests"
           className="absolute right-0 top-full z-50 mt-2 w-[min(21rem,calc(100vw-2rem))] rounded-3xl border border-[#eadfd6] bg-white p-4 shadow-[0_20px_60px_rgba(32,26,24,0.18)]"
         >

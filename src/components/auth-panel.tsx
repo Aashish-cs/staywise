@@ -149,11 +149,16 @@ export function AuthPanel({
             <span className="text-xl font-semibold">StayWise</span>
           </Link>
 
-          <div className="grid grid-cols-2 rounded-full bg-white p-1">
+          <div
+            role="group"
+            aria-label="Authentication mode"
+            className="grid grid-cols-2 rounded-full bg-white p-1"
+          >
             {(["signup", "signin"] as AuthMode[]).map((item) => (
               <button
                 type="button"
                 key={item}
+                aria-pressed={mode === item}
                 className={clsx(
                   "h-11 rounded-full text-sm font-semibold capitalize transition",
                   mode === item
@@ -188,10 +193,12 @@ export function AuthPanel({
                   <span className="field-shell">
                     <UserRound className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
                     <input
+                      type="text"
                       value={fullName}
                       onChange={(event) => setFullName(event.target.value)}
                       className="field-input"
                       placeholder="Ashish Mishra"
+                      autoComplete="name"
                       required
                     />
                   </span>
@@ -199,12 +206,17 @@ export function AuthPanel({
 
                 <div>
                   <span className="field-label">Account role</span>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div
+                    role="radiogroup"
+                    aria-label="Account role"
+                    className="grid grid-cols-2 gap-2"
+                  >
                     {(["guest", "host"] as AccountRole[]).map((item) => (
                       <button
                         type="button"
                         key={item}
-                        aria-pressed={role === item}
+                        role="radio"
+                        aria-checked={role === item}
                         className={clsx(
                           "choice-button capitalize",
                           role === item && "choice-button-active",
@@ -264,13 +276,19 @@ export function AuthPanel({
             </label>
 
             {error && (
-              <p className="rounded-2xl bg-[#fff3f5] p-3 text-sm font-semibold text-[#bd1740]">
+              <p
+                role="alert"
+                className="rounded-2xl bg-[#fff3f5] p-3 text-sm font-semibold text-[#bd1740]"
+              >
                 {error}
               </p>
             )}
 
             {message && (
-              <p className="flex items-center gap-2 rounded-2xl bg-[#e7f2e4] p-3 text-sm font-semibold text-[#315d3b]">
+              <p
+                role="status"
+                className="flex items-center gap-2 rounded-2xl bg-[#e7f2e4] p-3 text-sm font-semibold text-[#315d3b]"
+              >
                 <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
                 {message}
               </p>

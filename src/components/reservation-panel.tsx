@@ -256,7 +256,10 @@ export function ReservationPanel({
         </div>
 
         {!dateValidation.ok && (
-          <p className="rounded-2xl bg-[#fff3f5] p-3 text-sm font-semibold text-[#bd1740]">
+          <p
+            role="alert"
+            className="rounded-2xl bg-[#fff3f5] p-3 text-sm font-semibold text-[#bd1740]"
+          >
             <ShieldAlert className="mr-2 inline h-4 w-4" aria-hidden="true" />
             {dateValidation.message}
           </p>
@@ -264,6 +267,7 @@ export function ReservationPanel({
 
         {displayedAvailability.status !== "idle" && (
           <p
+            role={displayedAvailability.status === "unavailable" ? "alert" : "status"}
             className={`rounded-2xl p-3 text-sm font-semibold ${
               displayedAvailability.status === "available"
                 ? "bg-[#e7f2e4] text-[#315d3b]"
@@ -283,6 +287,7 @@ export function ReservationPanel({
 
         {state.message && (
           <p
+            role={state.ok ? "status" : "alert"}
             className={`rounded-2xl p-3 text-sm font-semibold ${
               state.ok
                 ? "bg-[#e7f2e4] text-[#315d3b]"

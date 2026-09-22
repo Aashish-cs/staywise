@@ -58,6 +58,7 @@ export function HostImageManager({
                       <input type="hidden" name="imageId" value={image.id} />
                       <button
                         type="submit"
+                        aria-label={`Make ${image.alt} the primary photo`}
                         className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[#eadfd6] bg-white px-3 text-xs font-extrabold hover:border-[#ff385c]"
                       >
                         <Star className="h-3.5 w-3.5" aria-hidden="true" />
@@ -71,6 +72,7 @@ export function HostImageManager({
                       <input type="hidden" name="imageId" value={image.id} />
                       <button
                         type="submit"
+                        aria-label={`Remove photo ${image.alt}`}
                         className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[#eadfd6] bg-white px-3 text-xs font-extrabold text-[#bd1740] hover:border-[#bd1740]"
                       >
                         <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />

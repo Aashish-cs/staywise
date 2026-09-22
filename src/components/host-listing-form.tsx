@@ -142,25 +142,38 @@ export function HostListingForm() {
       </div>
 
       <ol className="mt-6 grid grid-cols-5 gap-2" aria-label="Listing creation steps">
-        {steps.map((label, index) => (
-          <li key={label}>
-            <button
-              type="button"
-              onClick={() => index <= step && setStep(index)}
-              className={`w-full border-t-4 pt-2 text-left text-xs font-extrabold sm:text-sm ${
-                index === step
-                  ? "border-[#ff385c] text-[#201a18]"
-                  : index < step
-                    ? "border-[#315d3b] text-[#315d3b]"
-                    : "border-[#eadfd6] text-[#786a60]"
-              }`}
-              aria-current={index === step ? "step" : undefined}
-            >
-              <span className="mr-1">{index + 1}.</span>
-              {label}
-            </button>
-          </li>
-        ))}
+        {steps.map((label, index) => {
+          const isCurrent = index === step;
+          const isCompleted = index < step;
+          const isLocked = index > step;
+          const stateLabel = isCurrent
+            ? "current step"
+            : isCompleted
+              ? "completed step"
+              : "locked step";
+
+          return (
+            <li key={label}>
+              <button
+                type="button"
+                disabled={isLocked}
+                onClick={() => setStep(index)}
+                className={`w-full border-t-4 pt-2 text-left text-xs font-extrabold disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm ${
+                  isCurrent
+                    ? "border-[#ff385c] text-[#201a18]"
+                    : isCompleted
+                      ? "border-[#315d3b] text-[#315d3b]"
+                      : "border-[#eadfd6] text-[#786a60]"
+                }`}
+                aria-current={isCurrent ? "step" : undefined}
+                aria-label={`Step ${index + 1}: ${label}, ${stateLabel}`}
+              >
+                <span className="mr-1">{index + 1}.</span>
+                {label}
+              </button>
+            </li>
+          );
+        })}
       </ol>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -358,6 +371,7 @@ export function HostListingForm() {
 
       {state.message && (
         <div
+          role={state.ok ? "status" : "alert"}
           className={`mt-5 rounded-[22px] p-4 text-sm font-extrabold ${
             state.ok ? "bg-[#e7f2e4] text-[#315d3b]" : "bg-[#fff3f5] text-[#bd1740]"
           }`}
@@ -395,6 +409,7 @@ export function HostListingForm() {
               type="button"
               onClick={() => setStep((current) => current + 1)}
               disabled={!stepReady[step]}
+              aria-describedby={!stepReady[step] ? "host-step-status" : undefined}
               className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[#201a18] px-6 text-sm font-extrabold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
             >
               Continue
@@ -412,6 +427,11 @@ export function HostListingForm() {
           )}
         </div>
       </div>
+      <p id="host-step-status" className="sr-only" aria-live="polite">
+        {stepReady[step]
+          ? "This step is complete."
+          : "Finish the required fields before continuing."}
+      </p>
     </form>
   );
 }
@@ -532,6 +552,7 @@ function QualityChecklist({
         {items.map((item) => (
           <div key={item.label} className="flex gap-3">
             <span
+              aria-hidden="true"
               className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
                 item.done ? "bg-[#e7f2e4] text-[#315d3b]" : "bg-[#f7f3ee] text-[#9b8f87]"
               }`}

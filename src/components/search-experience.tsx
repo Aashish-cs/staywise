@@ -327,11 +327,15 @@ export function SearchExperience({
           onToggleFilters={() => setShowMobileFilters((current) => !current)}
           onToggleMap={() => setShowMapPanel((current) => !current)}
           resultSummary={resultSummary}
+          showMobileFilters={showMobileFilters}
           showMapPanel={showMapPanel}
         />
 
         <div className="mt-4 grid gap-6 lg:mt-0 lg:grid-cols-[360px_1fr]">
-          <div className={clsx("lg:block", showMobileFilters ? "block" : "hidden")}>
+          <div
+            id="mobile-search-filters"
+            className={clsx("lg:block", showMobileFilters ? "block" : "hidden")}
+          >
             <SearchFiltersPanel
               activeFilterCount={activeFilterCount}
               aiError={aiError}
@@ -459,6 +463,7 @@ function MobileSearchSummary({
   onToggleFilters,
   onToggleMap,
   resultSummary,
+  showMobileFilters,
   showMapPanel,
 }: {
   activeFilterCount: number;
@@ -466,6 +471,7 @@ function MobileSearchSummary({
   onToggleFilters: () => void;
   onToggleMap: () => void;
   resultSummary: string;
+  showMobileFilters: boolean;
   showMapPanel: boolean;
 }) {
   return (
@@ -480,6 +486,8 @@ function MobileSearchSummary({
         <div className="flex shrink-0 gap-2">
           <Button
             type="button"
+            aria-controls="mobile-search-filters"
+            aria-expanded={showMobileFilters}
             size="sm"
             variant="outline"
             onClick={onToggleFilters}

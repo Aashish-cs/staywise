@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import clsx from "clsx";
 import { Images, X } from "lucide-react";
@@ -12,11 +12,63 @@ export function ListingPhotoGallery({ listing }: { listing: Listing }) {
   const galleryImages = listing.images.length
     ? listing.images
     : [{ alt: listing.imageAlt, url: listing.imageUrl }];
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const lastTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const activeImage = galleryImages[activeIndex] ?? galleryImages[0];
 
-  function openGallery(index: number) {
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeButtonRef.current?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialogRef.current) {
+        return;
+      }
+
+      const focusableElements = getFocusableElements(dialogRef.current);
+
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+      window.requestAnimationFrame(() => {
+        lastTriggerRef.current?.focus();
+      });
+    };
+  }, [isOpen]);
+
+  function openGallery(index: number, trigger: HTMLButtonElement) {
+    lastTriggerRef.current = trigger;
     setActiveIndex(index);
     setIsOpen(true);
   }
@@ -35,24 +87,27 @@ export function ListingPhotoGallery({ listing }: { listing: Listing }) {
         {galleryImages.length === 1 ? (
           <GalleryTile
             image={galleryImages[0]}
+            label={`Open photo 1 of ${galleryImages.length}`}
             priority
             className="aspect-[16/9] min-h-[300px]"
-            onClick={() => openGallery(0)}
+            onClick={(trigger) => openGallery(0, trigger)}
           />
         ) : (
           <>
             <GalleryTile
               image={galleryImages[0]}
+              label={`Open photo 1 of ${galleryImages.length}`}
               priority
               className="aspect-[4/3] md:col-span-2 md:row-span-2 md:aspect-auto md:min-h-[440px]"
-              onClick={() => openGallery(0)}
+              onClick={(trigger) => openGallery(0, trigger)}
             />
             {galleryImages.slice(1, 5).map((image, index) => (
               <GalleryTile
                 key={`${image.url}-${image.alt}`}
                 image={image}
+                label={`Open photo ${index + 2} of ${galleryImages.length}`}
                 className="hidden min-h-[216px] md:block"
-                onClick={() => openGallery(index + 1)}
+                onClick={(trigger) => openGallery(index + 1, trigger)}
               />
             ))}
           </>
@@ -61,7 +116,7 @@ export function ListingPhotoGallery({ listing }: { listing: Listing }) {
         <button
           type="button"
           className="absolute bottom-4 right-4 inline-flex h-10 items-center gap-2 rounded-full border border-[#d8cbc1] bg-white/95 px-4 text-sm font-extrabold shadow-sm backdrop-blur transition hover:border-[#ff385c] hover:text-[#df2348]"
-          onClick={() => openGallery(0)}
+          onClick={(event) => openGallery(0, event.currentTarget)}
         >
           <Images className="h-4 w-4" aria-hidden="true" />
           Show all photos
@@ -70,9 +125,10 @@ export function ListingPhotoGallery({ listing }: { listing: Listing }) {
 
       {isOpen && (
         <div
+          ref={dialogRef}
           role="dialog"
           aria-modal="true"
-          aria-label={`${listing.title} photo gallery`}
+          aria-labelledby="photo-gallery-title"
           className="fixed inset-0 z-50 bg-[#201a18]/90 p-4 text-white"
         >
           <div className="mx-auto flex h-full max-w-6xl flex-col">
@@ -81,9 +137,12 @@ export function ListingPhotoGallery({ listing }: { listing: Listing }) {
                 <p className="text-sm font-extrabold text-white/70">
                   {activeIndex + 1} of {galleryImages.length}
                 </p>
-                <h2 className="mt-1 text-lg font-extrabold">{listing.title}</h2>
+                <h2 id="photo-gallery-title" className="mt-1 text-lg font-extrabold">
+                  {listing.title} photo gallery
+                </h2>
               </div>
               <button
+                ref={closeButtonRef}
                 type="button"
                 className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#201a18] hover:bg-[#fff3f5]"
                 aria-label="Close photo gallery"
@@ -140,19 +199,22 @@ export function ListingPhotoGallery({ listing }: { listing: Listing }) {
 function GalleryTile({
   className,
   image,
+  label,
   onClick,
   priority,
 }: {
   className: string;
   image: GalleryImage;
-  onClick: () => void;
+  label: string;
+  onClick: (trigger: HTMLButtonElement) => void;
   priority?: boolean;
 }) {
   return (
     <button
       type="button"
+      aria-label={label}
       className={`group relative block w-full bg-[#e8dfd6] ${className}`}
-      onClick={onClick}
+      onClick={(event) => onClick(event.currentTarget)}
     >
       <Image
         src={image.url || fallbackListingImage}
@@ -163,5 +225,24 @@ function GalleryTile({
         className="object-cover transition duration-500 group-hover:scale-[1.03]"
       />
     </button>
+  );
+}
+
+function getFocusableElements(root: HTMLElement) {
+  return Array.from(
+    root.querySelectorAll<HTMLElement>(
+      [
+        "a[href]",
+        "button:not([disabled])",
+        "input:not([disabled])",
+        "select:not([disabled])",
+        "textarea:not([disabled])",
+        '[tabindex]:not([tabindex="-1"])',
+      ].join(","),
+    ),
+  ).filter(
+    (element) =>
+      !element.hasAttribute("disabled") &&
+      element.getAttribute("aria-hidden") !== "true",
   );
 }

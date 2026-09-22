@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import clsx from "clsx";
 import {
@@ -32,6 +32,9 @@ export function DateRangePicker({
 }: DateRangePickerProps) {
   const minimumDate = getTodayIso();
   const pickerRef = useRef<HTMLDivElement>(null);
+  const checkInButtonRef = useRef<HTMLButtonElement>(null);
+  const checkOutButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const [activeField, setActiveField] = useState<DateField>("checkIn");
   const [viewMonth, setViewMonth] = useState(() =>
@@ -39,15 +42,22 @@ export function DateRangePicker({
   );
 
   useEffect(() => {
+    function restoreTriggerFocus() {
+      const trigger =
+        activeField === "checkIn" ? checkInButtonRef.current : checkOutButtonRef.current;
+      trigger?.focus();
+    }
+
     function handlePointerDown(event: PointerEvent) {
-      if (!pickerRef.current?.contains(event.target as Node)) {
+      if (isOpen && !pickerRef.current?.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
+      if (isOpen && event.key === "Escape") {
         setIsOpen(false);
+        restoreTriggerFocus();
       }
     }
 
@@ -57,7 +67,7 @@ export function DateRangePicker({
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [activeField, isOpen]);
 
   const monthCells = useMemo(() => getMonthCells(viewMonth), [viewMonth]);
   const monthLabel = new Intl.DateTimeFormat("en-US", {
@@ -107,8 +117,11 @@ export function DateRangePicker({
       {label && <span className="field-label">{label}</span>}
       <div className={clsx("grid gap-2", compact ? "sm:grid-cols-2" : "sm:grid-cols-2")}>
         <button
+          ref={checkInButtonRef}
           type="button"
           aria-expanded={isOpen && activeField === "checkIn"}
+          aria-controls={isOpen ? dialogId : undefined}
+          aria-haspopup="dialog"
           className={clsx(
             "flex min-h-[3.25rem] min-w-0 items-center gap-2 rounded-2xl border bg-white px-3 text-left transition hover:border-[#ff385c]",
             isOpen && activeField === "checkIn" ? "border-[#ff385c] shadow-[0_0_0_4px_rgba(255,56,92,0.12)]" : "border-[#eadfd6]",
@@ -124,8 +137,11 @@ export function DateRangePicker({
           </span>
         </button>
         <button
+          ref={checkOutButtonRef}
           type="button"
           aria-expanded={isOpen && activeField === "checkOut"}
+          aria-controls={isOpen ? dialogId : undefined}
+          aria-haspopup="dialog"
           className={clsx(
             "flex min-h-[3.25rem] min-w-0 items-center gap-2 rounded-2xl border bg-white px-3 text-left transition hover:border-[#ff385c]",
             isOpen && activeField === "checkOut" ? "border-[#ff385c] shadow-[0_0_0_4px_rgba(255,56,92,0.12)]" : "border-[#eadfd6]",
@@ -155,7 +171,9 @@ export function DateRangePicker({
 
       {isOpen && (
         <div
+          id={dialogId}
           role="dialog"
+          aria-modal="false"
           aria-label="Choose stay dates"
           className="absolute left-0 top-full z-50 mt-2 w-full min-w-0 rounded-3xl border border-[#eadfd6] bg-white p-4 shadow-[0_20px_60px_rgba(32,26,24,0.18)] sm:min-w-[360px]"
         >

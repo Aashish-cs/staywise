@@ -85,7 +85,12 @@ export function HostOnboardingPanel({
         </div>
 
         {state.message ? (
-          <p className="mt-5 rounded-2xl bg-[#fff3f5] p-4 text-sm font-extrabold text-[#bd1740]">
+          <p
+            role={state.ok ? "status" : "alert"}
+            className={`mt-5 rounded-2xl p-4 text-sm font-extrabold ${
+              state.ok ? "bg-[#e7f2e4] text-[#315d3b]" : "bg-[#fff3f5] text-[#bd1740]"
+            }`}
+          >
             {state.message}
           </p>
         ) : null}

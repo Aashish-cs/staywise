@@ -245,6 +245,7 @@ export function SearchResultsSection({
                     <div className="flex gap-2">
                       <Button
                         type="button"
+                        aria-label={`Preview ${listing.title}`}
                         size="sm"
                         variant="outline"
                         onClick={() => onSelectListing(listing.id)}
@@ -710,6 +711,7 @@ function ListingMapPanel({
           <button
             key={item.id}
             type="button"
+            aria-pressed={item.id === listing.id}
             className={clsx(
               "w-full rounded-2xl border p-3 text-left transition hover:border-[#ff385c]",
               item.id === listing.id || item.id === hoveredListingId

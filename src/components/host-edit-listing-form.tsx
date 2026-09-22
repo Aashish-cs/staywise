@@ -125,6 +125,7 @@ export function HostEditListingForm({ listing }: { listing: Listing }) {
 
       {state.message ? (
         <div
+          role={state.ok ? "status" : "alert"}
           className={`mt-5 rounded-2xl p-4 text-sm font-extrabold ${
             state.ok ? "bg-[#e7f2e4] text-[#315d3b]" : "bg-[#fff3f5] text-[#bd1740]"
           }`}

@@ -216,8 +216,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Test 1024, 1280, 1440, and 1920px with controlled max widths and good search/map use.
   - Current pass: browser-tested required desktop widths, fixed 1024 home nav wrapping, wide category strip clipping, and search toolbar clipping at 1024/1280; verified desktop Map view has no horizontal overflow.
 
-- [ ] Phase 42: Accessibility
+- [x] Phase 42: Accessibility
   - Semantic HTML, keyboard nav, focus states, labels, ARIA, dialog focus trapping, Escape close, SR labels, alt text, contrast, and no div-as-button misuse.
+  - Current pass: added global focus-visible styling, accessible menu/picker metadata, Escape/focus restoration, modal photo-gallery focus trapping, live status/error regions, labelled repeated actions, mobile filter expanded state, and host wizard step semantics.
 
 - [ ] Phase 43: Performance
   - Optimize images, query patterns, pagination, rendering, server/client boundaries, autocomplete debounce, map loading, and bundle size.

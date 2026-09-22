@@ -210,13 +210,19 @@ export function SearchFiltersPanel({
           </button>
 
           {aiMessage && (
-            <p className="rounded-2xl bg-[#e7f2e4] p-3 text-sm font-semibold text-[#315d3b]">
+            <p
+              role="status"
+              className="rounded-2xl bg-[#e7f2e4] p-3 text-sm font-semibold text-[#315d3b]"
+            >
               {aiMessage}
             </p>
           )}
 
           {aiError && (
-            <p className="rounded-2xl bg-[#fff3f5] p-3 text-sm font-semibold text-[#bd1740]">
+            <p
+              role="alert"
+              className="rounded-2xl bg-[#fff3f5] p-3 text-sm font-semibold text-[#bd1740]"
+            >
               {aiError}
             </p>
           )}
@@ -265,6 +271,11 @@ export function SearchFiltersPanel({
 
           {showLocationStatus && (
             <p
+              role={
+                currentLocationState === "accepted" || usesCurrentLocation
+                  ? "status"
+                  : "alert"
+              }
               className={clsx(
                 "mt-2 rounded-2xl p-3 text-xs font-semibold leading-5",
                 currentLocationState === "accepted" || usesCurrentLocation
@@ -492,7 +503,10 @@ export function SearchFiltersPanel({
         </button>
 
         {notice && (
-          <p className="rounded-2xl bg-[#fff3f5] p-3 text-sm font-semibold text-[#bd1740]">
+          <p
+            role="alert"
+            className="rounded-2xl bg-[#fff3f5] p-3 text-sm font-semibold text-[#bd1740]"
+          >
             {notice}
           </p>
         )}

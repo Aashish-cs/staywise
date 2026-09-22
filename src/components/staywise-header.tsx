@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import { Menu, Sparkles, UserRound } from "lucide-react";
@@ -83,6 +83,31 @@ export function StayWiseAccountMenu({
   menuClassName,
 }: StayWiseAccountMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const menuId = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      if (isOpen && !rootRef.current?.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (isOpen && event.key === "Escape") {
+        setIsOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
 
   return (
     <>
@@ -98,11 +123,14 @@ export function StayWiseAccountMenu({
       >
         {accountLabel}
       </Link>
-      <div className="relative">
+      <div ref={rootRef} className="relative">
         <button
+          ref={triggerRef}
           type="button"
           aria-expanded={isOpen}
-          aria-label="Open account menu"
+          aria-controls={isOpen ? menuId : undefined}
+          aria-haspopup="true"
+          aria-label={isOpen ? "Close account menu" : "Open account menu"}
           className="flex h-11 items-center gap-2 rounded-full border border-[#ddd0c6] bg-white px-3 text-sm shadow-sm"
           onClick={() => setIsOpen((current) => !current)}
         >
@@ -112,6 +140,9 @@ export function StayWiseAccountMenu({
 
         {isOpen && (
           <div
+            id={menuId}
+            role="region"
+            aria-label="Account menu"
             className={clsx(
               "absolute right-0 top-full z-40 mt-2 w-56 overflow-hidden rounded-2xl border border-[#eadfd6] bg-white py-2 text-sm font-semibold shadow-xl",
               menuClassName,

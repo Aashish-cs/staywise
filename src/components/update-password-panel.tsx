@@ -79,13 +79,19 @@ export function UpdatePasswordPanel() {
           </label>
 
           {error && (
-            <p className="rounded-2xl bg-[#fff3f5] p-3 text-sm font-semibold text-[#bd1740]">
+            <p
+              role="alert"
+              className="rounded-2xl bg-[#fff3f5] p-3 text-sm font-semibold text-[#bd1740]"
+            >
               {error}
             </p>
           )}
 
           {message && (
-            <p className="rounded-2xl bg-[#e7f2e4] p-3 text-sm font-semibold text-[#315d3b]">
+            <p
+              role="status"
+              className="rounded-2xl bg-[#e7f2e4] p-3 text-sm font-semibold text-[#315d3b]"
+            >
               {message}
             </p>
           )}

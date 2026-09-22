@@ -87,7 +87,7 @@ export function SearchResultsSection({
 }: SearchResultsSectionProps) {
   return (
     <section id="results" className="min-w-0 scroll-mt-24">
-      <div className="flex flex-col gap-4 border-b border-[#eadfd6] pb-5 lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-4 border-b border-[#eadfd6] pb-5 2xl:flex-row 2xl:items-end 2xl:justify-between">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-[#786a60]">
             {resultSummary}

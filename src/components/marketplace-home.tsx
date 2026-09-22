@@ -156,7 +156,7 @@ export function MarketplaceHome({
         brandClassName="shrink-0"
         innerClassName="gap-5"
         nav={
-          <nav className="hidden items-center gap-1 rounded-full border border-[#ebe3dd] bg-[#fbfaf8] p-1 lg:flex">
+          <nav className="hidden items-center gap-1 rounded-full border border-[#ebe3dd] bg-[#fbfaf8] p-1 xl:flex">
             {categoryItems.slice(0, 4).map((item, index) => {
               const Icon = item.icon;
 
@@ -179,7 +179,7 @@ export function MarketplaceHome({
         actions={
           <>
             <Link
-              className="hidden rounded-full px-4 py-2 text-sm font-extrabold hover:bg-[#f7f3ee] md:block"
+              className="hidden whitespace-nowrap rounded-full px-4 py-2 text-sm font-extrabold hover:bg-[#f7f3ee] md:block"
               href="/host"
             >
               Host on StayWise
@@ -194,7 +194,7 @@ export function MarketplaceHome({
         }
       >
 
-        <div className="border-t border-[#f3ede8] lg:hidden">
+        <div className="border-t border-[#f3ede8] xl:hidden">
           <div className="scrollbar-hide mx-auto flex max-w-[1536px] gap-2 overflow-x-auto px-5 py-3">
             {categoryItems.map((item, index) => {
               const Icon = item.icon;
@@ -449,7 +449,7 @@ function CategoryDiscoveryStrip({
 }) {
   return (
     <div
-      className="scrollbar-hide mx-auto mt-4 flex max-w-5xl gap-2 overflow-x-auto pb-1"
+      className="scrollbar-hide mx-auto mt-4 flex max-w-5xl gap-2 overflow-x-auto pb-1 md:flex-wrap md:justify-center md:overflow-visible"
       role="list"
       aria-label="Stay categories"
     >

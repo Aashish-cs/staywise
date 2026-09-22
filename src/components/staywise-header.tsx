@@ -67,7 +67,7 @@ export function StayWiseHeader({
         {center}
         {nav}
 
-        {actions && <div className="flex items-center gap-2">{actions}</div>}
+        {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
       </div>
       {children}
     </header>
@@ -89,6 +89,7 @@ export function StayWiseAccountMenu({
       <Link
         className={clsx(
           "rounded-full px-4 py-2 text-sm font-semibold hover:bg-[#f7f3ee]",
+          "whitespace-nowrap",
           accountLinkVisibilityClassName,
           accountLinkClassName,
         )}

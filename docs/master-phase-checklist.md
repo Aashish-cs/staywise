@@ -212,8 +212,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Test 375, 390, 430, and 768px. Use drawers, mobile date picker, mobile filters, map toggle, sticky booking CTA, and no horizontal scroll.
   - Current pass: browser-tested home, search, listing, host, dashboard, and favorites across required mobile widths; verified mobile filters, map toggle, date picker, and reserve anchor; fixed visible horizontal rail scrollbars, compact guest label spacing, and tablet search toolbar clipping.
 
-- [ ] Phase 41: Tablet/desktop
+- [x] Phase 41: Tablet/desktop
   - Test 1024, 1280, 1440, and 1920px with controlled max widths and good search/map use.
+  - Current pass: browser-tested required desktop widths, fixed 1024 home nav wrapping, wide category strip clipping, and search toolbar clipping at 1024/1280; verified desktop Map view has no horizontal overflow.
 
 - [ ] Phase 42: Accessibility
   - Semantic HTML, keyboard nav, focus states, labels, ARIA, dialog focus trapping, Escape close, SR labels, alt text, contrast, and no div-as-button misuse.

@@ -87,8 +87,8 @@ export function SearchResultsSection({
 }: SearchResultsSectionProps) {
   return (
     <section id="results" className="min-w-0 scroll-mt-24">
-      <div className="flex flex-col gap-4 border-b border-[#eadfd6] pb-5 md:flex-row md:items-end md:justify-between">
-        <div>
+      <div className="flex flex-col gap-4 border-b border-[#eadfd6] pb-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
           <p className="text-sm font-semibold text-[#786a60]">
             {resultSummary}
           </p>
@@ -106,7 +106,7 @@ export function SearchResultsSection({
           )}
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <div className="scrollbar-hide flex max-w-full items-center gap-2 overflow-x-auto pb-1">
           <div className="hidden md:block">
             <button type="button" className="toolbar-button" onClick={onFocusSearch}>
               <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
@@ -119,7 +119,7 @@ export function SearchResultsSection({
               aria-label="Sort results"
               value={sortMode}
               onChange={(event) => onSortModeChange(event.target.value as SortMode)}
-              className="bg-transparent text-sm font-extrabold outline-none"
+              className="min-w-0 bg-transparent text-sm font-extrabold outline-none"
             >
               <option value="recommended">Recommended</option>
               <option value="price-low">Lowest price</option>

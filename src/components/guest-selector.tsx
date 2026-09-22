@@ -84,7 +84,11 @@ export function GuestSelector({
 
   return (
     <div ref={rootRef} className="relative min-w-0">
-      {label && <span className="field-label">{label}</span>}
+      {label && (
+        <span className={clsx("field-label", compact && "mb-0 px-5 pt-4")}>
+          {label}
+        </span>
+      )}
       <button
         type="button"
         aria-expanded={isOpen}
@@ -92,7 +96,10 @@ export function GuestSelector({
         className={clsx(
           "flex w-full items-center gap-3 text-left transition",
           compact
-            ? "min-h-[3.25rem] px-5 py-4 hover:bg-[#fff8f9]"
+            ? clsx(
+                "min-h-[3.25rem] px-5 hover:bg-[#fff8f9]",
+                label ? "pb-4 pt-2" : "py-4",
+              )
             : "min-h-[3.25rem] rounded-2xl border border-[#eadfd6] bg-white px-3 hover:border-[#ff385c]",
         )}
         onClick={() => setIsOpen((current) => !current)}

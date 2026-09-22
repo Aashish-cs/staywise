@@ -296,7 +296,7 @@ export function SearchExperience({
       >
 
         <div className="border-t border-[#f3ede8]">
-          <div className="mx-auto flex max-w-[1536px] gap-2 overflow-x-auto px-5 py-3 lg:px-8">
+          <div className="scrollbar-hide mx-auto flex max-w-[1536px] gap-2 overflow-x-auto px-5 py-3 lg:px-8">
             {searchCategoryLinks.map((item, index) => {
               const Icon = item.icon;
 
@@ -500,7 +500,7 @@ function MobileSearchSummary({
       </div>
 
       {activeFilterLabels.length > 0 && (
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+        <div className="scrollbar-hide mt-3 flex gap-2 overflow-x-auto pb-1">
           {activeFilterLabels.slice(0, 8).map((label) => (
             <Badge key={label} tone="neutral" className="shrink-0">
               {label}

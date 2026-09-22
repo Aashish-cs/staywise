@@ -89,7 +89,7 @@ function ListingRail({
         </Link>
       </div>
 
-      <div className="grid auto-cols-[minmax(245px,1fr)] grid-flow-col gap-5 overflow-x-auto pb-3 [scrollbar-width:none] md:auto-cols-[minmax(260px,1fr)] lg:auto-cols-[minmax(275px,1fr)]">
+      <div className="scrollbar-hide grid auto-cols-[minmax(245px,1fr)] grid-flow-col gap-5 overflow-x-auto pb-3 md:auto-cols-[minmax(260px,1fr)] lg:auto-cols-[minmax(275px,1fr)]">
         {listings.map((listing, index) => (
           <MarketplaceListingCard
             key={`${title}-${listing.id}`}

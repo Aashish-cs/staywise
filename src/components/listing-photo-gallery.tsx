@@ -104,7 +104,7 @@ export function ListingPhotoGallery({ listing }: { listing: Listing }) {
                 />
               </div>
 
-              <div className="flex gap-3 overflow-x-auto pb-2 lg:max-h-full lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden">
+              <div className="scrollbar-hide flex gap-3 overflow-x-auto pb-2 lg:max-h-full lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden">
                 {galleryImages.map((image, index) => (
                   <button
                     key={`${image.url}-${image.alt}-${index}`}

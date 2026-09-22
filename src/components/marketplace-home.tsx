@@ -195,7 +195,7 @@ export function MarketplaceHome({
       >
 
         <div className="border-t border-[#f3ede8] lg:hidden">
-          <div className="mx-auto flex max-w-[1536px] gap-2 overflow-x-auto px-5 py-3">
+          <div className="scrollbar-hide mx-auto flex max-w-[1536px] gap-2 overflow-x-auto px-5 py-3">
             {categoryItems.map((item, index) => {
               const Icon = item.icon;
 
@@ -449,7 +449,7 @@ function CategoryDiscoveryStrip({
 }) {
   return (
     <div
-      className="mx-auto mt-4 flex max-w-5xl gap-2 overflow-x-auto pb-1 [scrollbar-width:none]"
+      className="scrollbar-hide mx-auto mt-4 flex max-w-5xl gap-2 overflow-x-auto pb-1"
       role="list"
       aria-label="Stay categories"
     >

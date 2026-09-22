@@ -208,8 +208,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Add useful empty states for no search results, favorites, trips, and host listings.
   - Current pass: replaced placeholder empty boxes with action-oriented states for search recovery, saved stays, trip sections, first host listing creation, and empty host reservation feed.
 
-- [ ] Phase 40: Mobile design
+- [x] Phase 40: Mobile design
   - Test 375, 390, 430, and 768px. Use drawers, mobile date picker, mobile filters, map toggle, sticky booking CTA, and no horizontal scroll.
+  - Current pass: browser-tested home, search, listing, host, dashboard, and favorites across required mobile widths; verified mobile filters, map toggle, date picker, and reserve anchor; fixed visible horizontal rail scrollbars, compact guest label spacing, and tablet search toolbar clipping.
 
 - [ ] Phase 41: Tablet/desktop
   - Test 1024, 1280, 1440, and 1920px with controlled max widths and good search/map use.

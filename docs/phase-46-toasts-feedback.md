@@ -23,4 +23,5 @@
 - Passed: `pnpm build`
 - Passed: `git diff --check`
 - Passed local production smoke: home, Dallas search, known listing detail, unknown route, dashboard redirect, host redirect, and profile sign-in redirect marker.
+- Passed production smoke on `https://staywise-tau.vercel.app`: home, Dallas search, known listing detail, unknown route, dashboard redirect, host redirect, and profile sign-in redirect marker.
 - Note: Playwright is not installed in this project, so toast display was verified through TypeScript/lint/build and route hydration boundaries rather than an automated browser screenshot.

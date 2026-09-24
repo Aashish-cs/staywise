@@ -1,6 +1,8 @@
 -- Phase 2 marketplace seed data for StayWise.
 -- Run this once in Supabase SQL Editor after schema.sql.
 -- Listings are synthetic StayWise marketplace records, not Airbnb data.
+-- They use real city/neighborhood coordinates and public stock imagery only
+-- so development/demo inventory is clearly separate from production supply.
 
 begin;
 
@@ -77,7 +79,12 @@ with seed_listings (
   bedrooms,
   bathrooms,
   latitude,
-  longitude
+  longitude,
+  formatted_address,
+  address_city,
+  address_region,
+  address_country,
+  address_country_code
 ) as (
   values
     (
@@ -94,7 +101,12 @@ with seed_listings (
       1,
       1.0,
       32.784100,
-      -96.783900
+      -96.783900,
+      'Deep Ellum, Dallas, TX, United States',
+      'Dallas',
+      'TX',
+      'United States',
+      'us'
     ),
     (
       '22222222-2222-4222-8222-222222222222'::uuid,
@@ -110,7 +122,12 @@ with seed_listings (
       2,
       2.0,
       32.748300,
-      -96.829700
+      -96.829700,
+      'Bishop Arts District, Dallas, TX, United States',
+      'Dallas',
+      'TX',
+      'United States',
+      'us'
     ),
     (
       '33333333-3333-4333-8333-333333333333'::uuid,
@@ -126,7 +143,12 @@ with seed_listings (
       1,
       1.0,
       32.802800,
-      -96.800900
+      -96.800900,
+      'Uptown, Dallas, TX, United States',
+      'Dallas',
+      'TX',
+      'United States',
+      'us'
     ),
     (
       '44444444-4444-4444-8444-444444444444'::uuid,
@@ -142,7 +164,12 @@ with seed_listings (
       1,
       1.0,
       30.263500,
-      -97.705900
+      -97.705900,
+      'East Austin, Austin, TX, United States',
+      'Austin',
+      'TX',
+      'United States',
+      'us'
     ),
     (
       '55555555-5555-4555-8555-555555555555'::uuid,
@@ -158,7 +185,12 @@ with seed_listings (
       1,
       1.0,
       41.884000,
-      -87.647000
+      -87.647000,
+      'West Loop, Chicago, IL, United States',
+      'Chicago',
+      'IL',
+      'United States',
+      'us'
     ),
     (
       '66666666-6666-4666-8666-666666666666'::uuid,
@@ -174,7 +206,12 @@ with seed_listings (
       2,
       2.0,
       39.762000,
-      -105.011000
+      -105.011000,
+      'Highland, Denver, CO, United States',
+      'Denver',
+      'CO',
+      'United States',
+      'us'
     ),
     (
       '77777777-7777-4777-8777-777777777777'::uuid,
@@ -190,7 +227,12 @@ with seed_listings (
       4,
       3.0,
       25.729000,
-      -80.241000
+      -80.241000,
+      'Coconut Grove, Miami, FL, United States',
+      'Miami',
+      'FL',
+      'United States',
+      'us'
     ),
     (
       '88888888-8888-4888-8888-888888888888'::uuid,
@@ -206,7 +248,12 @@ with seed_listings (
       1,
       1.0,
       40.787000,
-      -73.975400
+      -73.975400,
+      'Upper West Side, New York, NY, United States',
+      'New York',
+      'NY',
+      'United States',
+      'us'
     )
 )
 insert into public.listings (
@@ -225,6 +272,12 @@ insert into public.listings (
   bathrooms,
   latitude,
   longitude,
+  place_provider,
+  formatted_address,
+  address_city,
+  address_region,
+  address_country,
+  address_country_code,
   is_active
 )
 select
@@ -243,6 +296,12 @@ select
   bathrooms,
   latitude,
   longitude,
+  'manual',
+  formatted_address,
+  address_city,
+  address_region,
+  address_country,
+  address_country_code,
   true
 from seed_listings
 on conflict (id) do update set
@@ -259,6 +318,12 @@ on conflict (id) do update set
   bathrooms = excluded.bathrooms,
   latitude = excluded.latitude,
   longitude = excluded.longitude,
+  place_provider = excluded.place_provider,
+  formatted_address = excluded.formatted_address,
+  address_city = excluded.address_city,
+  address_region = excluded.address_region,
+  address_country = excluded.address_country,
+  address_country_code = excluded.address_country_code,
   is_active = excluded.is_active,
   updated_at = now();
 

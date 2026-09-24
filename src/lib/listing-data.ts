@@ -112,12 +112,18 @@ export type ListingAvailabilityStatus = {
 };
 
 export type ListingSearchResult = {
+  dataState: ListingDataState;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
   listings: Listing[];
   page: number;
   pageSize: number;
   totalCount: number;
+};
+
+export type ListingDataState = {
+  message: string | null;
+  status: "ready" | "unconfigured" | "error";
 };
 
 export type HostListingImage = {
@@ -160,22 +166,46 @@ const listingSelect = `
 
 const publicListingLoadAttempts = 3;
 const publicListingRetryDelayMs = 250;
+const readyListingDataState: ListingDataState = {
+  message: null,
+  status: "ready",
+};
 
 export async function getPublicListings() {
+  const result = await getPublicListingsResult();
+  return result.listings;
+}
+
+export async function getPublicListingsResult(): Promise<{
+  dataState: ListingDataState;
+  listings: Listing[];
+}> {
   const supabase = await createSupabaseServerClient();
 
   if (!supabase) {
-    return [];
+    return {
+      dataState: {
+        message:
+          "Supabase is not configured, so StayWise is showing no marketplace inventory instead of fake fallback listings.",
+        status: "unconfigured",
+      },
+      listings: [],
+    };
   }
 
   for (let attempt = 1; attempt <= publicListingLoadAttempts; attempt += 1) {
     const { data, error } = await loadPublicListingRows(supabase);
 
     if (!error) {
-      return enrichListingsWithReviewSignals(
+      const listings = await enrichListingsWithReviewSignals(
         supabase,
         ((data ?? []) as ListingRow[]).map(mapListingRow),
       );
+
+      return {
+        dataState: readyListingDataState,
+        listings,
+      };
     }
 
     if (
@@ -183,7 +213,14 @@ export async function getPublicListings() {
       !isTransientSupabaseError(error)
     ) {
       console.error("Unable to load listings", error);
-      return [];
+      return {
+        dataState: {
+          message:
+            "StayWise could not load live listings from Supabase. Check the project URL, anon key, schema, RLS policies, and deployment environment variables.",
+          status: "error",
+        },
+        listings: [],
+      };
     }
 
     console.warn("Retrying public listings after transient Supabase error", {
@@ -193,7 +230,14 @@ export async function getPublicListings() {
     await wait(publicListingRetryDelayMs * attempt);
   }
 
-  return [];
+  return {
+    dataState: {
+      message:
+        "StayWise could not load live listings from Supabase. Check the project URL, anon key, schema, RLS policies, and deployment environment variables.",
+      status: "error",
+    },
+    listings: [],
+  };
 }
 
 export async function searchPublicListings(
@@ -210,7 +254,11 @@ export async function searchPublicListings(
   const page = clampInteger(options.page ?? 1, 1, 100);
 
   if (!supabase) {
-    return emptyListingSearchResult(page, pageSize);
+    return emptyListingSearchResult(page, pageSize, {
+      message:
+        "Supabase is not configured, so StayWise is showing no marketplace inventory instead of fake fallback listings.",
+      status: "unconfigured",
+    });
   }
 
   const requiredListingIds = await getRequiredListingIds(supabase, search);
@@ -255,7 +303,11 @@ export async function searchPublicListings(
 
     if (error) {
       console.error("Unable to search listings", error);
-      return emptyListingSearchResult(page, pageSize);
+      return emptyListingSearchResult(page, pageSize, {
+        message:
+          "StayWise could not load live listings from Supabase. Check the project URL, anon key, schema, RLS policies, and deployment environment variables.",
+        status: "error",
+      });
     }
 
     const candidates = await enrichListingsWithReviewSignals(
@@ -267,6 +319,7 @@ export async function searchPublicListings(
     const listings = rankedListings.slice(offset, offset + pageSize);
 
     return {
+      dataState: readyListingDataState,
       hasNextPage: offset + pageSize < rankedListings.length,
       hasPreviousPage: page > 1,
       listings,
@@ -286,6 +339,7 @@ export async function searchPublicListings(
   if (error) {
     if (error.code === "PGRST103") {
       return {
+        dataState: readyListingDataState,
         hasNextPage: false,
         hasPreviousPage: page > 1,
         listings: [],
@@ -296,7 +350,11 @@ export async function searchPublicListings(
     }
 
     console.error("Unable to search listings", error);
-    return emptyListingSearchResult(page, pageSize);
+    return emptyListingSearchResult(page, pageSize, {
+      message:
+        "StayWise could not load live listings from Supabase. Check the project URL, anon key, schema, RLS policies, and deployment environment variables.",
+      status: "error",
+    });
   }
 
   const candidates = await enrichListingsWithReviewSignals(
@@ -311,6 +369,7 @@ export async function searchPublicListings(
   const offset = (page - 1) * pageSize;
 
   return {
+    dataState: readyListingDataState,
     hasNextPage: count !== null ? offset + pageSize < count : offset + pageSize < rankedListings.length,
     hasPreviousPage: page > 1,
     listings: rankedListings.slice(offset, offset + pageSize),
@@ -602,8 +661,10 @@ function wait(milliseconds: number) {
 function emptyListingSearchResult(
   page: number,
   pageSize: number,
+  dataState: ListingDataState = readyListingDataState,
 ): ListingSearchResult {
   return {
+    dataState,
     hasNextPage: false,
     hasPreviousPage: page > 1,
     listings: [],

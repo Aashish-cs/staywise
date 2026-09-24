@@ -27,6 +27,7 @@ import {
   type Listing,
   type PropertyType,
 } from "@/lib/listings";
+import type { ListingDataState } from "@/lib/listing-data";
 import type { LocationLookupResult } from "@/lib/location-service";
 import {
   rankListings,
@@ -76,6 +77,7 @@ const searchCategoryLinks = [
 
 export function SearchExperience({
   accountRole,
+  dataState,
   initialFavoriteIds,
   initialListings,
   initialLocation,
@@ -85,6 +87,7 @@ export function SearchExperience({
   showProductSections = true,
 }: {
   accountRole: "guest" | "host" | null;
+  dataState: ListingDataState;
   initialFavoriteIds: string[];
   initialListings: Listing[];
   initialLocation?: LocationLookupResult | null;
@@ -369,6 +372,7 @@ export function SearchExperience({
           <SearchResultsSection
             activeFilterCount={activeFilterCount}
             activeFilterLabels={activeFilterLabels}
+            dataState={dataState}
             displayedListings={displayedListings}
             availabilityFilterApplied={availabilityFilterApplied}
             listingDetailQuery={listingDetailQuery}

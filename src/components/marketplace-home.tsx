@@ -29,6 +29,7 @@ import { useAiSearch } from "@/hooks/use-ai-search";
 import { useSavedListings } from "@/hooks/use-saved-listings";
 import { GuestSelector, type GuestSelection } from "@/components/guest-selector";
 import type { Listing } from "@/lib/listings";
+import type { ListingDataState } from "@/lib/listing-data";
 import { rankListings, searchSchema, type SearchInput } from "@/lib/recommendations";
 import {
   broadMarketplaceSearchInput,
@@ -43,6 +44,7 @@ import { buildSearchQueryString } from "@/lib/search-url";
 
 type MarketplaceHomeProps = {
   accountRole: "guest" | "host" | null;
+  dataState: ListingDataState;
   initialFavoriteIds: string[];
   initialListings: Listing[];
   isSignedIn: boolean;
@@ -59,6 +61,7 @@ type RankedListing = ReturnType<typeof rankListings>[number];
 
 export function MarketplaceHome({
   accountRole,
+  dataState,
   initialFavoriteIds,
   initialListings,
   isSignedIn,
@@ -130,6 +133,7 @@ export function MarketplaceHome({
       ? "Host"
       : "Trips"
     : "Sign in";
+  const dataUnavailable = dataState.status !== "ready";
 
   function getCurrentSearch(): SearchInput {
     return searchSchema.parse({
@@ -352,11 +356,19 @@ export function MarketplaceHome({
             ) : (
               <div className="min-h-[360px] rounded-[30px] border border-dashed border-[#d8ccc2] bg-white p-8">
                 <p className="text-sm font-extrabold text-[#ff385c]">
-                  Marketplace loading
+                  {dataUnavailable ? "Live marketplace unavailable" : "Marketplace ready"}
                 </p>
                 <h2 className="mt-2 text-3xl font-extrabold tracking-tight">
-                  Add active listings to unlock the home discovery board.
+                  {dataState.status === "unconfigured"
+                    ? "Connect Supabase to show live stays."
+                    : dataState.status === "error"
+                      ? "We could not load live stays."
+                      : "Add active listings to unlock the home discovery board."}
                 </h2>
+                <p className="mt-3 max-w-xl text-sm font-semibold leading-6 text-[#5f5148]">
+                  {dataState.message ??
+                    "StayWise will show host-created listings and clearly documented seed data only when they exist in Supabase."}
+                </p>
               </div>
             )}
 
@@ -375,7 +387,9 @@ export function MarketplaceHome({
                   icon={Home}
                   label={`${initialListings.length} live stays`}
                   value={
-                    averageNightly
+                    dataUnavailable
+                      ? "No fallback data"
+                      : averageNightly
                       ? `Average $${averageNightly}/night`
                       : "Loaded from Supabase"
                   }

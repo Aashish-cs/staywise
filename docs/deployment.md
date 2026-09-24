@@ -8,7 +8,7 @@ Create one repository for the team and keep it private until the course team is 
 
 1. Create a free Supabase project.
 2. Run `supabase/schema.sql`.
-3. Run `supabase/phase2_seed.sql` for synthetic demo listings.
+3. Optional for demos: run `supabase/phase2_seed.sql` for clearly labeled synthetic StayWise demo listings.
 4. Run `supabase/phase3_booking_integrity.sql` for reservation validation and double-booking protection.
 5. Run `supabase/phase4_availability.sql` for date-aware search and reservation availability checks.
 6. Run `supabase/phase5_marketplace_foundation.sql` for profile settings, host availability blocks, real-review eligibility, recommendation events, and payment records.
@@ -56,7 +56,8 @@ Use Resend as the SMTP provider for Supabase Auth emails:
 - Password reset tested.
 - Supabase custom SMTP configured.
 - RLS policies verified.
-- `supabase/phase2_seed.sql` run for demo listings.
+- Optional: `supabase/phase2_seed.sql` run for clearly labeled demo listings, or host-created listings prepared for the presentation.
+- Production runtime checked for honest empty/error states when Supabase has no rows or cannot load rows.
 - `supabase/phase3_booking_integrity.sql` run for booking safeguards.
 - `supabase/phase4_availability.sql` run for availability-aware search.
 - `supabase/phase5_marketplace_foundation.sql` run for production support entities.

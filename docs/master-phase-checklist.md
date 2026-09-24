@@ -240,9 +240,10 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Meaningful URLs, browser back behavior, and no broken modal routing.
   - Current pass: preserved search page context in listing links/back links, added browser-history-aware photo gallery close behavior, and verified typecheck, lint, build, diff check, local production smoke, and live production smoke.
 
-- [ ] Phase 48: Data seeding
+- [x] Phase 48: Data seeding
   - Dev seed allowed if clearly demo, with real geographic cities/coordinates and legitimate assets.
   - Production runtime must show error/empty state, not silent demo array fallback.
+  - Current pass: added explicit listing data status for Supabase-ready/unconfigured/error states, showed honest home/search empty-error states instead of silent fallback inventory, enriched the synthetic seed with real address metadata, and documented the seed-data policy in `docs/phase-48-data-seeding.md`.
 
 - [ ] Phase 49: Testing
   - Unit tests for distance, pricing, night calculation, overlap, scoring, validation.

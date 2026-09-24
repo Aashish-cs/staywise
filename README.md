@@ -43,7 +43,7 @@ Resend is configured inside Supabase as a custom SMTP provider. Do not put the R
 
 1. Create a Supabase project.
 2. Run `supabase/schema.sql` in the SQL editor.
-3. Run `supabase/phase2_seed.sql` to add synthetic marketplace listings for demo search and reservations.
+3. Optional for demos: run `supabase/phase2_seed.sql` to add clearly synthetic StayWise marketplace listings for demo search and reservations.
 4. Run `supabase/phase3_booking_integrity.sql` to add server-side reservation validation and double-booking protection.
 5. Run `supabase/phase4_availability.sql` to let search and listing pages check booked dates.
 6. Run `supabase/phase5_marketplace_foundation.sql` to add profile settings, host availability blocks, reviews, recommendation events, and payment records.
@@ -52,7 +52,7 @@ Resend is configured inside Supabase as a custom SMTP provider. Do not put the R
 9. Configure custom SMTP with Resend.
 10. Add `http://localhost:3000/auth/callback` and the Vercel production callback URL to Supabase redirect URLs.
 
-The seed listings are synthetic StayWise data with public stock imagery and real geographic coordinates. They are not scraped from Airbnb or any other marketplace. Do not copy private marketplace content into this database.
+The seed listings are synthetic StayWise data with public stock imagery, real geographic coordinates, and explicit address metadata. They are not scraped from Airbnb or any other marketplace. Do not copy private marketplace content into this database.
 
 ## Useful Scripts
 
@@ -73,7 +73,7 @@ The current implementation covers authentication, Supabase-filtered listing sear
 
 ## Known Limitations
 
-- Listings can come from host-created rows or the provided synthetic seed data; production should not silently fall back to hardcoded listing arrays.
+- Listings can come from host-created rows or the provided synthetic seed data; production does not silently fall back to hardcoded listing arrays when Supabase is missing or failing.
 - Listing search now runs server-side filters for destination, current location, dates, guests, price, property type, bedrooms/beds, bathrooms, amenities, and page state before the UI ranks and displays results.
 - Availability search uses the database RPC path to exclude active reservations and host-blocked dates, then shows date-aware result and empty states.
 - Maps currently use OpenStreetMap embeds. A synchronized interactive marker map is planned for later phases.

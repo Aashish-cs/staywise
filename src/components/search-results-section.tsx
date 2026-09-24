@@ -23,6 +23,7 @@ import {
   Surface,
 } from "@/components/ui/primitives";
 import { formatDistanceMiles } from "@/lib/location-distance";
+import type { ListingDataState } from "@/lib/listing-data";
 import type { RankedListing, SearchInput } from "@/lib/recommendations";
 import type { SortMode } from "@/lib/search-results";
 
@@ -39,6 +40,7 @@ type SearchResultsSectionProps = {
   activeFilterCount: number;
   activeFilterLabels: string[];
   availabilityFilterApplied: boolean;
+  dataState: ListingDataState;
   displayedListings: RankedListing[];
   listingDetailQuery: string;
   onClearAdvancedFilters: () => void;
@@ -67,6 +69,7 @@ export function SearchResultsSection({
   activeFilterCount,
   activeFilterLabels,
   availabilityFilterApplied,
+  dataState,
   displayedListings,
   listingDetailQuery,
   onClearAdvancedFilters,
@@ -83,19 +86,22 @@ export function SearchResultsSection({
   showMapPanel,
   sortMode,
 }: SearchResultsSectionProps) {
+  const dataUnavailable = dataState.status !== "ready";
+
   return (
     <section id="results" className="min-w-0 scroll-mt-24">
       <div className="flex flex-col gap-4 border-b border-[#eadfd6] pb-5 2xl:flex-row 2xl:items-end 2xl:justify-between">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-[#786a60]">
-            {resultSummary}
+            {dataUnavailable ? "Marketplace data unavailable" : resultSummary}
           </p>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight">
-            Recommended stays
+            {dataUnavailable ? "Live stays need attention" : "Recommended stays"}
           </h2>
           <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#5f5148]">
-            Smart sort weighs budget, trip style, guest count, amenities, and the
-            filters in your shareable search URL.
+            {dataUnavailable
+              ? "StayWise does not fall back to hardcoded places when Supabase is missing or failing."
+              : "Smart sort weighs budget, trip style, guest count, amenities, and the filters in your shareable search URL."}
           </p>
           {availabilityFilterApplied && (
             <Badge tone="success" className="mt-2">
@@ -300,11 +306,18 @@ export function SearchResultsSection({
         <EmptyState
           className="mt-6"
           icon={Sparkles}
-          title="No stays match this trip yet."
+          title={
+            dataState.status === "unconfigured"
+              ? "Connect Supabase to show live stays."
+              : dataState.status === "error"
+                ? "We could not load live stays."
+                : "No stays match this trip yet."
+          }
           body={
-            availabilityFilterApplied
+            dataState.message ??
+            (availabilityFilterApplied
               ? "Those dates may already be booked or blocked by hosts. Try nearby dates, widen the nightly budget, or clear advanced filters."
-              : "StayWise can loosen the filters, widen the nightly budget, or use AI search to translate the trip into a better set of matches."
+              : "StayWise can loosen the filters, widen the nightly budget, or use AI search to translate the trip into a better set of matches.")
           }
           actions={
             <>

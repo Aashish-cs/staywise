@@ -81,6 +81,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     <SearchExperience
       key={currentQuery}
       accountRole={accountRole}
+      dataState={listingResult.dataState}
       initialFavoriteIds={favoriteIds}
       initialListings={listingResult.listings}
       initialLocation={location}

@@ -3,7 +3,7 @@ import { MarketplaceHome } from "@/components/marketplace-home";
 import {
   getCurrentUserProfile,
   getFavoriteListingIds,
-  getPublicListings,
+  getPublicListingsResult,
 } from "@/lib/listing-data";
 
 export const dynamic = "force-dynamic";
@@ -25,8 +25,8 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   const { user, profile } = await getCurrentUserProfile();
-  const [listings, favoriteIds] = await Promise.all([
-    getPublicListings(),
+  const [listingResult, favoriteIds] = await Promise.all([
+    getPublicListingsResult(),
     user ? getFavoriteListingIds(user.id) : Promise.resolve([]),
   ]);
   const accountRole =
@@ -35,8 +35,9 @@ export default async function Home() {
   return (
     <MarketplaceHome
       accountRole={accountRole}
+      dataState={listingResult.dataState}
       initialFavoriteIds={favoriteIds}
-      initialListings={listings}
+      initialListings={listingResult.listings}
       isSignedIn={Boolean(user)}
     />
   );

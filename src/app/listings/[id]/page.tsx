@@ -47,8 +47,10 @@ import {
 import { rankListings } from "@/lib/recommendations";
 import { formatMoney } from "@/lib/reservation-utils";
 import {
+  buildSearchPageQueryString,
   buildSearchQueryString,
   firstParam,
+  parseSearchPage,
   parseSearchParams,
 } from "@/lib/search-url";
 import { canonicalPath, truncateMetaDescription } from "@/lib/seo";
@@ -117,11 +119,15 @@ export default async function ListingPage({
   const maxNightlyBudget = hasBudgetQuery
     ? search.maxNightlyBudget
     : listing.pricePerNight + 75;
-  const backToSearchQuery = buildSearchQueryString({
+  const backToSearchInput = {
     ...search,
     destination: search.destination || listing.city,
     maxNightlyBudget,
-  });
+  };
+  const searchPage = parseSearchPage(query);
+  const backToSearchQuery = searchPage > 1
+    ? buildSearchPageQueryString(backToSearchInput, searchPage)
+    : buildSearchQueryString(backToSearchInput);
   const backToSearchHref = `/search${backToSearchQuery ? `?${backToSearchQuery}` : ""}`;
   const currentListingPath = `/listings/${listing.id}${
     backToSearchQuery ? `?${backToSearchQuery}` : ""

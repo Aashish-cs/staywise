@@ -46,7 +46,10 @@ import {
   outdoorSearchPreset,
   workReadySearchPreset,
 } from "@/lib/search-presets";
-import { buildSearchQueryString } from "@/lib/search-url";
+import {
+  buildSearchPageQueryString,
+  buildSearchQueryString,
+} from "@/lib/search-url";
 
 const searchCategoryLinks = [
   {
@@ -126,7 +129,9 @@ export function SearchExperience({
       first.localeCompare(second),
     );
   }, [initialListings]);
-  const listingDetailQuery = buildSearchQueryString(search);
+  const listingDetailQuery = pagination
+    ? buildSearchPageQueryString(search, pagination.page)
+    : buildSearchQueryString(search);
   const searchHref = `/search${listingDetailQuery ? `?${listingDetailQuery}` : ""}`;
   const { notice, savedIds, setNotice, toggleSaved } = useSavedListings({
     accountRole,

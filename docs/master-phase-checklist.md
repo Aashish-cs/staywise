@@ -236,8 +236,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Consistent feedback for save/remove favorite, reservation, listing publish/save, image failures, and similar events.
   - Current pass: added a shared toast viewport, wired saved-stay, reservation, profile, host onboarding, host listing create/edit/publish, listing photo, trip cancellation, and review submission feedback into consistent success/error/info toasts. Verified typecheck, lint, build, diff check, and local production route smoke.
 
-- [ ] Phase 47: URL and navigation quality
+- [x] Phase 47: URL and navigation quality
   - Meaningful URLs, browser back behavior, and no broken modal routing.
+  - Current pass: preserved search page context in listing links/back links, added browser-history-aware photo gallery close behavior, and verified typecheck, lint, build, diff check, and local production smoke.
 
 - [ ] Phase 48: Data seeding
   - Dev seed allowed if clearly demo, with real geographic cities/coordinates and legitimate assets.

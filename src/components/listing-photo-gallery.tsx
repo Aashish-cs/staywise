@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import clsx from "clsx";
 import { Images, X } from "lucide-react";
@@ -15,9 +15,23 @@ export function ListingPhotoGallery({ listing }: { listing: Listing }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const lastTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const pushedGalleryStateRef = useRef(false);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const activeImage = galleryImages[activeIndex] ?? galleryImages[0];
+
+  const closeGallery = useCallback(() => {
+    if (
+      pushedGalleryStateRef.current &&
+      typeof window !== "undefined" &&
+      window.location.hash === "#photos"
+    ) {
+      pushedGalleryStateRef.current = false;
+      window.history.back();
+    }
+
+    setIsOpen(false);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) {
@@ -28,9 +42,16 @@ export function ListingPhotoGallery({ listing }: { listing: Listing }) {
     document.body.style.overflow = "hidden";
     closeButtonRef.current?.focus();
 
+    function handlePopState() {
+      if (pushedGalleryStateRef.current) {
+        pushedGalleryStateRef.current = false;
+        setIsOpen(false);
+      }
+    }
+
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        setIsOpen(false);
+        closeGallery();
         return;
       }
 
@@ -58,18 +79,27 @@ export function ListingPhotoGallery({ listing }: { listing: Listing }) {
     }
 
     document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("popstate", handlePopState);
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("popstate", handlePopState);
       window.requestAnimationFrame(() => {
         lastTriggerRef.current?.focus();
       });
     };
-  }, [isOpen]);
+  }, [closeGallery, isOpen]);
 
   function openGallery(index: number, trigger: HTMLButtonElement) {
     lastTriggerRef.current = trigger;
     setActiveIndex(index);
+
+    if (!isOpen && typeof window !== "undefined") {
+      const nextUrl = `${window.location.pathname}${window.location.search}#photos`;
+      window.history.pushState({ staywisePhotoGallery: true }, "", nextUrl);
+      pushedGalleryStateRef.current = true;
+    }
+
     setIsOpen(true);
   }
 
@@ -146,7 +176,7 @@ export function ListingPhotoGallery({ listing }: { listing: Listing }) {
                 type="button"
                 className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#201a18] hover:bg-[#fff3f5]"
                 aria-label="Close photo gallery"
-                onClick={() => setIsOpen(false)}
+                onClick={closeGallery}
               >
                 <X className="h-5 w-5" aria-hidden="true" />
               </button>

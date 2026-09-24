@@ -23,6 +23,7 @@
 - Passed local smoke: unknown routes show the branded 404 with HTTP 404.
 - Passed local smoke: missing listing URLs show the listing-specific unavailable state and noindex metadata.
 - Passed local smoke: protected `/dashboard` and `/host` routes still redirect unauthenticated users to sign-in.
+- Passed production smoke on `https://staywise-tau.vercel.app`: unknown route, missing listing, home, Dallas search, dashboard redirect, and host redirect.
 
 ## Note
 

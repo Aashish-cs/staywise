@@ -16,6 +16,7 @@ import {
   createHostListingAction,
   type HostListingActionState,
 } from "@/app/host/actions";
+import { useToastOnActionState } from "@/components/ui/toast";
 
 const initialState: HostListingActionState = {
   ok: false,
@@ -105,6 +106,11 @@ export function HostListingForm() {
       window.localStorage.removeItem("staywise-host-listing-draft");
     }
   }, [state.ok]);
+
+  useToastOnActionState(state, {
+    errorTitle: "Listing was not published",
+    successTitle: "Listing published",
+  });
 
   const stepReady = [
     draft.title.trim().length >= 8 && draft.description.trim().length >= 24,

@@ -1,10 +1,20 @@
+"use client";
+
 import Image from "next/image";
+import { useActionState } from "react";
 import { ImagePlus, Star, Trash2 } from "lucide-react";
 import {
   deleteHostListingImageAction,
   setPrimaryHostListingImageAction,
+  type HostImageActionState,
 } from "@/app/host/actions";
+import { useToastOnActionState } from "@/components/ui/toast";
 import type { HostListingImage } from "@/lib/listing-data";
+
+const initialImageActionState: HostImageActionState = {
+  ok: false,
+  message: "",
+};
 
 export function HostImageManager({
   images,
@@ -53,32 +63,10 @@ export function HostImageManager({
                 <p className="line-clamp-2 text-sm font-extrabold">{image.alt}</p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {index !== 0 ? (
-                    <form action={setPrimaryHostListingImageAction}>
-                      <input type="hidden" name="listingId" value={listingId} />
-                      <input type="hidden" name="imageId" value={image.id} />
-                      <button
-                        type="submit"
-                        aria-label={`Make ${image.alt} the primary photo`}
-                        className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[#eadfd6] bg-white px-3 text-xs font-extrabold hover:border-[#ff385c]"
-                      >
-                        <Star className="h-3.5 w-3.5" aria-hidden="true" />
-                        Make primary
-                      </button>
-                    </form>
+                    <PrimaryPhotoForm image={image} listingId={listingId} />
                   ) : null}
                   {images.length > 1 ? (
-                    <form action={deleteHostListingImageAction}>
-                      <input type="hidden" name="listingId" value={listingId} />
-                      <input type="hidden" name="imageId" value={image.id} />
-                      <button
-                        type="submit"
-                        aria-label={`Remove photo ${image.alt}`}
-                        className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[#eadfd6] bg-white px-3 text-xs font-extrabold text-[#bd1740] hover:border-[#bd1740]"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                        Remove
-                      </button>
-                    </form>
+                    <RemovePhotoForm image={image} listingId={listingId} />
                   ) : null}
                 </div>
               </div>
@@ -91,5 +79,73 @@ export function HostImageManager({
         </p>
       )}
     </section>
+  );
+}
+
+function PrimaryPhotoForm({
+  image,
+  listingId,
+}: {
+  image: HostListingImage;
+  listingId: string;
+}) {
+  const [state, formAction, isPending] = useActionState(
+    setPrimaryHostListingImageAction,
+    initialImageActionState,
+  );
+
+  useToastOnActionState(state, {
+    errorTitle: "Primary photo unchanged",
+    successTitle: "Primary photo updated",
+  });
+
+  return (
+    <form action={formAction}>
+      <input type="hidden" name="listingId" value={listingId} />
+      <input type="hidden" name="imageId" value={image.id} />
+      <button
+        type="submit"
+        disabled={isPending}
+        aria-label={`Make ${image.alt} the primary photo`}
+        className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[#eadfd6] bg-white px-3 text-xs font-extrabold hover:border-[#ff385c] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <Star className="h-3.5 w-3.5" aria-hidden="true" />
+        {isPending ? "Updating" : "Make primary"}
+      </button>
+    </form>
+  );
+}
+
+function RemovePhotoForm({
+  image,
+  listingId,
+}: {
+  image: HostListingImage;
+  listingId: string;
+}) {
+  const [state, formAction, isPending] = useActionState(
+    deleteHostListingImageAction,
+    initialImageActionState,
+  );
+
+  useToastOnActionState(state, {
+    errorTitle: "Photo was not removed",
+    successTitle: "Photo removed",
+  });
+
+  return (
+    <form action={formAction}>
+      <input type="hidden" name="listingId" value={listingId} />
+      <input type="hidden" name="imageId" value={image.id} />
+      <button
+        type="submit"
+        disabled={isPending}
+        aria-label={`Remove photo ${image.alt}`}
+        className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[#eadfd6] bg-white px-3 text-xs font-extrabold text-[#bd1740] hover:border-[#bd1740] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+        {isPending ? "Removing" : "Remove"}
+      </button>
+    </form>
   );
 }

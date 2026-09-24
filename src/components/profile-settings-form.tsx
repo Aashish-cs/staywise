@@ -7,6 +7,7 @@ import {
   updateProfileAction,
   type ProfileActionState,
 } from "@/app/profile/actions";
+import { useToastOnActionState } from "@/components/ui/toast";
 
 const initialState: ProfileActionState = {
   ok: false,
@@ -26,6 +27,11 @@ type ProfileSettingsFormProps = {
 
 export function ProfileSettingsForm({ email, fullName, role, settings }: ProfileSettingsFormProps) {
   const [state, formAction, isPending] = useActionState(updateProfileAction, initialState);
+
+  useToastOnActionState(state, {
+    errorTitle: "Profile was not saved",
+    successTitle: "Profile saved",
+  });
 
   return (
     <form action={formAction} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">

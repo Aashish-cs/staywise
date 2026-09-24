@@ -13,6 +13,7 @@ import {
   activateHostAccountAction,
   type HostOnboardingActionState,
 } from "@/app/host/actions";
+import { useToastOnActionState } from "@/components/ui/toast";
 
 const initialState: HostOnboardingActionState = {
   ok: false,
@@ -53,6 +54,11 @@ export function HostOnboardingPanel({
     activateHostAccountAction,
     initialState,
   );
+
+  useToastOnActionState(state, {
+    errorTitle: "Host onboarding did not finish",
+    successTitle: "Host tools activated",
+  });
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_390px]">

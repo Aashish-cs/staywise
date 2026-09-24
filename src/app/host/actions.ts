@@ -23,6 +23,16 @@ export type HostEditListingActionState = {
   message: string;
 };
 
+export type HostListingStatusActionState = {
+  ok: boolean;
+  message: string;
+};
+
+export type HostImageActionState = {
+  ok: boolean;
+  message: string;
+};
+
 export async function activateHostAccountAction(
   _state: HostOnboardingActionState,
   _formData: FormData,
@@ -72,19 +82,29 @@ const hostListingIdSchema = z.object({
   listingId: z.string().uuid(),
 });
 
-export async function toggleHostListingAction(formData: FormData) {
+export async function toggleHostListingAction(
+  _state: HostListingStatusActionState,
+  formData: FormData,
+): Promise<HostListingStatusActionState> {
+  void _state;
   const parsed = hostListingIdSchema.safeParse({
     listingId: formData.get("listingId"),
   });
 
   if (!parsed.success) {
-    return;
+    return {
+      ok: false,
+      message: "This listing status could not be changed.",
+    };
   }
 
   const supabase = await createSupabaseServerClient();
 
   if (!supabase) {
-    return;
+    return {
+      ok: false,
+      message: "Supabase is not configured for host listings yet.",
+    };
   }
 
   const {
@@ -92,7 +112,10 @@ export async function toggleHostListingAction(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return;
+    return {
+      ok: false,
+      message: "Sign in as a host before changing listing status.",
+    };
   }
 
   const { data: listing } = await supabase
@@ -103,24 +126,38 @@ export async function toggleHostListingAction(formData: FormData) {
     .maybeSingle();
 
   if (!listing) {
-    return;
+    return {
+      ok: false,
+      message: "This listing was not found for your host account.",
+    };
   }
 
+  const nextIsActive = !listing.is_active;
   const { error } = await supabase
     .from("listings")
-    .update({ is_active: !listing.is_active })
+    .update({ is_active: nextIsActive })
     .eq("id", parsed.data.listingId)
     .eq("host_id", user.id);
 
   if (error) {
     console.error("Unable to update host listing status", error);
-    return;
+    return {
+      ok: false,
+      message: "Listing status could not be updated. Try again.",
+    };
   }
 
   revalidatePath("/");
   revalidatePath("/search");
   revalidatePath("/host");
   revalidatePath(`/listings/${parsed.data.listingId}`);
+
+  return {
+    ok: true,
+    message: nextIsActive
+      ? "Listing published and visible in search."
+      : "Listing unpublished and hidden from search.",
+  };
 }
 
 const featuredAmenitySet = new Set<string>(featuredAmenities);
@@ -243,20 +280,30 @@ const hostListingImageActionSchema = z.object({
   imageId: z.string().uuid(),
 });
 
-export async function deleteHostListingImageAction(formData: FormData) {
+export async function deleteHostListingImageAction(
+  _state: HostImageActionState,
+  formData: FormData,
+): Promise<HostImageActionState> {
+  void _state;
   const parsed = hostListingImageActionSchema.safeParse({
     listingId: formData.get("listingId"),
     imageId: formData.get("imageId"),
   });
 
   if (!parsed.success) {
-    return;
+    return {
+      ok: false,
+      message: "This photo action could not be completed.",
+    };
   }
 
   const context = await getOwnedListingImageContext(parsed.data.listingId, parsed.data.imageId);
 
   if (!context || context.images.length <= 1) {
-    return;
+    return {
+      ok: false,
+      message: "Keep at least one photo on each listing.",
+    };
   }
 
   const { error } = await context.supabase
@@ -267,7 +314,10 @@ export async function deleteHostListingImageAction(formData: FormData) {
 
   if (error) {
     console.error("Unable to delete host listing image", error);
-    return;
+    return {
+      ok: false,
+      message: "Photo could not be removed. Try again.",
+    };
   }
 
   const storagePath = extractListingStoragePath(context.image.image_url);
@@ -278,22 +328,37 @@ export async function deleteHostListingImageAction(formData: FormData) {
 
   await normalizeListingImageOrder(context.supabase, parsed.data.listingId, context.images);
   revalidateHostImagePaths(parsed.data.listingId);
+
+  return {
+    ok: true,
+    message: "Photo removed from the listing.",
+  };
 }
 
-export async function setPrimaryHostListingImageAction(formData: FormData) {
+export async function setPrimaryHostListingImageAction(
+  _state: HostImageActionState,
+  formData: FormData,
+): Promise<HostImageActionState> {
+  void _state;
   const parsed = hostListingImageActionSchema.safeParse({
     listingId: formData.get("listingId"),
     imageId: formData.get("imageId"),
   });
 
   if (!parsed.success) {
-    return;
+    return {
+      ok: false,
+      message: "This photo action could not be completed.",
+    };
   }
 
   const context = await getOwnedListingImageContext(parsed.data.listingId, parsed.data.imageId);
 
   if (!context) {
-    return;
+    return {
+      ok: false,
+      message: "This photo was not found for your host account.",
+    };
   }
 
   const orderedImages = [
@@ -302,6 +367,11 @@ export async function setPrimaryHostListingImageAction(formData: FormData) {
   ];
   await normalizeListingImageOrder(context.supabase, parsed.data.listingId, orderedImages);
   revalidateHostImagePaths(parsed.data.listingId);
+
+  return {
+    ok: true,
+    message: "Primary photo updated.",
+  };
 }
 
 export async function createHostListingAction(

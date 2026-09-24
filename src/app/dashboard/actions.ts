@@ -4,6 +4,11 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+export type DashboardActionState = {
+  ok: boolean;
+  message: string;
+};
+
 const cancelSchema = z.object({
   reservationId: z.string().uuid(),
 });
@@ -15,19 +20,29 @@ const reviewSchema = z.object({
   body: z.string().trim().min(20).max(1200),
 });
 
-export async function cancelReservationAction(formData: FormData) {
+export async function cancelReservationAction(
+  _state: DashboardActionState,
+  formData: FormData,
+): Promise<DashboardActionState> {
+  void _state;
   const parsed = cancelSchema.safeParse({
     reservationId: formData.get("reservationId"),
   });
 
   if (!parsed.success) {
-    return;
+    return {
+      ok: false,
+      message: "This reservation could not be cancelled.",
+    };
   }
 
   const supabase = await createSupabaseServerClient();
 
   if (!supabase) {
-    return;
+    return {
+      ok: false,
+      message: "Supabase is not configured for trips yet.",
+    };
   }
 
   const {
@@ -35,20 +50,40 @@ export async function cancelReservationAction(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return;
+    return {
+      ok: false,
+      message: "Sign in before cancelling a reservation.",
+    };
   }
 
-  await supabase.rpc("cancel_reservation", {
+  const { error } = await supabase.rpc("cancel_reservation", {
     reservation_id: parsed.data.reservationId,
   });
+
+  if (error) {
+    console.error("Unable to cancel reservation", error);
+    return {
+      ok: false,
+      message: "Reservation could not be cancelled. Try again.",
+    };
+  }
 
   revalidatePath("/dashboard");
   revalidatePath("/host");
   revalidatePath("/search");
   revalidatePath(`/reservations/${parsed.data.reservationId}`);
+
+  return {
+    ok: true,
+    message: "Trip cancelled and moved to your cancelled reservations.",
+  };
 }
 
-export async function createReviewAction(formData: FormData) {
+export async function createReviewAction(
+  _state: DashboardActionState,
+  formData: FormData,
+): Promise<DashboardActionState> {
+  void _state;
   const parsed = reviewSchema.safeParse({
     reservationId: formData.get("reservationId"),
     listingId: formData.get("listingId"),
@@ -57,13 +92,19 @@ export async function createReviewAction(formData: FormData) {
   });
 
   if (!parsed.success) {
-    return;
+    return {
+      ok: false,
+      message: "Add a rating and at least 20 characters before submitting a review.",
+    };
   }
 
   const supabase = await createSupabaseServerClient();
 
   if (!supabase) {
-    return;
+    return {
+      ok: false,
+      message: "Supabase is not configured for reviews yet.",
+    };
   }
 
   const {
@@ -71,7 +112,10 @@ export async function createReviewAction(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return;
+    return {
+      ok: false,
+      message: "Sign in before reviewing a stay.",
+    };
   }
 
   const { error } = await supabase.from("reviews").insert({
@@ -84,10 +128,18 @@ export async function createReviewAction(formData: FormData) {
 
   if (error) {
     console.error("Unable to create review", error);
-    return;
+    return {
+      ok: false,
+      message: "Review could not be submitted. You may have already reviewed this stay.",
+    };
   }
 
   revalidatePath("/dashboard");
   revalidatePath(`/listings/${parsed.data.listingId}`);
   revalidatePath(`/reservations/${parsed.data.reservationId}`);
+
+  return {
+    ok: true,
+    message: "Review submitted. It now contributes to the listing rating.",
+  };
 }

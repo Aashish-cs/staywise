@@ -14,6 +14,7 @@ import {
 import { createReservationAction, type ReservationActionState } from "@/app/listings/[id]/actions";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { GuestSelector, type GuestSelection } from "@/components/guest-selector";
+import { useToastOnActionState } from "@/components/ui/toast";
 import type { Listing } from "@/lib/listings";
 import {
   addDaysToIso,
@@ -117,6 +118,11 @@ export function ReservationPanel({
           : displayedAvailability.status === "unavailable"
             ? "Choose different dates"
             : "Reserve this stay";
+
+  useToastOnActionState(state, {
+    errorTitle: "Reservation not completed",
+    successTitle: "Reservation confirmed",
+  });
 
   useEffect(() => {
     if (!shouldCheckSelectedDates) {

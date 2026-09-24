@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { toggleHostListingAction } from "@/app/host/actions";
 import {
   CalendarDays,
   CheckCircle2,
@@ -11,6 +10,7 @@ import {
   Timer,
   WalletCards,
 } from "lucide-react";
+import { HostListingStatusForm } from "@/components/host-listing-status-form";
 import { HostListingForm } from "@/components/host-listing-form";
 import {
   ListingFacts,
@@ -358,15 +358,7 @@ function HostListingRow({ listing }: { listing: Listing }) {
           >
             Edit
           </Link>
-          <form action={toggleHostListingAction}>
-            <input type="hidden" name="listingId" value={listing.id} />
-            <button
-              type="submit"
-              className="rounded-full border border-[#eadfd6] px-4 py-2 text-sm font-extrabold hover:border-[#ff385c] hover:text-[#df2348]"
-            >
-              {listing.isActive ? "Unpublish" : "Publish"}
-            </button>
-          </form>
+          <HostListingStatusForm isActive={listing.isActive} listingId={listing.id} />
         </div>
       </div>
     </article>

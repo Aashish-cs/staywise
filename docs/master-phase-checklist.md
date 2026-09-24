@@ -232,8 +232,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Custom 404, global error, listing not found, and unauthorized states.
   - Current pass: added a reusable route-state panel, branded app 404, listing-specific not-found page, app error boundary with retry, and shared host access-gate styling. Verified typecheck, lint, build, local 404, listing missing state, and protected-route redirects.
 
-- [ ] Phase 46: Toasts and feedback
+- [x] Phase 46: Toasts and feedback
   - Consistent feedback for save/remove favorite, reservation, listing publish/save, image failures, and similar events.
+  - Current pass: added a shared toast viewport, wired saved-stay, reservation, profile, host onboarding, host listing create/edit/publish, listing photo, trip cancellation, and review submission feedback into consistent success/error/info toasts. Verified typecheck, lint, build, diff check, and local production route smoke.
 
 - [ ] Phase 47: URL and navigation quality
   - Meaningful URLs, browser back behavior, and no broken modal routing.

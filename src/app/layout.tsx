@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ToastViewport } from "@/components/ui/toast";
 import { siteUrl } from "@/lib/seo";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
@@ -49,7 +50,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       data-scroll-behavior="smooth"
       className="h-full antialiased"
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <ToastViewport />
+      </body>
     </html>
   );
 }

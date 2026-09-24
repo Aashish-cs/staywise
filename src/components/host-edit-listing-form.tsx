@@ -7,6 +7,7 @@ import {
   updateHostListingAction,
   type HostEditListingActionState,
 } from "@/app/host/actions";
+import { useToastOnActionState } from "@/components/ui/toast";
 import type { Listing } from "@/lib/listings";
 
 const initialState: HostEditListingActionState = {
@@ -19,6 +20,11 @@ export function HostEditListingForm({ listing }: { listing: Listing }) {
     updateHostListingAction,
     initialState,
   );
+
+  useToastOnActionState(state, {
+    errorTitle: "Listing was not saved",
+    successTitle: "Listing saved",
+  });
 
   return (
     <form

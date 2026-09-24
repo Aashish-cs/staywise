@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toggleFavoriteAction } from "@/app/favorites/actions";
+import { showStayWiseToast } from "@/components/ui/toast";
 
 type AccountRole = "guest" | "host" | null;
 
@@ -32,12 +33,23 @@ export function useSavedListings({
 
   function toggleSaved(listingId: string) {
     if (!isSignedIn) {
+      showStayWiseToast({
+        description: "Create or sign in to a guest account before saving stays.",
+        title: "Sign in required",
+        tone: "info",
+      });
       router.push(signInHref);
       return;
     }
 
     if (accountRole !== "guest") {
-      setNotice("Use a guest account to save stays.");
+      const message = "Use a guest account to save stays.";
+      setNotice(message);
+      showStayWiseToast({
+        description: message,
+        title: "Saved stays are guest-only",
+        tone: "error",
+      });
       return;
     }
 
@@ -58,15 +70,32 @@ export function useSavedListings({
             if (showSuccessMessage) {
               setNotice(result.message);
             }
+            showStayWiseToast({
+              description: result.message,
+              title: intent === "save" ? "Stay saved" : "Saved stay removed",
+              tone: "success",
+            });
             return;
           }
 
           setSavedState(listingId, wasSaved);
-          setNotice(result?.message ?? "This saved stay change did not finish.");
+          const message = result?.message ?? "This saved stay change did not finish.";
+          setNotice(message);
+          showStayWiseToast({
+            description: message,
+            title: "Saved stay did not update",
+            tone: "error",
+          });
         })
         .catch(() => {
           setSavedState(listingId, wasSaved);
-          setNotice("This saved stay change did not finish.");
+          const message = "This saved stay change did not finish.";
+          setNotice(message);
+          showStayWiseToast({
+            description: message,
+            title: "Saved stay did not update",
+            tone: "error",
+          });
         });
     });
   }

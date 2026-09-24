@@ -9,11 +9,14 @@ import {
   getHostListingImages,
   getHostListings,
 } from "@/lib/listing-data";
+import { noIndexRobots } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Edit Listing",
+  description: "Edit host-owned StayWise listing details, pricing, capacity, and photos.",
+  robots: noIndexRobots,
 };
 
 export default async function EditHostListingPage({

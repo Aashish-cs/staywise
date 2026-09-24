@@ -3,11 +3,15 @@ import Link from "next/link";
 import { HostOnboardingPanel } from "@/components/host-onboarding-panel";
 import { StayWiseHeader } from "@/components/staywise-header";
 import { getCurrentUserProfile } from "@/lib/listing-data";
+import { noIndexRobots } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Become a Host",
+  description:
+    "Activate StayWise host tools before creating real listings and managing reservations.",
+  robots: noIndexRobots,
 };
 
 export default async function HostOnboardingPage() {

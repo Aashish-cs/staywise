@@ -43,11 +43,15 @@ import {
 } from "@/lib/reservation-utils";
 import { rankListings } from "@/lib/recommendations";
 import { workReadySearchPreset } from "@/lib/search-presets";
+import { noIndexRobots } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Guest Dashboard",
+  description:
+    "View upcoming trips, saved stays, reservation history, and personalized StayWise recommendations.",
+  robots: noIndexRobots,
 };
 
 export default async function DashboardPage() {

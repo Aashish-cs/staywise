@@ -224,8 +224,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Optimize images, query patterns, pagination, rendering, server/client boundaries, autocomplete debounce, map loading, and bundle size.
   - Current pass: split the search map into a lazy client chunk, preserved Leaflet lazy loading, added a map skeleton, deferred client-side result ranking while filters update, and added cache headers to successful location lookup APIs.
 
-- [ ] Phase 44: SEO and metadata
+- [x] Phase 44: SEO and metadata
   - Meaningful metadata, listing dynamic title/description/OpenGraph, canonical if appropriate, no private address exposure, favicon/app description.
+  - Current pass: added shared SEO helpers, root/home/search/listing metadata, safe listing OpenGraph/Twitter metadata, noindex metadata for private/auth pages, favicon, robots.txt, and a public sitemap with active listing URLs.
 
 - [ ] Phase 45: Not found / error pages
   - Custom 404, global error, listing not found, and unauthorized states.

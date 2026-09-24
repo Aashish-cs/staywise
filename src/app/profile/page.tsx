@@ -5,12 +5,14 @@ import { ProfileSettingsForm } from "@/components/profile-settings-form";
 import { StayWiseHeader } from "@/components/staywise-header";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getCurrentUserProfile } from "@/lib/listing-data";
+import { noIndexRobots } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Profile & Settings",
   description: "Manage your StayWise account details and notification preferences.",
+  robots: noIndexRobots,
 };
 
 export default async function ProfilePage() {

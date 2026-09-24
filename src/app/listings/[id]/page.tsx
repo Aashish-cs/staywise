@@ -51,6 +51,7 @@ import {
   firstParam,
   parseSearchParams,
 } from "@/lib/search-url";
+import { canonicalPath, truncateMetaDescription } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -62,22 +63,43 @@ export async function generateMetadata({
 
   if (!listing) {
     return {
-      title: "Listing",
+      title: "Listing not found",
+      robots: {
+        follow: false,
+        index: false,
+      },
     };
   }
 
+  const listingPath = canonicalPath(`/listings/${listing.id}`);
+  const title = `${listing.title} in ${listing.city}`;
+  const description = truncateMetaDescription(
+    `${listing.neighborhood}, ${listing.city}. ${listing.description}`,
+  );
+
   return {
-    title: listing.title,
-    description: `${listing.neighborhood}, ${listing.city}. ${listing.description}`,
+    title,
+    description,
+    alternates: {
+      canonical: listingPath,
+    },
     openGraph: {
-      title: `${listing.title} | StayWise`,
-      description: `${listing.neighborhood}, ${listing.city}. ${listing.description}`,
+      title: `${title} | StayWise`,
+      description,
+      type: "article",
+      url: listingPath,
       images: [
         {
           url: listing.imageUrl,
           alt: listing.imageAlt,
         },
       ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | StayWise`,
+      description,
+      images: [listing.imageUrl],
     },
   };
 }

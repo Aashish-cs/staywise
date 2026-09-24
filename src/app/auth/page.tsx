@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { AuthPanel } from "@/components/auth-panel";
 import { getSafeRedirectPath } from "@/lib/safe-redirect";
+import { noIndexRobots } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Sign In",
+  description: "Sign in or create a verified StayWise account.",
+  robots: noIndexRobots,
 };
 
 export default async function AuthPage({ searchParams }: PageProps<"/auth">) {

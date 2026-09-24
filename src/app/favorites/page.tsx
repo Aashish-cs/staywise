@@ -7,6 +7,7 @@ import {
   getCurrentUserProfile,
   getFavoriteListings,
 } from "@/lib/listing-data";
+import { noIndexRobots } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
   title: "Saved Stays",
   description:
     "Review and manage the StayWise listings saved to your verified guest account.",
+  robots: noIndexRobots,
 };
 
 export default async function FavoritesPage() {

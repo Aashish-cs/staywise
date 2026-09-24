@@ -28,11 +28,15 @@ import {
 } from "@/lib/listing-data";
 import type { Listing, Reservation } from "@/lib/listings";
 import { formatMoney, formatStayDate } from "@/lib/reservation-utils";
+import { noIndexRobots } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Host Dashboard",
+  description:
+    "Manage StayWise host listings, reservations, revenue signals, availability, and listing creation workflows.",
+  robots: noIndexRobots,
 };
 
 export default async function HostPage() {

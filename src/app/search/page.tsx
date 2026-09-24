@@ -16,14 +16,38 @@ import { resolveSearchLocation } from "@/lib/location-service";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Search stays",
-  description: "Search real StayWise listings with AI-ranked recommendations.",
-};
-
 type SearchPageProps = {
   searchParams: Promise<RawSearchParams>;
 };
+
+export async function generateMetadata({
+  searchParams,
+}: SearchPageProps): Promise<Metadata> {
+  const query = await searchParams;
+  const search = parseSearchParams(query);
+  const destination = search.destination.trim();
+  const hasQuery = Object.values(query).some((value) =>
+    Array.isArray(value) ? value.length > 0 : Boolean(value),
+  );
+  const title = destination ? `${destination} stays` : "Search stays";
+  const description = destination
+    ? `Search real StayWise listings near ${destination} with AI-ranked recommendations, explainable matches, and booking-ready filters.`
+    : "Search real StayWise listings with AI-ranked recommendations, explainable matches, and booking-ready filters.";
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: "/search",
+    },
+    robots: hasQuery ? { follow: true, index: false } : undefined,
+    openGraph: {
+      title: `${title} | StayWise`,
+      description,
+      url: "/search",
+    },
+  };
+}
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const query = await searchParams;

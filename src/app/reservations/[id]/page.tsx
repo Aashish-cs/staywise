@@ -24,6 +24,7 @@ import {
   formatMoneyFromCents,
   formatStayDate,
 } from "@/lib/reservation-utils";
+import { noIndexRobots } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,7 @@ export const metadata: Metadata = {
   title: "Reservation Confirmation",
   description:
     "Review your StayWise reservation details, dates, guests, status, and trusted booking total.",
+  robots: noIndexRobots,
 };
 
 const reservationIdSchema = z.string().uuid();

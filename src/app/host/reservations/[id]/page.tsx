@@ -6,11 +6,14 @@ import { ArrowLeft, CalendarDays, CheckCircle2, Home, ReceiptText, Users } from 
 import { StayWiseHeader } from "@/components/staywise-header";
 import { getCurrentUserProfile, getHostReservationById } from "@/lib/listing-data";
 import { formatMoney, formatStayDate } from "@/lib/reservation-utils";
+import { noIndexRobots } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Host Reservation",
+  description: "Review a host-owned StayWise reservation, guest context, dates, and booking total.",
+  robots: noIndexRobots,
 };
 
 export default async function HostReservationPage({

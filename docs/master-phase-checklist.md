@@ -238,7 +238,7 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
 
 - [x] Phase 47: URL and navigation quality
   - Meaningful URLs, browser back behavior, and no broken modal routing.
-  - Current pass: preserved search page context in listing links/back links, added browser-history-aware photo gallery close behavior, and verified typecheck, lint, build, diff check, and local production smoke.
+  - Current pass: preserved search page context in listing links/back links, added browser-history-aware photo gallery close behavior, and verified typecheck, lint, build, diff check, local production smoke, and live production smoke.
 
 - [ ] Phase 48: Data seeding
   - Dev seed allowed if clearly demo, with real geographic cities/coordinates and legitimate assets.

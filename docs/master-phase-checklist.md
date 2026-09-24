@@ -228,8 +228,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Meaningful metadata, listing dynamic title/description/OpenGraph, canonical if appropriate, no private address exposure, favicon/app description.
   - Current pass: added shared SEO helpers, root/home/search/listing metadata, safe listing OpenGraph/Twitter metadata, noindex metadata for private/auth pages, favicon, robots.txt, and a public sitemap with active listing URLs.
 
-- [ ] Phase 45: Not found / error pages
+- [x] Phase 45: Not found / error pages
   - Custom 404, global error, listing not found, and unauthorized states.
+  - Current pass: added a reusable route-state panel, branded app 404, listing-specific not-found page, app error boundary with retry, and shared host access-gate styling. Verified typecheck, lint, build, local 404, listing missing state, and protected-route redirects.
 
 - [ ] Phase 46: Toasts and feedback
   - Consistent feedback for save/remove favorite, reservation, listing publish/save, image failures, and similar events.

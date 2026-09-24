@@ -7,6 +7,7 @@ import {
   Home,
   MapPin,
   Percent,
+  ShieldCheck,
   Timer,
   WalletCards,
 } from "lucide-react";
@@ -16,6 +17,7 @@ import {
   ListingCardMedia,
   ListingLocationLine,
 } from "@/components/listing-card-primitives";
+import { RouteStatePanel } from "@/components/route-state";
 import { StayWiseHeader } from "@/components/staywise-header";
 import {
   ButtonLink,
@@ -469,17 +471,15 @@ function GateMessage({
   href: string;
 }) {
   return (
-    <section className="mt-8 rounded-[24px] border border-[#eadfd6] bg-white p-6 shadow-sm">
-      <p className="text-sm font-semibold text-[#ff385c]">Protected workspace</p>
-      <h2 className="mt-2 text-2xl font-semibold tracking-tight">{title}</h2>
-      <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5f5148]">{body}</p>
-      <Link
-        href={href}
-        className="mt-5 inline-flex h-11 items-center rounded-full bg-[#201a18] px-5 text-sm font-semibold text-white"
-      >
-        {action}
-      </Link>
-    </section>
+    <RouteStatePanel
+      actions={[{ href, label: action, variant: "secondary" }]}
+      body={body}
+      className="mt-8"
+      eyebrow="Protected workspace"
+      icon={ShieldCheck}
+      title={title}
+      variant="embedded"
+    />
   );
 }
 

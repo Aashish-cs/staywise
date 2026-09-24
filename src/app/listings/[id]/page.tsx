@@ -62,13 +62,7 @@ export async function generateMetadata({
   const listing = await getListingById(id);
 
   if (!listing) {
-    return {
-      title: "Listing not found",
-      robots: {
-        follow: false,
-        index: false,
-      },
-    };
+    notFound();
   }
 
   const listingPath = canonicalPath(`/listings/${listing.id}`);

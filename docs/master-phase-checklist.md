@@ -258,8 +258,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Complete `.env.example` with site, Supabase, Mapbox, Stripe, OpenAI, and any server-only variables clearly documented.
   - Current pass: expanded `.env.example`, README, and deployment docs with public/site, Supabase, OpenStreetMap/Nominatim, reserved Mapbox, optional AI/OpenAI, optional Stripe, Supabase service-role, and Playwright QA variables.
 
-- [ ] Phase 52: Vercel deployment
+- [x] Phase 52: Vercel deployment
   - Verify production build, env vars, auth callback, Supabase redirect URLs, Stripe webhook docs, map provider domain, storage, images, and migrations.
+  - Current pass: deployed latest commit to Vercel, verified Ready status and alias, confirmed required Vercel env vars, smoke-tested home/search/listing/auth callback/location API/Stripe webhook fallback/protected redirects/404, and documented Supabase dashboard-only redirect/storage/migration checks in `docs/phase-52-vercel-deployment.md`.
 
 - [ ] Phase 53: README
   - Rewrite README to accurately describe real features, architecture, screenshots section, stack, database, auth, maps, recommendations, payments, setup, env, migrations, storage, tests, deployment, limitations, and roadmap.

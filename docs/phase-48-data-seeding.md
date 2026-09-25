@@ -25,3 +25,4 @@
 - Passed: `pnpm build`
 - Passed: `git diff --check`
 - Passed local production smoke: home, Dallas search with `page=2`, listing detail with `page=2`, and unknown-route 404.
+- Passed live production smoke on `https://staywise-tau.vercel.app`: home, Dallas search with `page=2`, listing detail with `page=2`, and unknown-route 404.

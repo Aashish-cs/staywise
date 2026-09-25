@@ -41,12 +41,16 @@ Use Resend as the SMTP provider for Supabase Auth emails:
    - `NOMINATIM_EMAIL` (optional but recommended)
    - `NOMINATIM_BASE_URL` (optional, defaults to OpenStreetMap Nominatim)
    - `NOMINATIM_REVERSE_BASE_URL` (optional, defaults to OpenStreetMap Nominatim reverse geocoding)
+   - `MAPBOX_ACCESS_TOKEN` (reserved for a future map provider; current app uses OpenStreetMap/Leaflet without it)
    - `STAYWISE_AI_API_KEY` (optional, server-only; deterministic AI search works without it)
    - `STAYWISE_AI_BASE_URL` (optional, defaults to `https://api.openai.com/v1`)
    - `STAYWISE_AI_MODEL` (optional, defaults to `gpt-5`)
+   - `OPENAI_API_KEY` (optional compatibility alias for `STAYWISE_AI_API_KEY`)
+   - `OPENAI_MODEL` (optional compatibility alias for `STAYWISE_AI_MODEL`)
    - `STRIPE_SECRET_KEY` (optional, server-only; enables hosted Checkout when payment-required reservations are enabled)
    - `STRIPE_WEBHOOK_SECRET` (optional, server-only; verifies `/api/payments/webhook`)
    - `SUPABASE_SERVICE_ROLE_KEY` (optional, server-only; required for webhook ledger updates)
+   - `PLAYWRIGHT_BASE_URL` and `PLAYWRIGHT_PORT` (local/CI test runner only; do not add to Vercel unless needed for custom QA jobs)
 3. Deploy from `main`.
 4. Copy the deployment URL back into Supabase Auth redirect settings.
 

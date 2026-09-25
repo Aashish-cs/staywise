@@ -27,17 +27,30 @@ Auth screens compile without secrets, but real sign-up, email confirmation, pass
 ## Environment Variables
 
 ```bash
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NOMINATIM_EMAIL=
 NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org/search
 NOMINATIM_REVERSE_BASE_URL=https://nominatim.openstreetmap.org/reverse
+MAPBOX_ACCESS_TOKEN=
+STAYWISE_AI_API_KEY=
+STAYWISE_AI_BASE_URL=https://api.openai.com/v1
+STAYWISE_AI_MODEL=gpt-5
+OPENAI_API_KEY=
+OPENAI_MODEL=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+SUPABASE_SERVICE_ROLE_KEY=
+PLAYWRIGHT_BASE_URL=
+PLAYWRIGHT_PORT=3014
 ```
 
 Resend is configured inside Supabase as a custom SMTP provider. Do not put the Resend API key in browser-visible environment variables.
 
 `NOMINATIM_EMAIL` is optional but recommended so OpenStreetMap operators can identify StayWise traffic. Location and reverse-geocoding lookups are server-side, user-triggered, cached, and attributed.
+
+`MAPBOX_ACCESS_TOKEN` is reserved for a future map provider; the current app uses OpenStreetMap/Leaflet without a paid browser map key. AI, Stripe, and Supabase service-role variables are server-only and optional for the MVP.
 
 ## Supabase Setup
 

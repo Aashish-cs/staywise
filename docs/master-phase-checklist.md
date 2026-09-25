@@ -254,8 +254,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Click every button/link/tab/filter/menu/dropdown/form/modal/drawer/card across success, failure, empty, loading, guest, host, unauthenticated, mobile, and desktop.
   - Current pass: added Playwright interaction QA for account menu, home search, auth tabs/forms, role choices, password toggle, search guest/filter/sort/map controls, listing gallery/share/save actions, protected redirects, and 404. Credential-backed authenticated flows remain documented for seeded QA accounts.
 
-- [ ] Phase 51: Environment variables
+- [x] Phase 51: Environment variables
   - Complete `.env.example` with site, Supabase, Mapbox, Stripe, OpenAI, and any server-only variables clearly documented.
+  - Current pass: expanded `.env.example`, README, and deployment docs with public/site, Supabase, OpenStreetMap/Nominatim, reserved Mapbox, optional AI/OpenAI, optional Stripe, Supabase service-role, and Playwright QA variables.
 
 - [ ] Phase 52: Vercel deployment
   - Verify production build, env vars, auth callback, Supabase redirect URLs, Stripe webhook docs, map provider domain, storage, images, and migrations.

@@ -32,3 +32,23 @@
 - `pnpm test:e2e`
 
 All verification commands passed.
+
+## Production Deployment
+
+- Commit deployed: `75671f4`
+- Deployment: `https://staywise-m7oekk1tk-ashishmishra1.vercel.app`
+- Production alias: `https://staywise-tau.vercel.app`
+- Vercel deployment id: `dpl_76Y1wadCejirsWxwvNWuJXpGef6e`
+
+Live smoke checks passed for:
+
+- Home page.
+- Dallas search page.
+- Dallas listing detail page with preserved search context.
+- Sign-in page.
+- Auth callback missing-code redirect.
+- Guest dashboard protected redirect.
+- Host protected redirect.
+- Branded 404.
+- Location search API with OpenStreetMap attribution.
+- Stripe webhook fallback when Stripe is not configured.

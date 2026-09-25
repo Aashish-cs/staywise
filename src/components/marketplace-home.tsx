@@ -319,7 +319,7 @@ export function MarketplaceHome({
               <input
                 value={aiPrompt}
                 onChange={(event) => setAiPrompt(event.target.value)}
-                placeholder="Ask StayWise: quiet Dallas stay under $250 with Wi-Fi"
+                placeholder="Ask StayWise: Dallas under $250 with Wi-Fi"
                 className="min-h-11 w-full bg-transparent text-sm font-semibold outline-none placeholder:text-[#8b7d74]"
               />
             </div>
@@ -463,7 +463,7 @@ function CategoryDiscoveryStrip({
 }) {
   return (
     <div
-      className="scrollbar-hide mx-auto mt-4 flex max-w-5xl gap-2 overflow-x-auto pb-1 md:flex-wrap md:justify-center md:overflow-visible"
+      className="mx-auto mt-4 hidden max-w-5xl gap-2 pb-1 md:flex md:flex-wrap md:justify-center md:overflow-visible"
       role="list"
       aria-label="Stay categories"
     >

@@ -119,7 +119,7 @@ export function ListingPhotoGallery({ listing }: { listing: Listing }) {
             image={galleryImages[0]}
             label={`Open photo 1 of ${galleryImages.length}`}
             priority
-            className="aspect-[16/9] min-h-[300px]"
+            className="h-[300px] md:h-[520px]"
             onClick={(trigger) => openGallery(0, trigger)}
           />
         ) : (

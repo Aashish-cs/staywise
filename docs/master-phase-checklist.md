@@ -266,8 +266,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Rewrite README to accurately describe real features, architecture, screenshots section, stack, database, auth, maps, recommendations, payments, setup, env, migrations, storage, tests, deployment, limitations, and roadmap.
   - Current pass: rewrote `README.md` with live site, feature scope, screenshot placeholders, stack, setup/env, Supabase migrations, storage, tests, deployment, key docs, and limitations; documented in `docs/phase-53-readme.md`.
 
-- [ ] Phase 54: Final visual polish
+- [x] Phase 54: Final visual polish
   - Review as professor, recruiter, engineer, and founder. Fix spacing, alignment, typography, images, buttons, modals, forms, nav, responsive behavior, loading, empty, and error states.
+  - Current pass: reviewed desktop/mobile screenshots for home, search, listing, and auth; capped one-photo listing gallery height, removed duplicate mobile home category strip, shortened the AI prompt placeholder, and verified typecheck/lint/unit/build/browser QA in `docs/phase-54-final-visual-polish.md`.
 
 - [ ] Phase 55: Production quality gate
   - Do not call complete until lint/typecheck/build pass, no console errors, no dead UI, no fake production data, auth/favorites/search/maps/reservations/availability/host/images/trips/RLS/mobile/desktop/errors/loading/deployment all work.

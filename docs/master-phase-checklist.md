@@ -262,8 +262,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Verify production build, env vars, auth callback, Supabase redirect URLs, Stripe webhook docs, map provider domain, storage, images, and migrations.
   - Current pass: deployed latest commit to Vercel, verified Ready status and alias, confirmed required Vercel env vars, smoke-tested home/search/listing/auth callback/location API/Stripe webhook fallback/protected redirects/404, and documented Supabase dashboard-only redirect/storage/migration checks in `docs/phase-52-vercel-deployment.md`.
 
-- [ ] Phase 53: README
+- [x] Phase 53: README
   - Rewrite README to accurately describe real features, architecture, screenshots section, stack, database, auth, maps, recommendations, payments, setup, env, migrations, storage, tests, deployment, limitations, and roadmap.
+  - Current pass: rewrote `README.md` with live site, feature scope, screenshot placeholders, stack, setup/env, Supabase migrations, storage, tests, deployment, key docs, and limitations; documented in `docs/phase-53-readme.md`.
 
 - [ ] Phase 54: Final visual polish
   - Review as professor, recruiter, engineer, and founder. Fix spacing, alignment, typography, images, buttons, modals, forms, nav, responsive behavior, loading, empty, and error states.

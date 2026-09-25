@@ -2,15 +2,45 @@
 
 Smart Stays, Better Days.
 
-StayWise is a senior design project for an AI-assisted short-term rental marketplace. Guests can search Supabase-backed listings, save places, reserve stays with date-conflict protection, and receive explainable recommendations. Hosts can publish listings and view reservation demand.
+StayWise is a senior design project for an AI-assisted short-term rental marketplace. It is not an Airbnb clone or scraped marketplace. The app uses Supabase-backed listings, real auth, real database constraints, free OpenStreetMap location services, explainable recommendation scoring, and production-style deployment on Vercel.
+
+Live site: `https://staywise-tau.vercel.app`
+
+## Features
+
+- Verified account flow with sign up, sign in, email confirmation callback, password reset, protected routes, guest/host roles, and safe redirects.
+- Supabase-backed marketplace data with no hardcoded production listing fallback.
+- Search by destination, current location, dates, guests, budget, property type, bedrooms, bathrooms, amenities, and trip purpose.
+- Real OpenStreetMap/Nominatim place lookup and reverse geocoding through server routes.
+- Interactive Leaflet/OpenStreetMap result map with listing marker sync and current-location support.
+- Listing detail pages with gallery modal, save/share actions, amenities, reviews section, map, booking panel, and mobile reserve CTA.
+- Date-aware reservation flow backed by database availability RPCs and active-reservation overlap protection.
+- Persisted favorites, trip dashboard, reservation confirmation pages, and review submission for eligible completed reservations.
+- Host onboarding, listing creation/editing, listing status controls, image-management UI, dashboard metrics, and host reservation detail pages.
+- Explainable deterministic recommendation scoring with optional server-only LLM parsing.
+- Payment-ready architecture with optional Stripe Checkout/webhook paths and MVP pay-later fallback.
+- Custom 404/error pages, loading states, empty states, toasts, accessibility pass, responsive mobile/tablet/desktop QA, unit tests, and Playwright browser smoke tests.
+
+## Screenshots
+
+Add final presentation screenshots here before submission:
+
+- Home marketplace
+- Search with map
+- Listing detail
+- Reservation confirmation
+- Guest dashboard
+- Host dashboard
 
 ## Tech Stack
 
-- Next.js, React, TypeScript, Tailwind CSS
+- Next.js App Router, React, TypeScript, Tailwind CSS
 - Supabase Auth, Postgres, Storage, Row Level Security
-- Resend SMTP for production-style auth emails
-- Vercel for deployment
-- Explainable recommendation scoring with an optional LLM layer later
+- OpenStreetMap/Nominatim for free geocoding
+- Leaflet for interactive maps
+- Vitest for unit tests
+- Playwright for browser QA
+- Vercel for production deployment
 
 ## Local Setup
 
@@ -22,75 +52,112 @@ pnpm dev
 
 Open `http://localhost:3000`.
 
-Auth screens compile without secrets, but real sign-up, email confirmation, password reset, listings, favorites, and reservations require Supabase environment variables.
+The UI can build without secrets, but real auth, listings, favorites, reservations, host workflows, and location-backed search require the Supabase and provider setup below.
 
 ## Environment Variables
 
-```bash
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-NOMINATIM_EMAIL=
-NOMINATIM_BASE_URL=https://nominatim.openstreetmap.org/search
-NOMINATIM_REVERSE_BASE_URL=https://nominatim.openstreetmap.org/reverse
-MAPBOX_ACCESS_TOKEN=
-STAYWISE_AI_API_KEY=
-STAYWISE_AI_BASE_URL=https://api.openai.com/v1
-STAYWISE_AI_MODEL=gpt-5
-OPENAI_API_KEY=
-OPENAI_MODEL=
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
-SUPABASE_SERVICE_ROLE_KEY=
-PLAYWRIGHT_BASE_URL=
-PLAYWRIGHT_PORT=3014
-```
+Use `.env.example` as the source of truth. Important groups:
 
-Resend is configured inside Supabase as a custom SMTP provider. Do not put the Resend API key in browser-visible environment variables.
+- Public app/Supabase values:
+  - `NEXT_PUBLIC_SITE_URL`
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- Free location provider:
+  - `NOMINATIM_EMAIL`
+  - `NOMINATIM_BASE_URL`
+  - `NOMINATIM_REVERSE_BASE_URL`
+- Reserved future map provider:
+  - `MAPBOX_ACCESS_TOKEN`
+- Optional server-only AI:
+  - `STAYWISE_AI_API_KEY`
+  - `STAYWISE_AI_BASE_URL`
+  - `STAYWISE_AI_MODEL`
+  - `OPENAI_API_KEY`
+  - `OPENAI_MODEL`
+- Optional Stripe architecture:
+  - `STRIPE_SECRET_KEY`
+  - `STRIPE_WEBHOOK_SECRET`
+- Optional trusted Supabase admin path:
+  - `SUPABASE_SERVICE_ROLE_KEY`
+- Test runner:
+  - `PLAYWRIGHT_BASE_URL`
+  - `PLAYWRIGHT_PORT`
 
-`NOMINATIM_EMAIL` is optional but recommended so OpenStreetMap operators can identify StayWise traffic. Location and reverse-geocoding lookups are server-side, user-triggered, cached, and attributed.
-
-`MAPBOX_ACCESS_TOKEN` is reserved for a future map provider; the current app uses OpenStreetMap/Leaflet without a paid browser map key. AI, Stripe, and Supabase service-role variables are server-only and optional for the MVP.
+Resend SMTP is configured inside Supabase Auth settings, not as a browser-visible environment variable.
 
 ## Supabase Setup
 
 1. Create a Supabase project.
-2. Run `supabase/schema.sql` in the SQL editor.
-3. Optional for demos: run `supabase/phase2_seed.sql` to add clearly synthetic StayWise marketplace listings for demo search and reservations.
-4. Run `supabase/phase3_booking_integrity.sql` to add server-side reservation validation and double-booking protection.
-5. Run `supabase/phase4_availability.sql` to let search and listing pages check booked dates.
-6. Run `supabase/phase5_marketplace_foundation.sql` to add profile settings, host availability blocks, reviews, recommendation events, and payment records.
-7. Run `supabase/phase6_location_foundation.sql` to add provider-backed address and bounds columns for listings.
-8. Turn on email confirmation in Supabase Auth settings.
-9. Configure custom SMTP with Resend.
-10. Add `http://localhost:3000/auth/callback` and the Vercel production callback URL to Supabase redirect URLs.
+2. Run `supabase/schema.sql`.
+3. Optional for demos: run `supabase/phase2_seed.sql` for clearly labeled synthetic StayWise listings.
+4. Run these migrations if your database was created before the canonical schema was updated:
+   - `supabase/phase3_booking_integrity.sql`
+   - `supabase/phase4_availability.sql`
+   - `supabase/phase5_marketplace_foundation.sql`
+   - `supabase/phase6_location_foundation.sql`
+   - `supabase/phase7_booking_hardening.sql`
+   - `supabase/phase8_trip_management.sql`
+   - `supabase/phase9_reviews.sql`
+   - `supabase/phase10_storage.sql`
+   - `supabase/phase33_pricing.sql`
+5. Keep RLS enabled on application tables.
+6. Enable email confirmation.
+7. Configure custom SMTP with Resend.
+8. Add redirect URLs:
+   - `http://localhost:3000/auth/callback`
+   - `https://staywise-tau.vercel.app/auth/callback`
+   - any Vercel preview callback URL used during demos
 
-The seed listings are synthetic StayWise data with public stock imagery, real geographic coordinates, and explicit address metadata. They are not scraped from Airbnb or any other marketplace. Do not copy private marketplace content into this database.
+The seed rows use public stock imagery and real city/neighborhood coordinates. They are not scraped from Airbnb or any private marketplace.
 
-## Useful Scripts
+## Storage
+
+`supabase/phase10_storage.sql` defines the owner-scoped Storage bucket policy for listing images. Existing seed listings can still use public image URLs, but host-uploaded images should use Supabase Storage paths after the storage migration is applied.
+
+## Testing
 
 ```bash
-pnpm dev
 pnpm lint
-pnpm test
-pnpm test:e2e
 pnpm typecheck
+pnpm test
 pnpm build
+pnpm test:e2e
 ```
+
+Current automated coverage includes distance, pricing, date/night overlap behavior, recommendation scoring, search URL validation, public marketplace browser smoke, auth redirects, search interactions, listing gallery/share/save interactions, and branded error states.
+
+Authenticated browser flows that create real reservations, persist favorites, publish host listings, or submit completed-trip reviews should use seeded QA accounts in a test Supabase project.
 
 ## Deployment
 
-Use GitHub as the source repository and import it into Vercel. Add the same environment variables in Vercel Project Settings. The database, auth, email, seed data, and deployment setup is documented in `docs/deployment.md`.
+The production site is deployed through Vercel.
 
-## Current Scope
+1. Push to GitHub.
+2. Import the repository into Vercel.
+3. Add the required environment variables from `.env.example`.
+4. Deploy from `main`.
+5. Add the production callback URL to Supabase Auth redirects.
+6. Verify with `docs/phase-52-vercel-deployment.md`.
 
-The current implementation covers authentication, Supabase-filtered listing search, server-side OpenStreetMap destination lookup, browser current-location search with reverse geocoding, distance-aware ranking, natural-language search parsing, explainable AI-style ranking, date-aware guest reservations, persisted favorites, recommendation event logging, payment-record architecture, and a host listing dashboard. Ratings/reviews are intentionally not displayed until the real review UI is implemented.
+Useful command:
+
+```bash
+pnpm dlx vercel --prod --yes --scope ashishmishra1
+```
+
+## Important Docs
+
+- `docs/master-phase-checklist.md`: current phase-by-phase project status
+- `docs/deployment.md`: deployment and provider checklist
+- `docs/architecture.md`: architecture notes
+- `docs/phase-52-vercel-deployment.md`: latest production deployment verification
+- `docs/phase-49-testing.md`: test coverage summary
+- `docs/phase-50-browser-qa.md`: browser QA coverage summary
 
 ## Known Limitations
 
-- Listings can come from host-created rows or the provided synthetic seed data; production does not silently fall back to hardcoded listing arrays when Supabase is missing or failing.
-- Listing search now runs server-side filters for destination, current location, dates, guests, price, property type, bedrooms/beds, bathrooms, amenities, and page state before the UI ranks and displays results.
-- Availability search uses the database RPC path to exclude active reservations and host-blocked dates, then shows date-aware result and empty states.
-- Maps currently use OpenStreetMap embeds. A synchronized interactive marker map is planned for later phases.
-- Guest-host messaging, review UI, Supabase Storage image uploads, profile settings UI, real payment provider checkout/webhooks, and automated browser tests are still roadmap items.
-- Any Supabase key that was shared during setup should be rotated before final presentation.
+- Real payment collection is optional and remains disabled unless Stripe variables and payment-required reservation flow are enabled.
+- Some Supabase operations, including redirect URLs, storage bucket policies, and SQL migrations, must be checked in the Supabase dashboard/SQL editor.
+- Fully automated authenticated e2e tests need seeded QA accounts and a dedicated test Supabase project.
+- Guest-host messaging is not implemented yet.
+- Any Supabase or API key shared during setup should be rotated before final presentation.

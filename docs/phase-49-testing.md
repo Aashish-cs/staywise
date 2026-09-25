@@ -34,3 +34,4 @@
 - Passed: `pnpm lint`
 - Passed: `pnpm build`
 - Passed: `git diff --check`
+- Passed live production smoke on `https://staywise-tau.vercel.app`: home, Dallas search, listing detail with `page=2`, dashboard redirect, host redirect, and unknown-route 404.

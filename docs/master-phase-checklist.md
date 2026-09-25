@@ -245,9 +245,10 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Production runtime must show error/empty state, not silent demo array fallback.
   - Current pass: added explicit listing data status for Supabase-ready/unconfigured/error states, showed honest home/search empty-error states instead of silent fallback inventory, enriched the synthetic seed with real address metadata, and documented the seed-data policy in `docs/phase-48-data-seeding.md`.
 
-- [ ] Phase 49: Testing
+- [x] Phase 49: Testing
   - Unit tests for distance, pricing, night calculation, overlap, scoring, validation.
   - Integration/Playwright flows for home, search, listing, sign in, favorite, reserve, trips, create/publish listing, host dashboard.
+  - Current pass: added Vitest unit coverage for distance, pricing, nights, overlap, recommendation scoring, and search validation; added Playwright smoke coverage for home, search, listing detail, sign-in redirects, protected guest/host routes, and 404. Credential-backed favorite/reserve/host publish flows remain documented as requiring seeded test accounts.
 
 - [ ] Phase 50: Browser QA
   - Click every button/link/tab/filter/menu/dropdown/form/modal/drawer/card across success, failure, empty, loading, guest, host, unauthenticated, mobile, and desktop.

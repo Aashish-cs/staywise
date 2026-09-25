@@ -59,6 +59,8 @@ The seed listings are synthetic StayWise data with public stock imagery, real ge
 ```bash
 pnpm dev
 pnpm lint
+pnpm test
+pnpm test:e2e
 pnpm typecheck
 pnpm build
 ```

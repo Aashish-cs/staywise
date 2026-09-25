@@ -49,6 +49,22 @@ export function countNights(startDate: string, endDate: string) {
   return Math.round((end.getTime() - start.getTime()) / dayInMilliseconds);
 }
 
+export function dateRangesOverlap(
+  firstStartDate: string,
+  firstEndDate: string,
+  secondStartDate: string,
+  secondEndDate: string,
+) {
+  if (
+    countNights(firstStartDate, firstEndDate) <= 0 ||
+    countNights(secondStartDate, secondEndDate) <= 0
+  ) {
+    return false;
+  }
+
+  return firstStartDate < secondEndDate && secondStartDate < firstEndDate;
+}
+
 export function validateReservationDateRange(
   startDate: string,
   endDate: string,

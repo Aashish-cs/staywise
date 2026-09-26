@@ -48,7 +48,6 @@ export function HostImageManager({
                   src={image.url}
                   alt={image.alt}
                   fill
-                  unoptimized
                   sizes="(min-width: 1024px) 30vw, (min-width: 640px) 50vw, 100vw"
                   className="object-cover"
                 />

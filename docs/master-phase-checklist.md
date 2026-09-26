@@ -149,9 +149,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Host reservation page with guest, listing, dates, status, total, created date, and supported actions.
   - Current pass: added host-owned reservation detail routing, privacy-safe guest context, booking timeline, listing links, and reservation-feed navigation.
 
-- [ ] Phase 26: Image system
+- [x] Phase 26: Image system
   - Supabase Storage bucket strategy, owner-only listing uploads, optimization, type/size/count validation, ordering, delete, primary photo, and alt text/fallbacks.
-  - Current pass: added host upload validation, owner-scoped Storage paths, public listing image URLs, listing image rows, upload cleanup on failure, owner-only delete/primary-photo controls, and `supabase/phase10_storage.sql`. Image optimization and applying the Storage migration remain.
+  - Current pass: added host upload validation, owner-scoped Storage paths, public listing image URLs, listing image rows, upload cleanup on failure, owner-only delete/primary-photo controls, `supabase/phase10_storage.sql`, and optimized AVIF/WebP-capable Next image delivery for host-managed photos. Applying the Storage migration in live Supabase remains an environment setup step in `docs/phase-26-image-system.md`.
 
 - [x] Phase 27: Profile
   - Profile settings for display name, avatar, bio, phone if used, security, favorites, trips, and hosting.

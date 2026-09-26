@@ -1,6 +1,6 @@
 # Phase 26: Image System
 
-## In progress
+## Completed
 
 - Added server-side image file validation for type, size, and total count.
 - Added Supabase Storage uploads under an owner/listing-scoped path.
@@ -9,8 +9,17 @@
 - Kept URL-based images available so existing seeded listings do not break during migration.
 - Added owner-only primary-photo promotion and deletion with storage cleanup.
 - Added the idempotent `supabase/phase10_storage.sql` bucket and policy migration.
+- Enabled optimized Next.js image delivery for configured remote images with AVIF/WebP support and a one-day optimizer cache floor.
+- Removed the host image manager’s `unoptimized` override so uploaded Supabase photos use the same responsive optimization pipeline as other listing imagery.
 
-## Remaining work
+## Follow-up
 
-- Add image optimization and responsive variants where the provider supports them.
 - Apply the Storage migration in the live Supabase project before testing uploads.
+- Add provider-specific responsive transform URLs later if Supabase image transformation is enabled for the project.
+
+## Verification
+
+- `pnpm typecheck`
+- `pnpm lint`
+- `pnpm test`
+- `pnpm build`

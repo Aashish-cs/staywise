@@ -133,9 +133,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Current pass: added protected host onboarding, account activation into the host role, ownership/trust expectations, and a guided transition into the host workspace.
 
 
-- [ ] Phase 22: Host create listing wizard
+- [x] Phase 22: Host create listing wizard
   - Multi-step flow: property type, room type, real address/map, basics, amenities, Supabase Storage photos, title, description, price, review, publish, and draft persistence.
-  - Current pass: added the five-step host listing wizard, step readiness checks, review-before-publish summary, live quality preview, and browser draft persistence. Storage uploads, provider-backed coordinates, and durable server drafts remain for the next host phases.
+  - Current pass: added the five-step host listing wizard, step readiness checks, review-before-publish summary, live quality preview, browser draft persistence, Supabase Storage uploads, provider-backed OpenStreetMap location verification, and coordinate/address metadata storage. Cross-device drafts and fuller room-type modeling remain future enhancements in `docs/phase-22-host-listing-wizard.md`.
 
 - [x] Phase 23: Host dashboard
   - Professional dashboard with real active/draft listings, reservations, revenue estimate, occupancy, counts, and recent activity.

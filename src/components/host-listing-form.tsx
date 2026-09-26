@@ -8,8 +8,10 @@ import {
   CheckCircle2,
   DollarSign,
   Home,
+  Loader2,
   MapPin,
   Plus,
+  Search,
   Sparkles,
 } from "lucide-react";
 import {
@@ -24,6 +26,7 @@ const initialState: HostListingActionState = {
 };
 
 type ListingDraft = {
+  addressQuery: string;
   amenities: string;
   bathrooms: string;
   bedrooms: string;
@@ -31,6 +34,7 @@ type ListingDraft = {
   city: string;
   description: string;
   imageUrls: string;
+  locationJson: string;
   neighborhood: string;
   pricePerNight: string;
   propertyType: string;
@@ -39,6 +43,7 @@ type ListingDraft = {
 };
 
 const initialDraft: ListingDraft = {
+  addressQuery: "",
   amenities: "Fast Wi-Fi, Workspace, Kitchen, Parking, Self check-in",
   bathrooms: "",
   bedrooms: "",
@@ -46,12 +51,36 @@ const initialDraft: ListingDraft = {
   city: "",
   description: "",
   imageUrls: "",
+  locationJson: "",
   neighborhood: "",
   pricePerNight: "",
   propertyType: "Apartment",
   state: "",
   title: "",
 };
+
+type HostLocationResult = {
+  attribution?: string;
+  bounds?: {
+    east: number;
+    north: number;
+    south: number;
+    west: number;
+  } | null;
+  city: string | null;
+  country: string | null;
+  countryCode: string | null;
+  formattedAddress: string;
+  lat: number;
+  lng: number;
+  name: string;
+  provider: "nominatim";
+  providerId: string;
+  query: string;
+  region: string | null;
+};
+
+type LocationLookupState = "idle" | "loading" | "verified" | "error";
 
 export function HostListingForm() {
   const [state, formAction, isPending] = useActionState(
@@ -61,7 +90,14 @@ export function HostListingForm() {
   const [draft, setDraft] = useState<ListingDraft>(initialDraft);
   const [step, setStep] = useState(0);
   const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
+  const [locationLookupState, setLocationLookupState] =
+    useState<LocationLookupState>("idle");
+  const [locationMessage, setLocationMessage] = useState("");
   const imageUrls = useMemo(() => parseDraftUrls(draft.imageUrls), [draft.imageUrls]);
+  const verifiedLocation = useMemo(
+    () => parseDraftLocation(draft.locationJson),
+    [draft.locationJson],
+  );
   const amenities = useMemo(
     () =>
       draft.amenities
@@ -79,6 +115,63 @@ export function HostListingForm() {
 
   function updateDraft<K extends keyof ListingDraft>(key: K, value: ListingDraft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
+  }
+
+  function updateLocationDraft<K extends keyof ListingDraft>(
+    key: K,
+    value: ListingDraft[K],
+  ) {
+    setDraft((current) => ({
+      ...current,
+      [key]: value,
+      locationJson: "",
+    }));
+    setLocationLookupState("idle");
+    setLocationMessage("");
+  }
+
+  async function verifyListingLocation() {
+    const query = buildLocationQuery(draft);
+
+    if (!query) {
+      setLocationLookupState("error");
+      setLocationMessage("Add city, state, and neighborhood before verifying location.");
+      return;
+    }
+
+    setLocationLookupState("loading");
+    setLocationMessage("");
+
+    try {
+      const response = await fetch(
+        `/api/locations/search?query=${encodeURIComponent(query)}`,
+      );
+      const payload = (await response.json()) as {
+        error?: string;
+        locations?: HostLocationResult[];
+      };
+
+      if (!response.ok || !payload.locations?.[0]) {
+        throw new Error(payload.error ?? "No verified place was found.");
+      }
+
+      const location = payload.locations[0];
+
+      setDraft((current) => ({
+        ...current,
+        locationJson: JSON.stringify(location),
+      }));
+      setLocationLookupState("verified");
+      setLocationMessage(`Verified place: ${formatHostLocation(location)}`);
+    } catch (error) {
+      setDraft((current) => ({ ...current, locationJson: "" }));
+      setLocationLookupState("error");
+      setLocationMessage(
+        error instanceof Error
+          ? error.message
+          : "Location verification is unavailable right now.",
+      );
+    }
   }
 
   useEffect(() => {
@@ -114,7 +207,12 @@ export function HostListingForm() {
 
   const stepReady = [
     draft.title.trim().length >= 8 && draft.description.trim().length >= 24,
-    Boolean(draft.city.trim() && draft.state.trim() && draft.neighborhood.trim()),
+    Boolean(
+      draft.city.trim() &&
+        draft.state.trim() &&
+        draft.neighborhood.trim() &&
+        verifiedLocation,
+    ),
     Number(draft.pricePerNight) >= 50 &&
       Number(draft.capacity) >= 1 &&
       Number(draft.bedrooms) >= 0 &&
@@ -227,11 +325,21 @@ export function HostListingForm() {
             >
             <div className="grid gap-4 md:grid-cols-3">
               <TextField
+                name="addressQuery"
+                label="Address or landmark"
+                placeholder="Katy Trail, Uptown Dallas"
+                required={false}
+                value={draft.addressQuery}
+                onChange={(value) => updateLocationDraft("addressQuery", value)}
+              />
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <TextField
                 name="city"
                 label="City"
                 placeholder="Dallas"
                 value={draft.city}
-                onChange={(value) => updateDraft("city", value)}
+                onChange={(value) => updateLocationDraft("city", value)}
               />
               <TextField
                 name="state"
@@ -239,15 +347,69 @@ export function HostListingForm() {
                 placeholder="TX"
                 maxLength={2}
                 value={draft.state}
-                onChange={(value) => updateDraft("state", value.toUpperCase())}
+                onChange={(value) => updateLocationDraft("state", value.toUpperCase())}
               />
               <TextField
                 name="neighborhood"
                 label="Neighborhood"
                 placeholder="Deep Ellum"
                 value={draft.neighborhood}
-                onChange={(value) => updateDraft("neighborhood", value)}
+                onChange={(value) => updateLocationDraft("neighborhood", value)}
               />
+            </div>
+            <input name="locationJson" type="hidden" value={draft.locationJson} />
+            <div className="rounded-3xl border border-[#eadfd6] bg-[#fbfaf8] p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm font-extrabold text-[#201a18]">
+                    Verify with OpenStreetMap
+                  </p>
+                  <p className="mt-1 text-xs font-semibold leading-5 text-[#786a60]">
+                    StayWise stores provider-backed coordinates so search, maps, and
+                    recommendations do not rely on manual city text.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={locationLookupState === "loading"}
+                  onClick={() => {
+                    void verifyListingLocation();
+                  }}
+                  className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-[#201a18] px-5 text-sm font-extrabold text-white hover:bg-black disabled:cursor-not-allowed disabled:bg-[#9b8f87]"
+                >
+                  {locationLookupState === "loading" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Search className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  {verifiedLocation ? "Reverify" : "Verify location"}
+                </button>
+              </div>
+              {(locationMessage || verifiedLocation) && (
+                <p
+                  role={locationLookupState === "error" ? "alert" : "status"}
+                  className={`mt-3 rounded-2xl p-3 text-sm font-semibold leading-6 ${
+                    locationLookupState === "error"
+                      ? "bg-[#fff3f5] text-[#bd1740]"
+                      : "bg-[#e7f2e4] text-[#315d3b]"
+                  }`}
+                >
+                  {locationMessage ||
+                    (verifiedLocation
+                      ? `Verified place: ${formatHostLocation(verifiedLocation)}`
+                      : "")}
+                  {verifiedLocation && (
+                    <a
+                      href="https://www.openstreetmap.org/copyright"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="ml-2 underline decoration-2 underline-offset-4"
+                    >
+                      Data © OpenStreetMap contributors
+                    </a>
+                  )}
+                </p>
+              )}
             </div>
             </FormSection>
           </div>
@@ -351,9 +513,14 @@ export function HostListingForm() {
               <div className="grid gap-3 sm:grid-cols-2">
                 {[
                   ["Title", draft.title || "Missing"],
-                  ["Location", `${draft.neighborhood || "Missing"}, ${draft.city || ""} ${draft.state || ""}`],
                   ["Price", draft.pricePerNight ? `$${draft.pricePerNight} per night` : "Missing"],
-                  ["Photos", `${imageUrls.length} ready`],
+                  [
+                    "Location",
+                    verifiedLocation
+                      ? formatHostLocation(verifiedLocation)
+                      : `${draft.neighborhood || "Missing"}, ${draft.city || ""} ${draft.state || ""}`,
+                  ],
+                  ["Photos", `${imageUrls.length + selectedImageFiles.length} ready`],
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-2xl bg-[#f7f3ee] p-4">
                     <p className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">{label}</p>
@@ -579,6 +746,7 @@ function TextField({
   name,
   onChange,
   placeholder,
+  required = true,
   step,
   type = "text",
   value,
@@ -588,6 +756,7 @@ function TextField({
   name: keyof ListingDraft;
   onChange: (value: string) => void;
   placeholder: string;
+  required?: boolean;
   step?: string;
   type?: string;
   value: string;
@@ -605,7 +774,7 @@ function TextField({
           placeholder={placeholder}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          required
+          required={required}
         />
       </span>
     </label>
@@ -653,6 +822,53 @@ function parseDraftUrls(value: string) {
     .slice(0, 6);
 }
 
+function parseDraftLocation(value: string) {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(value) as Partial<HostLocationResult>;
+
+    if (
+      parsed.provider !== "nominatim" ||
+      typeof parsed.formattedAddress !== "string" ||
+      typeof parsed.lat !== "number" ||
+      typeof parsed.lng !== "number" ||
+      typeof parsed.providerId !== "string"
+    ) {
+      return null;
+    }
+
+    return parsed as HostLocationResult;
+  } catch {
+    return null;
+  }
+}
+
+function buildLocationQuery(draft: ListingDraft) {
+  return [
+    draft.addressQuery.trim(),
+    draft.neighborhood.trim(),
+    draft.city.trim(),
+    draft.state.trim(),
+    "United States",
+  ]
+    .filter(Boolean)
+    .join(", ");
+}
+
+function formatHostLocation(location: HostLocationResult) {
+  return [
+    location.name,
+    location.city,
+    location.region,
+    location.country,
+  ]
+    .filter((part, index, parts) => part && parts.indexOf(part) === index)
+    .join(", ");
+}
+
 function buildQualityItems(
   draft: ListingDraft,
   imageCount: number,
@@ -671,8 +887,13 @@ function buildQualityItems(
       label: "Detailed description with neighborhood and guest experience",
     },
     {
-      done: Boolean(draft.city.trim() && draft.state.trim() && draft.neighborhood.trim()),
-      label: "City, state, and neighborhood are filled",
+      done: Boolean(
+        draft.city.trim() &&
+          draft.state.trim() &&
+          draft.neighborhood.trim() &&
+          parseDraftLocation(draft.locationJson),
+      ),
+      label: "Location is verified with provider-backed coordinates",
     },
     {
       done: Number.isFinite(price) && price >= 50,

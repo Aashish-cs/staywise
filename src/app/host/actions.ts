@@ -162,9 +162,51 @@ export async function toggleHostListingAction(
 
 const featuredAmenitySet = new Set<string>(featuredAmenities);
 
+const hostLocationSchema = z.object({
+  bounds: z
+    .object({
+      east: z.coerce.number().min(-180).max(180),
+      north: z.coerce.number().min(-90).max(90),
+      south: z.coerce.number().min(-90).max(90),
+      west: z.coerce.number().min(-180).max(180),
+    })
+    .nullable()
+    .optional(),
+  city: z.string().trim().max(120).nullable().optional(),
+  country: z.string().trim().max(120).nullable().optional(),
+  countryCode: z.string().trim().max(8).nullable().optional(),
+  formattedAddress: z.string().trim().min(3).max(300),
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
+  name: z.string().trim().min(1).max(160),
+  provider: z.literal("nominatim"),
+  providerId: z.string().trim().min(1).max(160),
+  region: z.string().trim().max(120).nullable().optional(),
+});
+
+function parseHostLocation(value: string, context: z.RefinementCtx) {
+  try {
+    const parsed = hostLocationSchema.safeParse(JSON.parse(value));
+
+    if (parsed.success) {
+      return parsed.data;
+    }
+  } catch {
+    // Fall through to the validation issue below.
+  }
+
+  context.addIssue({
+    code: z.ZodIssueCode.custom,
+    message: "Verify the listing location before publishing.",
+  });
+
+  return z.NEVER;
+}
+
 const listingSchema = z.object({
   title: z.string().trim().min(8).max(90),
   description: z.string().trim().min(24).max(1200),
+  locationJson: z.string().trim().min(2).transform(parseHostLocation),
   city: z.string().trim().min(2).max(80),
   state: z
     .string()
@@ -184,7 +226,7 @@ const listingSchema = z.object({
 });
 
 const editListingSchema = listingSchema
-  .omit({ imageUrls: true, amenities: true })
+  .omit({ imageUrls: true, amenities: true, locationJson: true })
   .extend({
     listingId: z.string().uuid(),
   });
@@ -434,6 +476,7 @@ export async function createHostListingAction(
   }
 
   const values = parsed.data;
+  const location = values.locationJson;
   const imageUrls = values.imageUrls;
   const imageFiles = formData
     .getAll("imageFiles")
@@ -480,6 +523,19 @@ export async function createHostListingAction(
       capacity: values.capacity,
       bedrooms: values.bedrooms,
       bathrooms: values.bathrooms,
+      latitude: location.lat,
+      longitude: location.lng,
+      place_provider: location.provider,
+      place_provider_id: location.providerId,
+      formatted_address: location.formattedAddress,
+      address_city: location.city ?? values.city,
+      address_region: location.region ?? values.state,
+      address_country: location.country ?? "United States",
+      address_country_code: location.countryCode ?? "US",
+      bounds_south: location.bounds?.south ?? null,
+      bounds_north: location.bounds?.north ?? null,
+      bounds_west: location.bounds?.west ?? null,
+      bounds_east: location.bounds?.east ?? null,
       is_active: true,
     })
     .select("id")

@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   CalendarDays,
   CheckCircle2,
+  CreditCard,
   Home,
   MapPin,
   ReceiptText,
@@ -14,9 +15,10 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
+import { PaymentCheckoutButton } from "@/components/payment-checkout-button";
 import { StayWiseHeader } from "@/components/staywise-header";
 import { getCurrentUserProfile, getReservationById } from "@/lib/listing-data";
-import type { ReservationStatus } from "@/lib/listings";
+import type { PaymentRecordStatus, ReservationPayment, ReservationStatus } from "@/lib/listings";
 import {
   calculateReservationTotal,
   countNights,
@@ -70,6 +72,7 @@ export default async function ReservationConfirmationPage({
   const nights = Math.max(0, countNights(reservation.startDate, reservation.endDate));
   const totals = calculateReservationTotal(reservation.nightlyRate, nights);
   const StatusIcon = status.icon;
+  const payment = reservation.payment;
 
   return (
     <main className="min-h-screen bg-white text-[#201a18]">
@@ -258,16 +261,11 @@ export default async function ReservationConfirmationPage({
             </div>
           </div>
 
-          <div className="mt-5 space-y-3 rounded-2xl border border-[#eadfd6] bg-[#fbfaf8] p-4 text-sm font-semibold text-[#5f5148]">
-            <p className="flex gap-3">
-              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#315d3b]" />
-              No card is charged in the MVP.
-            </p>
-            <p className="flex gap-3">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#315d3b]" />
-              Your dashboard keeps the live trip status.
-            </p>
-          </div>
+          <PaymentSummary
+            payment={payment}
+            reservationId={reservation.id}
+            reservationStatus={reservation.status}
+          />
         </aside>
       </section>
     </main>
@@ -343,7 +341,92 @@ function PriceRow({
   );
 }
 
+function PaymentSummary({
+  payment,
+  reservationId,
+  reservationStatus,
+}: {
+  payment: ReservationPayment | null;
+  reservationId: string;
+  reservationStatus: ReservationStatus;
+}) {
+  if (reservationStatus === "awaiting_payment" && payment?.status === "requires_payment") {
+    return (
+      <div className="mt-5 space-y-4 rounded-2xl border border-[#ffd0da] bg-[#fff7f9] p-4 text-sm font-semibold text-[#5f5148]">
+        <p className="flex gap-3">
+          <CreditCard className="mt-0.5 h-4 w-4 shrink-0 text-[#bd1740]" aria-hidden="true" />
+          Complete secure Stripe Checkout to confirm this reservation.
+        </p>
+        <PaymentCheckoutButton reservationId={reservationId} />
+        <p className="text-xs font-semibold leading-5 text-[#786a60]">
+          StayWise never stores card numbers. Stripe sends payment status back through the signed webhook.
+        </p>
+      </div>
+    );
+  }
+
+  const presentation = getPaymentPresentation(payment?.status ?? "not_required");
+
+  return (
+    <div className="mt-5 space-y-3 rounded-2xl border border-[#eadfd6] bg-[#fbfaf8] p-4 text-sm font-semibold text-[#5f5148]">
+      <p className="flex gap-3">
+        <presentation.icon
+          className={`mt-0.5 h-4 w-4 shrink-0 ${presentation.iconClassName}`}
+          aria-hidden="true"
+        />
+        {presentation.body}
+      </p>
+      <p className="flex gap-3">
+        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#315d3b]" aria-hidden="true" />
+        Your dashboard keeps the live trip status.
+      </p>
+    </div>
+  );
+}
+
+function getPaymentPresentation(status: PaymentRecordStatus) {
+  if (status === "processing") {
+    return {
+      body: "Stripe Checkout has been opened. StayWise is waiting for the signed webhook confirmation.",
+      icon: CreditCard,
+      iconClassName: "text-[#7a4a00]",
+    };
+  }
+
+  if (status === "succeeded") {
+    return {
+      body: "Payment is recorded on the reservation ledger.",
+      icon: CheckCircle2,
+      iconClassName: "text-[#315d3b]",
+    };
+  }
+
+  if (status === "failed") {
+    return {
+      body: "Payment was not completed. The reservation status will reflect that outcome.",
+      icon: ShieldCheck,
+      iconClassName: "text-[#bd1740]",
+    };
+  }
+
+  return {
+    body: "No card is charged in the MVP pay-later flow.",
+    icon: ShieldCheck,
+    iconClassName: "text-[#315d3b]",
+  };
+}
+
 function getStatusPresentation(status: ReservationStatus) {
+  if (status === "awaiting_payment") {
+    return {
+      badgeClassName: "bg-[#fff7e6] text-[#7a4a00]",
+      body: "Your dates are held while checkout is pending. Complete payment to move this reservation into confirmed status.",
+      heading: "Complete payment to confirm your StayWise reservation.",
+      icon: CreditCard,
+      label: "Payment due",
+    };
+  }
+
   if (status === "confirmed") {
     return {
       badgeClassName: "bg-[#e7f2e4] text-[#315d3b]",

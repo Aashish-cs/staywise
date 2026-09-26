@@ -167,10 +167,10 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - App must work without `OPENAI_API_KEY`.
   - Current pass: added an optional server-only structured-output adapter using `STAYWISE_AI_*` or `OPENAI_*` variables, strict schema validation, an eight-second timeout, and deterministic fallback when no key/provider is configured or the provider fails.
 
-- [ ] Phase 30: Stripe payment architecture
+- [x] Phase 30: Stripe payment architecture
   - Payment-ready architecture with Checkout or Payment Intent when credentials exist.
   - Webhook verification, statuses, no card storage, and development mode without fake payment success.
-  - Current pass: added server-only Stripe Checkout session creation for `requires_payment` ledgers, signed webhook verification, payment status updates, reservation confirmation/cancellation transitions, and explicit no-provider MVP responses. The current reserve-now/pay-later flow remains unchanged until the payment-required reservation migration is applied.
+  - Current pass: added server-only Stripe Checkout session creation for `requires_payment` ledgers, signed webhook verification, payment status updates, reservation confirmation/cancellation transitions, explicit no-provider MVP responses, a server-only Stripe enable flag, a payment-required reservation RPC, and a guest-facing Pay now action for real payment-required ledgers.
 
 - [ ] Phase 31: Date picker
   - Professional check-in/check-out selection, unavailable date disabling, invalid range prevention, mobile dialog, desktop popover, keyboard support, and URL/state sync.

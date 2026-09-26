@@ -75,6 +75,7 @@ Use `.env.example` as the source of truth. Important groups:
   - `OPENAI_API_KEY`
   - `OPENAI_MODEL`
 - Optional Stripe architecture:
+  - `STAYWISE_ENABLE_STRIPE_CHECKOUT`
   - `STRIPE_SECRET_KEY`
   - `STRIPE_WEBHOOK_SECRET`
 - Optional trusted Supabase admin path:

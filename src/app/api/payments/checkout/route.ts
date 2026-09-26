@@ -59,7 +59,7 @@ export async function POST(request: Request) {
   }
 
   const config = getPaymentProviderConfig(request.url);
-  if (!config.stripeSecretKey) {
+  if (!config.stripeCheckoutEnabled || !config.stripeSecretKey) {
     return NextResponse.json({ error: getPaymentNotConfiguredMessage() }, { status: 503 });
   }
 

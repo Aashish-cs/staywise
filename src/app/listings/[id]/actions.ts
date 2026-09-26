@@ -7,6 +7,7 @@ import {
   maximumReservationGuests,
   validateReservationDateRange,
 } from "@/lib/reservation-utils";
+import { isStripeCheckoutEnabled } from "@/lib/payments";
 import { recordRecommendationEvent } from "@/lib/recommendation-events";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -71,7 +72,11 @@ export async function createReservationAction(
     };
   }
 
-  const { data, error } = await supabase.rpc("create_reservation", {
+  const requiresPayment = isStripeCheckoutEnabled();
+  const reservationRpc = requiresPayment
+    ? "create_payment_required_reservation"
+    : "create_reservation";
+  const { data, error } = await supabase.rpc(reservationRpc, {
     requested_end_date: checkOut,
     requested_guests: guests,
     requested_listing_id: listingId,
@@ -101,7 +106,7 @@ export async function createReservationAction(
   revalidatePath(`/reservations/${reservationId}`);
 
   await recordRecommendationEvent({
-    eventName: "reservation_confirmed",
+    eventName: requiresPayment ? "reservation_started" : "reservation_confirmed",
     listingId,
     searchFilters: {
       checkIn,
@@ -113,7 +118,9 @@ export async function createReservationAction(
 
   return {
     ok: true,
-    message: "Reservation confirmed. It now appears in your trips.",
+    message: requiresPayment
+      ? "Reservation held. Complete payment to confirm your stay."
+      : "Reservation confirmed. It now appears in your trips.",
     reservationId,
   };
 }
@@ -162,7 +169,10 @@ function getReservationErrorMessage(errorMessage: string) {
     return "The host blocked those dates. Choose different dates.";
   }
 
-  if (errorMessage.includes("create_reservation")) {
+  if (
+    errorMessage.includes("create_reservation") ||
+    errorMessage.includes("create_payment_required_reservation")
+  ) {
     return "Reservation service is not ready yet. Run the latest Supabase migration.";
   }
 

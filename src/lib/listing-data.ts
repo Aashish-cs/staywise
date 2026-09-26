@@ -7,6 +7,7 @@ import {
   type Listing,
   type ListingReview,
   type ListingReviewSummary,
+  type PaymentRecordStatus,
   type PropertyType,
   type Reservation,
   type ReservationStatus,
@@ -68,6 +69,16 @@ type ReservationRow = {
   status: ReservationStatus;
   created_at: string;
   listing?: ListingRow | ListingRow[] | null;
+  payment_records?: PaymentRecordRow | PaymentRecordRow[] | null;
+};
+
+type PaymentRecordRow = {
+  amount_cents: number | string;
+  currency: string;
+  id: string;
+  provider: string;
+  status: PaymentRecordStatus;
+  updated_at: string | null;
 };
 
 type ReviewRow = {
@@ -801,6 +812,14 @@ export async function getGuestReservations(userId: string) {
         total_amount,
         status,
         created_at,
+        payment_records (
+          id,
+          provider,
+          amount_cents,
+          currency,
+          status,
+          updated_at
+        ),
         listing:listings (
           ${listingSelect}
         )
@@ -836,6 +855,14 @@ export async function getReservationById(reservationId: string) {
         total_amount,
         status,
         created_at,
+        payment_records (
+          id,
+          provider,
+          amount_cents,
+          currency,
+          status,
+          updated_at
+        ),
         listing:listings (
           ${listingSelect}
         )
@@ -1143,6 +1170,9 @@ export async function fetchListingForReservation(
 
 function mapReservationRow(row: ReservationRow): Reservation {
   const listing = Array.isArray(row.listing) ? row.listing[0] : row.listing;
+  const payment = Array.isArray(row.payment_records)
+    ? row.payment_records[0]
+    : row.payment_records;
 
   return {
     id: row.id,
@@ -1154,6 +1184,16 @@ function mapReservationRow(row: ReservationRow): Reservation {
     totalAmount: row.total_amount,
     status: row.status,
     createdAt: row.created_at,
+    payment: payment
+      ? {
+          amountCents: Number(payment.amount_cents),
+          currency: payment.currency,
+          id: payment.id,
+          provider: payment.provider,
+          status: payment.status,
+          updatedAt: payment.updated_at,
+        }
+      : null,
   };
 }
 

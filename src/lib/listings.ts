@@ -62,6 +62,23 @@ export type ReservationStatus =
   | "cancelled"
   | "completed";
 
+export type PaymentRecordStatus =
+  | "not_required"
+  | "requires_payment"
+  | "processing"
+  | "succeeded"
+  | "failed"
+  | "refunded";
+
+export type ReservationPayment = {
+  amountCents: number;
+  currency: string;
+  id: string;
+  provider: string;
+  status: PaymentRecordStatus;
+  updatedAt: string | null;
+};
+
 export type Reservation = {
   id: string;
   listing: Listing | null;
@@ -72,6 +89,7 @@ export type Reservation = {
   totalAmount: number;
   status: ReservationStatus;
   createdAt: string;
+  payment: ReservationPayment | null;
 };
 
 export type ListingReview = {

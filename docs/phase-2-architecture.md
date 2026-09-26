@@ -1,8 +1,8 @@
 # Phase 2 Architecture Notes
 
-Status: In progress
+Status: Completed
 
-Last updated: 2026-09-14
+Last updated: 2026-09-26
 
 ## Completed In This Pass
 
@@ -22,9 +22,11 @@ Last updated: 2026-09-14
 - Added `src/components/search-results-section.tsx` so search result cards, sort/map toolbar, empty state, fit panel, and map panel are separated from the main search state container.
 - Added `src/components/search-filters-panel.tsx` so AI prompt, destination/date/guest/budget inputs, advanced filters, trip style, amenities, and search action are separated from the main search state container.
 - Added `src/components/marketplace-listing-rails.tsx` so marketplace listing rails and home listing cards are separated from the main home page state container.
+- Added focused server/API/data boundaries for recommendation popularity, payment-required reservations, and listing calendar availability instead of embedding those workflows inside JSX.
+- Kept payment configuration in `src/lib/payments.ts`, recommendation ranking in `src/lib/recommendations.ts`, date validation in `src/lib/reservation-utils.ts`, and listing reads in `src/lib/listing-data.ts`.
 - Kept visual behavior unchanged while reducing duplication in the largest components.
 
-## Next Phase 2 Extraction Targets
+## Boundary Notes
 
-- Continue extracting small pure helpers before changing database/location/search behavior.
-- Keep each extraction small, verified, and deployed before adding new provider-backed search or map features.
+- The app now has clear shared areas for UI primitives/components, hooks, data access, validation, provider adapters, recommendation scoring, payments, and Supabase SQL.
+- Further refactors should happen only when a feature needs them, not as broad rewrites.

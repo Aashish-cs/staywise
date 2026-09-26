@@ -23,7 +23,7 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Run `pnpm install`, `pnpm lint`, `pnpm typecheck`, and `pnpm build`.
   - Fix errors and continue beyond simply passing the build.
 
-- [~] Phase 2: Define real product architecture
+- [x] Phase 2: Define real product architecture
   - Move toward feature-oriented structure where useful.
   - Separate UI, business logic, data access, validation, and types.
   - Avoid giant components, duplicated Supabase queries, and business logic hidden inside JSX.
@@ -38,6 +38,7 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Current pass: search result cards, toolbar, empty state, fit panel, and map panel extracted into `src/components/search-results-section.tsx`.
   - Current pass: search AI prompt, destination/date/guest/budget fields, advanced filters, trip style, amenities, and search action extracted into `src/components/search-filters-panel.tsx`.
   - Current pass: marketplace listing rails and home listing cards extracted into `src/components/marketplace-listing-rails.tsx`.
+  - Current pass: recommendation popularity, payment-required reservations, and calendar availability are handled through focused SQL/API/data/helper boundaries instead of JSX-heavy feature logic.
 
 - [x] Phase 3: Database design
   - Audit current Supabase schema.

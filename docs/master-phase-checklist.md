@@ -172,9 +172,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Webhook verification, statuses, no card storage, and development mode without fake payment success.
   - Current pass: added server-only Stripe Checkout session creation for `requires_payment` ledgers, signed webhook verification, payment status updates, reservation confirmation/cancellation transitions, explicit no-provider MVP responses, a server-only Stripe enable flag, a payment-required reservation RPC, and a guest-facing Pay now action for real payment-required ledgers.
 
-- [ ] Phase 31: Date picker
+- [x] Phase 31: Date picker
   - Professional check-in/check-out selection, unavailable date disabling, invalid range prevention, mobile dialog, desktop popover, keyboard support, and URL/state sync.
-  - Current pass: added a shared range calendar for reservation and search filters with month navigation, past-date and maximum-stay guards, range highlighting, Escape/outside-click close, hidden ISO form fields, and existing live availability validation. Provider-backed unavailable-date cells remain after the calendar RPC migration.
+  - Current pass: added a shared range calendar for reservation, search filters, and home search with month navigation, past-date and maximum-stay guards, range highlighting, Escape/outside-click close, hidden ISO form fields, live availability validation, and privacy-safe unavailable-date cells for booked/host-blocked nights.
 
 - [x] Phase 32: Guest selector
   - Adults/children/infants/pets where supported and max guest enforcement.

@@ -22,6 +22,7 @@ import {
   ListingLocationLine,
   ListingSaveButton,
 } from "@/components/listing-card-primitives";
+import { DateRangePicker } from "@/components/date-range-picker";
 import { MarketplaceListingRails } from "@/components/marketplace-listing-rails";
 import { StayWiseAccountMenu, StayWiseHeader } from "@/components/staywise-header";
 import { Badge, Price } from "@/components/ui/primitives";
@@ -31,6 +32,7 @@ import { GuestSelector, type GuestSelection } from "@/components/guest-selector"
 import type { Listing } from "@/lib/listings";
 import type { ListingDataState } from "@/lib/listing-data";
 import { rankListings, searchSchema, type SearchInput } from "@/lib/recommendations";
+import { maximumReservationNights } from "@/lib/reservation-utils";
 import {
   broadMarketplaceSearchInput,
   createListingSearchInput,
@@ -235,7 +237,7 @@ export function MarketplaceHome({
           </div>
 
           <form
-            className="mx-auto mt-6 grid max-w-5xl overflow-hidden rounded-[2rem] border border-[#e6ddd5] bg-white text-left shadow-[0_18px_55px_rgba(32,26,24,0.12)] md:grid-cols-[minmax(0,1.45fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_118px_76px] md:rounded-full"
+            className="mx-auto mt-6 grid max-w-5xl overflow-visible rounded-[2rem] border border-[#e6ddd5] bg-white text-left shadow-[0_18px_55px_rgba(32,26,24,0.12)] md:grid-cols-[minmax(0,1.45fr)_minmax(0,1.8fr)_118px_76px] md:rounded-full"
             onSubmit={(event) => {
               event.preventDefault();
               submitSearch();
@@ -257,25 +259,20 @@ export function MarketplaceHome({
               </datalist>
             </label>
 
-            <label className="border-t border-[#efe8e2] px-5 py-4 transition focus-within:bg-[#fff8f9] md:border-r md:border-t-0">
-              <span className="block text-xs font-extrabold text-[#201a18]">Check in</span>
-              <input
-                type="date"
-                value={checkIn}
-                onChange={(event) => setCheckIn(event.target.value)}
-                className="mt-1 w-full bg-transparent text-sm font-semibold text-[#5f5148] outline-none"
+            <div className="border-t border-[#efe8e2] px-3 py-3 transition focus-within:bg-[#fff8f9] md:border-r md:border-t-0">
+              <DateRangePicker
+                checkIn={checkIn}
+                checkOut={checkOut}
+                compact
+                label=""
+                maxNights={maximumReservationNights}
+                showHint={false}
+                onChange={(nextCheckIn, nextCheckOut) => {
+                  setCheckIn(nextCheckIn);
+                  setCheckOut(nextCheckOut);
+                }}
               />
-            </label>
-
-            <label className="border-t border-[#efe8e2] px-5 py-4 transition focus-within:bg-[#fff8f9] md:border-r md:border-t-0">
-              <span className="block text-xs font-extrabold text-[#201a18]">Check out</span>
-              <input
-                type="date"
-                value={checkOut}
-                onChange={(event) => setCheckOut(event.target.value)}
-                className="mt-1 w-full bg-transparent text-sm font-semibold text-[#5f5148] outline-none"
-              />
-            </label>
+            </div>
 
             <div className="border-t border-[#efe8e2] transition focus-within:bg-[#fff8f9] md:border-r md:border-t-0">
               <GuestSelector

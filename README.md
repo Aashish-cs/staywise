@@ -100,6 +100,9 @@ Resend SMTP is configured inside Supabase Auth settings, not as a browser-visibl
    - `supabase/phase8_trip_management.sql`
    - `supabase/phase9_reviews.sql`
    - `supabase/phase10_storage.sql`
+   - `supabase/phase28_recommendation_signals.sql`
+   - `supabase/phase30_payment_required_reservations.sql`
+   - `supabase/phase31_calendar_availability.sql`
    - `supabase/phase33_pricing.sql`
 5. Keep RLS enabled on application tables.
 6. Enable email confirmation.

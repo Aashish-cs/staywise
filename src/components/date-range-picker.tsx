@@ -12,23 +12,31 @@ import {
 type DateField = "checkIn" | "checkOut";
 
 type DateRangePickerProps = {
+  availabilityStatus?: "idle" | "loading" | "ready" | "error";
   checkIn: string;
   checkOut: string;
   onChange: (checkIn: string, checkOut: string) => void;
+  onVisibleRangeChange?: (startDate: string, endDate: string) => void;
   maxNights?: number;
   namePrefix?: string;
   label?: string;
   compact?: boolean;
+  showHint?: boolean;
+  unavailableDates?: string[];
 };
 
 export function DateRangePicker({
+  availabilityStatus = "idle",
   checkIn,
   checkOut,
   onChange,
+  onVisibleRangeChange,
   maxNights = 30,
   namePrefix,
   label = "Stay dates",
   compact = false,
+  showHint = true,
+  unavailableDates = [],
 }: DateRangePickerProps) {
   const minimumDate = getTodayIso();
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -70,10 +78,29 @@ export function DateRangePicker({
   }, [activeField, isOpen]);
 
   const monthCells = useMemo(() => getMonthCells(viewMonth), [viewMonth]);
+  const unavailableDateSet = useMemo(
+    () => new Set(unavailableDates),
+    [unavailableDates],
+  );
+  const visibleRange = useMemo(
+    () => ({
+      endDate: toIsoDate(addDays(monthCells[monthCells.length - 1], 1)),
+      startDate: toIsoDate(monthCells[0]),
+    }),
+    [monthCells],
+  );
   const monthLabel = new Intl.DateTimeFormat("en-US", {
     month: "long",
     year: "numeric",
   }).format(viewMonth);
+
+  useEffect(() => {
+    if (!isOpen || !onVisibleRangeChange) {
+      return;
+    }
+
+    onVisibleRangeChange(visibleRange.startDate, visibleRange.endDate);
+  }, [isOpen, onVisibleRangeChange, visibleRange.endDate, visibleRange.startDate]);
 
   function openField(field: DateField) {
     setActiveField(field);
@@ -86,7 +113,16 @@ export function DateRangePicker({
   }
 
   function selectDate(isoDate: string) {
-    if (isDisabledDate(isoDate, activeField, checkIn, maxNights, minimumDate)) {
+    if (
+      isDisabledDate(
+        isoDate,
+        activeField,
+        checkIn,
+        maxNights,
+        minimumDate,
+        unavailableDateSet,
+      )
+    ) {
       return;
     }
 
@@ -158,9 +194,11 @@ export function DateRangePicker({
         </button>
       </div>
 
-      <p className="mt-2 text-xs font-semibold text-[#786a60]" aria-live="polite">
-        {dateHint}
-      </p>
+      {showHint && (
+        <p className="mt-2 text-xs font-semibold text-[#786a60]" aria-live="polite">
+          {dateHint}
+        </p>
+      )}
 
       {namePrefix && (
         <>
@@ -211,10 +249,18 @@ export function DateRangePicker({
           <div className="mt-2 grid grid-cols-7 gap-1" role="grid" aria-label={monthLabel}>
             {monthCells.map((date) => {
               const isoDate = toIsoDate(date);
-              const disabled = isDisabledDate(isoDate, activeField, checkIn, maxNights, minimumDate);
+              const disabled = isDisabledDate(
+                isoDate,
+                activeField,
+                checkIn,
+                maxNights,
+                minimumDate,
+                unavailableDateSet,
+              );
               const isSelected = isoDate === checkIn || isoDate === checkOut;
               const isInRange = Boolean(checkIn && checkOut && isoDate > checkIn && isoDate < checkOut);
               const isCurrentMonth = date.getMonth() === viewMonth.getMonth();
+              const isUnavailableNight = unavailableDateSet.has(isoDate);
 
               return (
                 <button
@@ -226,6 +272,7 @@ export function DateRangePicker({
                     "flex aspect-square items-center justify-center rounded-full text-sm font-extrabold transition",
                     !isCurrentMonth && "text-[#b9ada4]",
                     disabled && "cursor-not-allowed opacity-30",
+                    isUnavailableNight && "line-through decoration-2",
                     !disabled && !isSelected && "hover:bg-[#fff3f5] hover:text-[#bd1740]",
                     isInRange && !isSelected && "rounded-none bg-[#fff3f5] text-[#bd1740]",
                     isSelected && "bg-[#201a18] text-white hover:bg-black",
@@ -238,9 +285,13 @@ export function DateRangePicker({
             })}
           </div>
           <p className="mt-4 border-t border-[#eadfd6] pt-3 text-xs font-semibold leading-5 text-[#786a60]">
-            {activeField === "checkIn"
-              ? "Past dates are unavailable. Select a check-in to continue."
-              : `Choose a stay up to ${maxNights} nights.`}
+            {availabilityStatus === "loading"
+              ? "Checking booked and host-blocked dates."
+              : availabilityStatus === "error"
+                ? "Calendar availability could not load; final availability is still checked before booking."
+                : activeField === "checkIn"
+                  ? "Past, booked, and host-blocked nights are unavailable."
+                  : `Choose a stay up to ${maxNights} nights. Ranges cannot cross booked nights.`}
           </p>
         </div>
       )}
@@ -256,8 +307,13 @@ function isDisabledDate(
   checkIn: string,
   maxNights: number,
   minimumDate: string,
+  unavailableDateSet: Set<string>,
 ) {
   if (isoDate < minimumDate) {
+    return true;
+  }
+
+  if (activeField === "checkIn" && unavailableDateSet.has(isoDate)) {
     return true;
   }
 
@@ -266,7 +322,24 @@ function isDisabledDate(
       return true;
     }
 
-    return countNights(checkIn, isoDate) > maxNights;
+    return (
+      countNights(checkIn, isoDate) > maxNights ||
+      rangeContainsUnavailableNight(checkIn, isoDate, unavailableDateSet)
+    );
+  }
+
+  return false;
+}
+
+function rangeContainsUnavailableNight(
+  startDate: string,
+  endDate: string,
+  unavailableDateSet: Set<string>,
+) {
+  for (const unavailableDate of unavailableDateSet) {
+    if (unavailableDate >= startDate && unavailableDate < endDate) {
+      return true;
+    }
   }
 
   return false;

@@ -13,12 +13,15 @@ Create one repository for the team and keep it private until the course team is 
 5. Run `supabase/phase4_availability.sql` for date-aware search and reservation availability checks.
 6. Run `supabase/phase5_marketplace_foundation.sql` for profile settings, host availability blocks, real-review eligibility, recommendation events, and payment records.
 7. Run `supabase/phase6_location_foundation.sql` for provider-backed location metadata columns.
-8. In Authentication settings, enable email confirmation.
-9. Add redirect URLs:
+8. Run `supabase/phase28_recommendation_signals.sql` for aggregate popularity ranking when replaying migrations incrementally.
+9. Run `supabase/phase30_payment_required_reservations.sql` only when preparing Stripe test-mode reservations.
+10. Run `supabase/phase31_calendar_availability.sql` for unavailable-date calendar cells.
+11. In Authentication settings, enable email confirmation.
+12. Add redirect URLs:
    - `http://localhost:3000/auth/callback`
    - `https://YOUR-VERCEL-DOMAIN.vercel.app/auth/callback`
-10. In Authentication email settings, configure custom SMTP using Resend.
-11. Keep Row Level Security enabled on every application table.
+13. In Authentication email settings, configure custom SMTP using Resend.
+14. Keep Row Level Security enabled on every application table.
 
 ## Resend SMTP
 
@@ -67,6 +70,9 @@ Use Resend as the SMTP provider for Supabase Auth emails:
 - `supabase/phase4_availability.sql` run for availability-aware search.
 - `supabase/phase5_marketplace_foundation.sql` run for production support entities.
 - `supabase/phase6_location_foundation.sql` run for provider-backed location columns.
+- `supabase/phase28_recommendation_signals.sql` run for popularity aggregates.
+- `supabase/phase31_calendar_availability.sql` run for calendar unavailable-date cells.
+- Optional Stripe test mode only: `supabase/phase30_payment_required_reservations.sql` run and `STAYWISE_ENABLE_STRIPE_CHECKOUT=true` set with Stripe credentials.
 - OpenStreetMap/Nominatim attribution remains visible anywhere verified destination or current-location data appears.
 - No `.env.local` or API secrets committed.
 - `pnpm lint`, `pnpm typecheck`, and `pnpm build` pass.

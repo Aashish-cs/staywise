@@ -10,6 +10,10 @@ test("account menu and home search controls are clickable", async ({ page }) => 
   await page.keyboard.press("Escape");
   await expect(page.getByRole("region", { name: "Account menu" })).toBeHidden();
 
+  await page.getByRole("button", { name: /Check in/ }).click();
+  await expect(page.getByRole("dialog", { name: "Choose stay dates" })).toBeVisible();
+  await page.keyboard.press("Escape");
+
   await page.getByPlaceholder(/Search .* or any city|Search destinations/).fill("Dallas");
   await page.getByRole("button", { name: "Search stays" }).click();
   await expect(page).toHaveURL(/\/search\?destination=Dallas/);

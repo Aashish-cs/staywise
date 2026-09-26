@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useActionState } from "react";
+import { useActionState, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -39,6 +39,17 @@ type AvailabilityState = {
   status: "idle" | "checking" | "available" | "unavailable" | "unknown";
 };
 
+type CalendarAvailabilityState = {
+  dates: string[];
+  key: string;
+  status: "idle" | "loading" | "ready" | "error";
+};
+
+type CalendarRange = {
+  endDate: string;
+  startDate: string;
+};
+
 export function ReservationPanel({
   listing,
   isSignedIn,
@@ -69,6 +80,13 @@ export function ReservationPanel({
     message: "",
     status: "idle",
   });
+  const [calendarRange, setCalendarRange] = useState<CalendarRange | null>(null);
+  const [calendarAvailability, setCalendarAvailability] =
+    useState<CalendarAvailabilityState>({
+      dates: [],
+      key: "",
+      status: "idle",
+    });
   const [state, formAction, isPending] = useActionState(
     createReservationAction,
     initialState,
@@ -88,6 +106,13 @@ export function ReservationPanel({
   const guests = guestSelection.adults + guestSelection.childGuests;
   const shouldCheckSelectedDates = dateValidation.ok;
   const availabilityKey = `${listing.id}:${checkIn}:${checkOut}`;
+  const calendarAvailabilityKey = calendarRange
+    ? `${listing.id}:${calendarRange.startDate}:${calendarRange.endDate}`
+    : "";
+  const calendarUnavailableDates =
+    calendarAvailability.key === calendarAvailabilityKey
+      ? calendarAvailability.dates
+      : [];
   const displayedAvailability: AvailabilityState = shouldCheckSelectedDates
     ? availability.key === availabilityKey
       ? availability
@@ -123,6 +148,82 @@ export function ReservationPanel({
     errorTitle: "Reservation not completed",
     successTitle: "Reservation confirmed",
   });
+
+  const handleVisibleCalendarRangeChange = useCallback(
+    (startDate: string, endDate: string) => {
+      const key = `${listing.id}:${startDate}:${endDate}`;
+
+      setCalendarRange((currentRange) =>
+        currentRange?.startDate === startDate && currentRange.endDate === endDate
+          ? currentRange
+          : { endDate, startDate },
+      );
+      setCalendarAvailability((current) =>
+        current.key === key && current.status === "ready"
+          ? current
+          : {
+              dates: current.key === key ? current.dates : [],
+              key,
+              status: "loading",
+            },
+      );
+    },
+    [listing.id],
+  );
+
+  useEffect(() => {
+    if (!calendarRange) {
+      return;
+    }
+
+    const key = `${listing.id}:${calendarRange.startDate}:${calendarRange.endDate}`;
+    const controller = new AbortController();
+
+    const params = new URLSearchParams({
+      end: calendarRange.endDate,
+      start: calendarRange.startDate,
+    });
+
+    void fetch(`/api/listings/${listing.id}/calendar?${params.toString()}`, {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const result = (await response.json().catch(() => null)) as
+          | { unavailableDates?: string[] }
+          | null;
+
+        if (!response.ok || !Array.isArray(result?.unavailableDates)) {
+          setCalendarAvailability({
+            dates: [],
+            key,
+            status: "error",
+          });
+          return;
+        }
+
+        setCalendarAvailability({
+          dates: result.unavailableDates,
+          key,
+          status: "ready",
+        });
+      })
+      .catch((error: unknown) => {
+        if (error instanceof DOMException && error.name === "AbortError") {
+          return;
+        }
+
+        setCalendarAvailability({
+          dates: [],
+          key,
+          status: "error",
+        });
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, [calendarRange, listing.id]);
 
   useEffect(() => {
     if (!shouldCheckSelectedDates) {
@@ -210,9 +311,12 @@ export function ReservationPanel({
         <input type="hidden" name="listingId" value={listing.id} />
 
         <DateRangePicker
+          availabilityStatus={calendarAvailability.status}
           checkIn={checkIn}
           checkOut={checkOut}
           maxNights={maximumReservationNights}
+          onVisibleRangeChange={handleVisibleCalendarRangeChange}
+          unavailableDates={calendarUnavailableDates}
           onChange={(nextCheckIn, nextCheckOut) => {
             setCheckIn(nextCheckIn);
             setCheckOut(nextCheckOut || addDaysToIso(nextCheckIn, 1));

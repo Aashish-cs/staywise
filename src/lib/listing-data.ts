@@ -105,6 +105,10 @@ type AvailableListingIdRow = {
   listing_id: string;
 };
 
+type UnavailableDateRow = {
+  unavailable_date: string;
+};
+
 type FavoriteListingRow = {
   created_at: string;
   listing?: ListingRow | ListingRow[] | null;
@@ -470,7 +474,36 @@ export async function checkListingAvailability(
         available: false,
         message: "Those dates are already booked. Choose different dates.",
         status: "unavailable",
-      };
+  };
+}
+
+export async function getListingUnavailableDates(
+  listingId: string,
+  startDate: string,
+  endDate: string,
+) {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return [];
+  }
+
+  const { data, error } = await supabase.rpc("get_listing_unavailable_dates", {
+    requested_end_date: endDate,
+    requested_listing_id: listingId,
+    requested_start_date: startDate,
+  });
+
+  if (error) {
+    if (!isMissingTableError(error)) {
+      console.error("Unable to load listing calendar availability", error);
+    }
+    return [];
+  }
+
+  return ((data ?? []) as UnavailableDateRow[])
+    .map((row) => row.unavailable_date)
+    .filter(Boolean);
 }
 
 export async function getListingById(id: string) {

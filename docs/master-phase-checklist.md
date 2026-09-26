@@ -137,9 +137,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Multi-step flow: property type, room type, real address/map, basics, amenities, Supabase Storage photos, title, description, price, review, publish, and draft persistence.
   - Current pass: added the five-step host listing wizard, step readiness checks, review-before-publish summary, live quality preview, and browser draft persistence. Storage uploads, provider-backed coordinates, and durable server drafts remain for the next host phases.
 
-- [ ] Phase 23: Host dashboard
+- [x] Phase 23: Host dashboard
   - Professional dashboard with real active/draft listings, reservations, revenue estimate, occupancy, counts, and recent activity.
-  - Current pass: added real host metrics for active listings, reservations, projected confirmed revenue, markets, average booking value, and 90-day occupancy. Listing editing and deeper recent-activity management continue in the next host phases.
+  - Current pass: added real host metrics for active listings, reservations, projected confirmed revenue, markets, average booking value, and 90-day occupancy, plus listing portfolio, create-listing entry, reservation feed, protected states, and host quality insights. Verified against `docs/phase-23-host-dashboard.md`.
 
 - [ ] Phase 24: Host listing management
   - Host can view, edit, publish/unpublish, archive where supported, change price/amenities/photos/location carefully, and review reservations only for owned listings.
@@ -274,8 +274,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Do not call complete until lint/typecheck/build pass, no console errors, no dead UI, no fake production data, auth/favorites/search/maps/reservations/availability/host/images/trips/RLS/mobile/desktop/errors/loading/deployment all work.
   - Current pass: verified typecheck, lint, unit tests, production build, browser QA, live Vercel status, live smoke routes, desktop/mobile console scan, and data honesty in `docs/phase-55-production-quality-gate.md`.
 
-- [ ] Phase 56: End-to-end product test
+- [x] Phase 56: End-to-end product test
   - Test new guest flow, host flow, near-me flow, and mobile main guest flow.
+  - Current pass: added `tests/e2e/product-flows.spec.ts` covering guest discovery/reservation sign-in handoff, protected host entry, geolocation near-me search, and mobile guest reserve path; verified 13 browser tests in `docs/phase-56-end-to-end-product-test.md`.
 
 ## Final Report Requirements
 

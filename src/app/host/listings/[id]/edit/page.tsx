@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { HostEditListingForm } from "@/components/host-edit-listing-form";
 import { HostImageManager } from "@/components/host-image-manager";
+import { HostListingArchiveForm } from "@/components/host-listing-status-form";
 import { StayWiseHeader } from "@/components/staywise-header";
 import {
   getCurrentUserProfile,
@@ -62,6 +63,7 @@ export default async function EditHostListingPage({
       <section className="mx-auto max-w-[1100px] px-5 py-8 lg:px-8">
         <HostEditListingForm listing={listing} />
         <HostImageManager images={images} listingId={listing.id} />
+        <HostListingArchiveForm isActive={listing.isActive} listingId={listing.id} />
       </section>
     </main>
   );

@@ -141,9 +141,9 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Professional dashboard with real active/draft listings, reservations, revenue estimate, occupancy, counts, and recent activity.
   - Current pass: added real host metrics for active listings, reservations, projected confirmed revenue, markets, average booking value, and 90-day occupancy, plus listing portfolio, create-listing entry, reservation feed, protected states, and host quality insights. Verified against `docs/phase-23-host-dashboard.md`.
 
-- [ ] Phase 24: Host listing management
+- [x] Phase 24: Host listing management
   - Host can view, edit, publish/unpublish, archive where supported, change price/amenities/photos/location carefully, and review reservations only for owned listings.
-  - Current pass: added owner-scoped publish/unpublish controls, visible inventory status, and a protected edit route for core listing details. Archive and asset-management surfaces remain in this phase.
+  - Current pass: added owner-scoped publish/unpublish controls, visible inventory status, protected core edit route, owner-only image management, and non-destructive archive behavior that hides listings from guest search while preserving host records. Amenity editing and richer activity history remain follow-ups in `docs/phase-24-host-listing-management.md`.
 
 - [x] Phase 25: Host reservation management
   - Host reservation page with guest, listing, dates, status, total, created date, and supported actions.

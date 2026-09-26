@@ -160,6 +160,85 @@ export async function toggleHostListingAction(
   };
 }
 
+export async function archiveHostListingAction(
+  _state: HostListingStatusActionState,
+  formData: FormData,
+): Promise<HostListingStatusActionState> {
+  void _state;
+  const parsed = hostListingIdSchema.safeParse({
+    listingId: formData.get("listingId"),
+  });
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "This listing could not be archived.",
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return {
+      ok: false,
+      message: "Supabase is not configured for host listings yet.",
+    };
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      ok: false,
+      message: "Sign in as a host before archiving a listing.",
+    };
+  }
+
+  const { data: listing } = await supabase
+    .from("listings")
+    .select("id")
+    .eq("id", parsed.data.listingId)
+    .eq("host_id", user.id)
+    .maybeSingle();
+
+  if (!listing) {
+    return {
+      ok: false,
+      message: "This listing was not found for your host account.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("listings")
+    .update({
+      is_active: false,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", parsed.data.listingId)
+    .eq("host_id", user.id);
+
+  if (error) {
+    console.error("Unable to archive host listing", error);
+    return {
+      ok: false,
+      message: "Listing could not be archived. Try again.",
+    };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/search");
+  revalidatePath("/host");
+  revalidatePath(`/host/listings/${parsed.data.listingId}/edit`);
+  revalidatePath(`/listings/${parsed.data.listingId}`);
+
+  return {
+    ok: true,
+    message: "Listing archived and hidden from guest search. You can publish it again from the host workspace.",
+  };
+}
+
 const featuredAmenitySet = new Set<string>(featuredAmenities);
 
 const hostLocationSchema = z.object({

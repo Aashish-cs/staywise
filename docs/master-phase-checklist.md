@@ -157,10 +157,10 @@ Rule for this file: do not mark a phase complete just because it was reviewed. A
   - Profile settings for display name, avatar, bio, phone if used, security, favorites, trips, and hosting.
   - Current pass: added protected `/profile`, owner-scoped display-name and notification preference saves, password-reset entry point, and signed-in account-menu navigation. Avatar and public host bio remain follow-up work.
 
-- [ ] Phase 28: Recommendation system
+- [x] Phase 28: Recommendation system
   - Improve deterministic explainable ranking with real signals: geography, distance, price, capacity, amenities, favorites, history, property type, popularity, real rating, and recency.
   - Never fabricate recommendation reasons.
-  - Current pass: rank up to 200 live candidates before pagination, add live review averages/counts when the reviews table is available, use real saved-stay and recent-trip-city context for signed-in guests, and add honest recency signals. Popularity aggregation still needs a privacy-safe public aggregate query.
+  - Current pass: rank up to 200 live candidates before pagination, add live review averages/counts when the reviews table is available, use real saved-stay and recent-trip-city context for signed-in guests, add honest recency signals, and include privacy-safe completed-stay popularity aggregates with automated scoring tests.
 
 - [x] Phase 29: Optional LLM layer
   - Server-only AI abstraction for natural language search, host description assistance, explanations, and smart search interpretation.

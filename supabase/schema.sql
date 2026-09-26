@@ -819,6 +819,30 @@ $$;
 grant execute on function public.get_available_listing_ids(date, date) to anon;
 grant execute on function public.get_available_listing_ids(date, date) to authenticated;
 
+create or replace function public.get_listing_popularity_signals(listing_ids uuid[])
+returns table (
+  listing_id uuid,
+  completed_reservation_count bigint
+)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select
+    reservations.listing_id,
+    count(*)::bigint as completed_reservation_count
+  from public.reservations
+  join public.listings on listings.id = reservations.listing_id
+  where reservations.listing_id = any(listing_ids)
+    and reservations.status = 'completed'
+    and listings.is_active = true
+  group by reservations.listing_id;
+$$;
+
+grant execute on function public.get_listing_popularity_signals(uuid[]) to anon;
+grant execute on function public.get_listing_popularity_signals(uuid[]) to authenticated;
+
 create or replace function public.cancel_reservation(reservation_id uuid)
 returns void
 language plpgsql

@@ -91,4 +91,62 @@ describe("recommendation ranking", () => {
     expect(ranked[0].matchReasons).toContain("Saved in your StayWise stays");
     expect(ranked[0].matchReasons.every((reason) => reason.length > 0)).toBe(true);
   });
+
+  it("uses real rating averages and review counts in ranking reasons", () => {
+    const ratedListing = {
+      ...baseListing,
+      id: "listing-rated",
+      ratingAverage: 4.8,
+      reviewCount: 5,
+      title: "Reviewed work suite",
+    };
+    const unratedListing = {
+      ...baseListing,
+      id: "listing-unrated",
+      ratingAverage: null,
+      reviewCount: 0,
+      title: "Unreviewed work suite",
+    };
+
+    const ranked = rankListings(
+      {
+        destination: "Dallas",
+        guests: 2,
+        maxNightlyBudget: 250,
+        tripPurpose: "remote-work",
+      },
+      [unratedListing, ratedListing],
+    );
+
+    expect(ranked[0].id).toBe("listing-rated");
+    expect(ranked[0].matchReasons).toContain("4.8 guest rating from 5 reviews");
+  });
+
+  it("uses completed-stay popularity without exposing reservation rows", () => {
+    const popularListing = {
+      ...baseListing,
+      completedReservationCount: 6,
+      id: "listing-popular",
+      title: "Trusted work suite",
+    };
+    const newerListing = {
+      ...baseListing,
+      completedReservationCount: 0,
+      id: "listing-new",
+      title: "New work suite",
+    };
+
+    const ranked = rankListings(
+      {
+        destination: "Dallas",
+        guests: 2,
+        maxNightlyBudget: 250,
+        tripPurpose: "remote-work",
+      },
+      [newerListing, popularListing],
+    );
+
+    expect(ranked[0].id).toBe("listing-popular");
+    expect(ranked[0].matchReasons).toContain("6 completed stays on StayWise");
+  });
 });

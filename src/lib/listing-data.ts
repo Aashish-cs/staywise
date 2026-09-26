@@ -85,6 +85,11 @@ type ReviewSignalRow = {
   rating: number;
 };
 
+type PopularitySignalRow = {
+  completed_reservation_count: number | string;
+  listing_id: string;
+};
+
 type AvailableListingIdRow = {
   listing_id: string;
 };
@@ -197,7 +202,7 @@ export async function getPublicListingsResult(): Promise<{
     const { data, error } = await loadPublicListingRows(supabase);
 
     if (!error) {
-      const listings = await enrichListingsWithReviewSignals(
+      const listings = await enrichListingsWithRecommendationSignals(
         supabase,
         ((data ?? []) as ListingRow[]).map(mapListingRow),
       );
@@ -310,7 +315,7 @@ export async function searchPublicListings(
       });
     }
 
-    const candidates = await enrichListingsWithReviewSignals(
+    const candidates = await enrichListingsWithRecommendationSignals(
       supabase,
       ((data ?? []) as ListingRow[]).map(mapListingRow),
     );
@@ -357,7 +362,7 @@ export async function searchPublicListings(
     });
   }
 
-  const candidates = await enrichListingsWithReviewSignals(
+  const candidates = await enrichListingsWithRecommendationSignals(
     supabase,
     ((data ?? []) as ListingRow[]).map(mapListingRow),
   );
@@ -589,6 +594,14 @@ async function loadPublicListingRows(supabase: SupabaseClient) {
     .limit(80);
 }
 
+async function enrichListingsWithRecommendationSignals(
+  supabase: SupabaseClient,
+  listings: Listing[],
+) {
+  const listingsWithReviews = await enrichListingsWithReviewSignals(supabase, listings);
+  return enrichListingsWithPopularitySignals(supabase, listingsWithReviews);
+}
+
 async function enrichListingsWithReviewSignals(
   supabase: SupabaseClient,
   listings: Listing[],
@@ -632,6 +645,36 @@ async function enrichListingsWithReviewSignals(
       reviewCount: ratings.length,
     };
   });
+}
+
+async function enrichListingsWithPopularitySignals(
+  supabase: SupabaseClient,
+  listings: Listing[],
+) {
+  if (listings.length === 0) {
+    return listings;
+  }
+
+  const { data, error } = await supabase.rpc("get_listing_popularity_signals", {
+    listing_ids: listings.map((listing) => listing.id),
+  });
+
+  if (error) {
+    if (!isMissingTableError(error)) {
+      console.warn("Unable to load popularity signals for recommendations", error.message);
+    }
+    return listings;
+  }
+
+  const countsByListing = new Map<string, number>();
+  for (const row of (data ?? []) as PopularitySignalRow[]) {
+    countsByListing.set(row.listing_id, Number(row.completed_reservation_count));
+  }
+
+  return listings.map((listing) => ({
+    ...listing,
+    completedReservationCount: countsByListing.get(listing.id) ?? 0,
+  }));
 }
 
 function isMissingTableError(error: SupabaseQueryError) {

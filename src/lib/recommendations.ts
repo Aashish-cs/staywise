@@ -214,6 +214,21 @@ function scoreListing(
     );
   }
 
+  if ((listing.completedReservationCount ?? 0) > 0) {
+    const completedReservationCount = listing.completedReservationCount ?? 0;
+    const popularityScore = Math.min(
+      8,
+      Math.max(2, Math.round(Math.log2(completedReservationCount + 1) * 2)),
+    );
+
+    score += popularityScore;
+    reasons.push(
+      `${completedReservationCount} completed ${
+        completedReservationCount === 1 ? "stay" : "stays"
+      } on StayWise`,
+    );
+  }
+
   const amenityMatches = input.amenities.filter((amenity) =>
     listing.amenities.includes(amenity),
   );

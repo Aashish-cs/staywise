@@ -50,6 +50,7 @@ export type Listing = {
   bestFor: TripPurpose[];
   description: string;
   createdAt?: string;
+  completedReservationCount?: number;
   ratingAverage?: number | null;
   reviewCount?: number;
 };

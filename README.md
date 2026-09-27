@@ -62,7 +62,7 @@ Use `.env.example` as the source of truth. Important groups:
   - `NEXT_PUBLIC_SITE_URL`
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- Free location provider:
+- Free location provider and external nearby hotel fallback:
   - `NOMINATIM_EMAIL`
   - `NOMINATIM_BASE_URL`
   - `NOMINATIM_REVERSE_BASE_URL`

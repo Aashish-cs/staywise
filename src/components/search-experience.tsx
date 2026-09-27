@@ -29,6 +29,7 @@ import {
 } from "@/lib/listings";
 import type { ListingDataState } from "@/lib/listing-data";
 import type { LocationLookupResult } from "@/lib/location-service";
+import type { NearbyPlace } from "@/lib/nearby-places";
 import {
   rankListings,
   searchSchema,
@@ -83,6 +84,7 @@ export function SearchExperience({
   initialLocation,
   initialSearch,
   isSignedIn,
+  nearbyPlaces = [],
   pagination,
   showProductSections = true,
 }: {
@@ -93,6 +95,7 @@ export function SearchExperience({
   initialLocation?: LocationLookupResult | null;
   initialSearch?: Partial<SearchInput>;
   isSignedIn: boolean;
+  nearbyPlaces?: NearbyPlace[];
   pagination?: {
     hasNextPage: boolean;
     hasPreviousPage: boolean;
@@ -382,6 +385,7 @@ export function SearchExperience({
             onSortModeChange={setSortMode}
             onToggleMapPanel={() => setShowMapPanel((current) => !current)}
             onToggleSaved={toggleSaved}
+            nearbyPlaces={nearbyPlaces}
             pagination={pagination}
             resultSummary={resultSummary}
             savedIds={savedIds}

@@ -4,7 +4,10 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import clsx from "clsx";
 import {
+  ExternalLink,
+  Hotel,
   Map as MapIcon,
+  MapPin,
   SlidersHorizontal,
   Sparkles,
 } from "lucide-react";
@@ -24,6 +27,7 @@ import {
 } from "@/components/ui/primitives";
 import { formatDistanceMiles } from "@/lib/location-distance";
 import type { ListingDataState } from "@/lib/listing-data";
+import type { NearbyPlace } from "@/lib/nearby-places";
 import type { RankedListing, SearchInput } from "@/lib/recommendations";
 import type { SortMode } from "@/lib/search-results";
 
@@ -49,6 +53,7 @@ type SearchResultsSectionProps = {
   onSortModeChange: (sortMode: SortMode) => void;
   onToggleMapPanel: () => void;
   onToggleSaved: (listingId: string) => void;
+  nearbyPlaces?: NearbyPlace[];
   pagination?: {
     hasNextPage: boolean;
     hasPreviousPage: boolean;
@@ -78,6 +83,7 @@ export function SearchResultsSection({
   onSortModeChange,
   onToggleMapPanel,
   onToggleSaved,
+  nearbyPlaces = [],
   pagination,
   resultSummary,
   savedIds,
@@ -87,6 +93,9 @@ export function SearchResultsSection({
   sortMode,
 }: SearchResultsSectionProps) {
   const dataUnavailable = dataState.status !== "ready";
+  const hasNearbyPlaceFallback =
+    !dataUnavailable && displayedListings.length === 0 && nearbyPlaces.length > 0;
+  const destinationLabel = search.destination.trim() || "this area";
 
   return (
     <section id="results" className="min-w-0 scroll-mt-24">
@@ -96,12 +105,18 @@ export function SearchResultsSection({
             {dataUnavailable ? "Marketplace data unavailable" : resultSummary}
           </p>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight">
-            {dataUnavailable ? "Live stays need attention" : "Recommended stays"}
+            {dataUnavailable
+              ? "Live stays need attention"
+              : hasNearbyPlaceFallback
+                ? `Real places near ${destinationLabel}`
+                : "Recommended stays"}
           </h2>
           <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#5f5148]">
             {dataUnavailable
               ? "StayWise does not fall back to hardcoded places when Supabase is missing or failing."
-              : "Smart sort weighs budget, trip style, guest count, amenities, and the filters in your shareable search URL."}
+              : hasNearbyPlaceFallback
+                ? "No bookable StayWise stays match this search yet. These nearby hotels are real external places from OpenStreetMap, so the page still gives you useful local context."
+                : "Smart sort weighs budget, trip style, guest count, amenities, and the filters in your shareable search URL."}
           </p>
           {availabilityFilterApplied && (
             <Badge tone="success" className="mt-2">
@@ -302,6 +317,13 @@ export function SearchResultsSection({
               </div>
             )}
         </div>
+      ) : hasNearbyPlaceFallback ? (
+        <NearbyPlacesFallback
+          destinationLabel={destinationLabel}
+          nearbyPlaces={nearbyPlaces}
+          onClearAdvancedFilters={onClearAdvancedFilters}
+          onFocusSearch={onFocusSearch}
+        />
       ) : (
         <EmptyState
           className="mt-6"
@@ -340,6 +362,102 @@ export function SearchResultsSection({
         />
       )}
     </section>
+  );
+}
+
+function NearbyPlacesFallback({
+  destinationLabel,
+  nearbyPlaces,
+  onClearAdvancedFilters,
+  onFocusSearch,
+}: {
+  destinationLabel: string;
+  nearbyPlaces: NearbyPlace[];
+  onClearAdvancedFilters: () => void;
+  onFocusSearch: () => void;
+}) {
+  return (
+    <div className="mt-6 space-y-4">
+      <Surface className="p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <Badge tone="info">External place data</Badge>
+            <h3 className="mt-3 text-xl font-extrabold tracking-tight">
+              StayWise does not have reservable stays in {destinationLabel} yet.
+            </h3>
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-[#5f5148]">
+              These are real hotels around the searched destination from OpenStreetMap.
+              They are for discovery only until a StayWise host adds bookable inventory
+              there.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row lg:shrink-0">
+            <Button type="button" variant="secondary" onClick={onClearAdvancedFilters}>
+              Clear advanced filters
+            </Button>
+            <Button type="button" variant="outline" onClick={onFocusSearch}>
+              Adjust search
+            </Button>
+          </div>
+        </div>
+      </Surface>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {nearbyPlaces.map((place) => (
+          <Surface
+            as="article"
+            key={place.id}
+            className="flex min-h-56 flex-col justify-between p-5"
+          >
+            <div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#fff3f5] text-[#bd1740]">
+                  {place.kind === "place" ? (
+                    <MapPin className="h-5 w-5" aria-hidden="true" />
+                  ) : (
+                    <Hotel className="h-5 w-5" aria-hidden="true" />
+                  )}
+                </span>
+                <Badge tone="neutral" className="shrink-0">
+                  {place.typeLabel}
+                </Badge>
+              </div>
+
+              <h3 className="mt-4 line-clamp-2 text-lg font-extrabold leading-6">
+                {place.name}
+              </h3>
+              {place.address && (
+                <p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-[#5f5148]">
+                  {place.address}
+                </p>
+              )}
+              {place.distanceMiles !== null && (
+                <p className="mt-3 text-sm font-extrabold text-[#315d3b]">
+                  {formatDistanceMiles(place.distanceMiles)} from search center
+                </p>
+              )}
+            </div>
+
+            <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#f0e7df] pt-4">
+              <p className="text-xs font-semibold text-[#786a60]">OpenStreetMap</p>
+              <a
+                href={place.mapUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[#eadfd6] bg-white px-3 text-xs font-extrabold text-[#201a18] transition hover:border-[#ff385c] hover:text-[#df2348]"
+              >
+                View map
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              </a>
+            </div>
+          </Surface>
+        ))}
+      </div>
+
+      <p className="text-xs font-semibold text-[#786a60]">
+        Data © OpenStreetMap contributors, ODbL 1.0.
+      </p>
+    </div>
   );
 }
 

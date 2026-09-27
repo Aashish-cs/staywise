@@ -31,6 +31,10 @@ Sources:
   - 30-day fetch/cache revalidation
   - identifiable headers
   - optional `NOMINATIM_EMAIL`
+- `src/lib/nearby-places.ts`: server-side external hotel discovery using
+  OpenStreetMap/Nominatim when a verified destination has no bookable StayWise
+  matches. These places are clearly labeled as external and never show a
+  StayWise reserve action.
 - `src/app/api/locations/search/route.ts`: explicit user-triggered place search endpoint.
 - `/search` now resolves submitted destinations on the server and passes the verified location into the UI.
 - Search filters show verified OpenStreetMap place status and attribution when a destination has been resolved.

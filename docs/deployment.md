@@ -42,7 +42,7 @@ Use Resend as the SMTP provider for Supabase Auth emails:
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `NEXT_PUBLIC_SITE_URL`
    - `NOMINATIM_EMAIL` (optional but recommended)
-   - `NOMINATIM_BASE_URL` (optional, defaults to OpenStreetMap Nominatim)
+   - `NOMINATIM_BASE_URL` (optional, defaults to OpenStreetMap Nominatim search and external nearby hotel fallback)
    - `NOMINATIM_REVERSE_BASE_URL` (optional, defaults to OpenStreetMap Nominatim reverse geocoding)
    - `MAPBOX_ACCESS_TOKEN` (reserved for a future map provider; current app uses OpenStreetMap/Leaflet without it)
    - `STAYWISE_AI_API_KEY` (optional, server-only; deterministic AI search works without it)

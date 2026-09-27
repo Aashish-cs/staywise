@@ -13,6 +13,7 @@ import {
   type RawSearchParams,
 } from "@/lib/search-url";
 import { resolveSearchLocation } from "@/lib/location-service";
+import { getNearbyPlacesForLocation } from "@/lib/nearby-places";
 
 export const dynamic = "force-dynamic";
 
@@ -71,6 +72,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       preferredCities,
     },
   });
+  const nearbyPlaces =
+    location && listingResult.dataState.status === "ready" && listingResult.listings.length === 0
+      ? await getNearbyPlacesForLocation(location)
+      : [];
   const accountRole =
     profile?.role === "host" ? "host" : profile?.role === "guest" ? "guest" : null;
   const currentQuery = buildSearchPageQueryString(search, listingResult.page);
@@ -87,6 +92,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       initialLocation={location}
       initialSearch={search}
       isSignedIn={Boolean(user)}
+      nearbyPlaces={nearbyPlaces}
       pagination={{
         hasNextPage: listingResult.hasNextPage,
         hasPreviousPage: listingResult.hasPreviousPage,

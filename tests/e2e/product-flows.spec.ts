@@ -5,7 +5,7 @@ test("new guest can discover a stay and reach the reservation sign-in handoff", 
 }) => {
   await page.goto("/");
 
-  await page.getByPlaceholder(/Search .* or any city|Search destinations/).fill("Dallas");
+  await page.getByPlaceholder("Search any city worldwide").fill("Dallas");
   await page.getByRole("button", { name: "Search stays" }).click();
 
   await expect(page).toHaveURL(/\/search\?destination=Dallas/);
@@ -91,7 +91,7 @@ test("mobile guest flow can filter, open a stay, and reach the sticky reserve pa
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
 
-  await page.getByPlaceholder(/Search .* or any city|Search destinations/).fill("Dallas");
+  await page.getByPlaceholder("Search any city worldwide").fill("Dallas");
   await page.getByRole("button", { name: "Search stays" }).click();
 
   await expect(page).toHaveURL(/\/search\?destination=Dallas/);

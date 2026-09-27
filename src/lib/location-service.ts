@@ -92,7 +92,6 @@ export async function searchLocations(query: string, limit = 5) {
   url.searchParams.set("q", normalizedQuery);
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("addressdetails", "1");
-  url.searchParams.set("countrycodes", "us");
   url.searchParams.set("dedupe", "1");
   url.searchParams.set("featureType", "settlement");
   url.searchParams.set("limit", String(safeLimit));
@@ -116,7 +115,12 @@ export async function searchLocations(query: string, limit = 5) {
     throw new Error(`Location lookup failed with ${response.status}.`);
   }
 
-  const rows = (await response.json()) as NominatimSearchRow[];
+  let rows = (await response.json()) as NominatimSearchRow[];
+
+  if (rows.length === 0) {
+    rows = await searchAnyPlace(normalizedQuery, safeLimit);
+  }
+
   const results = rows
     .map((row) => mapNominatimRow(normalizedQuery, row))
     .filter((row): row is LocationLookupResult => Boolean(row));
@@ -127,6 +131,36 @@ export async function searchLocations(query: string, limit = 5) {
   });
 
   return results;
+}
+
+async function searchAnyPlace(query: string, limit: number) {
+  const url = new URL(nominatimEndpoint);
+  url.searchParams.set("q", query);
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("addressdetails", "1");
+  url.searchParams.set("dedupe", "1");
+  url.searchParams.set("limit", String(limit));
+
+  if (contactEmail) {
+    url.searchParams.set("email", contactEmail);
+  }
+
+  const response = await fetch(url, {
+    headers: {
+      "Accept-Language": "en-US,en;q=0.9",
+      Referer: siteUrl,
+      "User-Agent": `StayWiseSeniorDesign/1.0 (${siteUrl})`,
+    },
+    next: {
+      revalidate: Math.floor(cacheTtlMs / 1000),
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Location lookup failed with ${response.status}.`);
+  }
+
+  return (await response.json()) as NominatimSearchRow[];
 }
 
 export async function reverseGeocodeLocation(lat: number, lng: number) {

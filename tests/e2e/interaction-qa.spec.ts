@@ -14,7 +14,7 @@ test("account menu and home search controls are clickable", async ({ page }) => 
   await expect(page.getByRole("dialog", { name: "Choose stay dates" })).toBeVisible();
   await page.keyboard.press("Escape");
 
-  await page.getByPlaceholder(/Search .* or any city|Search destinations/).fill("Dallas");
+  await page.getByPlaceholder("Search any city worldwide").fill("Dallas");
   await page.getByRole("button", { name: "Search stays" }).click();
   await expect(page).toHaveURL(/\/search\?destination=Dallas/);
 });

@@ -173,8 +173,8 @@ export function SearchFiltersPanel({
             Find the right stay.
           </h1>
           <p className="mt-3 text-sm font-semibold leading-6 text-[#5f5148]">
-            Find the stay that fits the trip with live inventory and clear AI
-            match reasons.
+            Choose a real place, dates, guests, and filters. StayWise will only
+            show inventory that exists in the database.
           </p>
         </div>
         <span className="rounded-full bg-[#e7f2e4] px-3 py-1 text-sm font-semibold text-[#315d3b]">
@@ -239,7 +239,7 @@ export function SearchFiltersPanel({
                 setCurrentLocationState("idle");
                 onDestinationChange(event.target.value);
               }}
-              placeholder="Search by city or neighborhood"
+              placeholder="Search any city or place worldwide"
               className="field-input"
             />
           </span>

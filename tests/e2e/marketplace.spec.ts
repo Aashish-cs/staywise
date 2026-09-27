@@ -5,7 +5,7 @@ test("home page exposes the premium marketplace shell", async ({ page }) => {
 
   await expect(page).toHaveTitle(/Smart Stays, Better Days/);
   await expect(page.getByRole("link", { name: "StayWise home" })).toBeVisible();
-  await expect(page.getByText("Real stays, smarter matching, zero guesswork.")).toBeVisible();
+  await expect(page.getByText("Find a stay that fits your trip.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Search stays" })).toBeVisible();
 });
 

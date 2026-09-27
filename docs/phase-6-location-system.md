@@ -26,12 +26,12 @@ Sources:
 - `src/lib/location-service.ts`: server-side search service using Nominatim with:
   - query normalization
   - max 5 results
-  - United States country filter
-  - settlement-focused results
+  - worldwide place lookup
+  - settlement-focused results with a general place fallback
   - 30-day fetch/cache revalidation
   - identifiable headers
   - optional `NOMINATIM_EMAIL`
-- `src/app/api/locations/search/route.ts`: explicit user-triggered place search endpoint for future UI.
+- `src/app/api/locations/search/route.ts`: explicit user-triggered place search endpoint.
 - `/search` now resolves submitted destinations on the server and passes the verified location into the UI.
 - Search filters show verified OpenStreetMap place status and attribution when a destination has been resolved.
 - `supabase/phase6_location_foundation.sql` adds provider-backed listing location metadata columns.
@@ -57,4 +57,5 @@ The migration adds provider and bounds constraints plus indexes for provider ids
 ## What This Does Not Do Yet
 
 - It does not call Nominatim on every keystroke.
+- It does not use hardcoded destination objects or restrict searches to the United States.
 - It does not replace the Phase 8 server-side listing search work.

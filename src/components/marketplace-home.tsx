@@ -96,13 +96,6 @@ export function MarketplaceHome({
   });
 
   const topCity = useMemo(() => getTopCity(initialListings), [initialListings]);
-  const cityOptions = useMemo(
-    () =>
-      Array.from(new Set(initialListings.map((listing) => listing.city))).sort(
-        (first, second) => first.localeCompare(second),
-      ),
-    [initialListings],
-  );
   const rankedListings = useMemo(
     () =>
       rankListings(broadMarketplaceSearchInput, initialListings, {
@@ -232,7 +225,7 @@ export function MarketplaceHome({
               Smart Stays, Better Days.
             </p>
             <h1 className="mx-auto mt-2 max-w-4xl text-3xl font-extrabold leading-tight tracking-tight md:text-5xl">
-              Real stays, smarter matching, zero guesswork.
+              Find a stay that fits your trip.
             </h1>
           </div>
 
@@ -248,15 +241,9 @@ export function MarketplaceHome({
               <input
                 value={destination}
                 onChange={(event) => setDestination(event.target.value)}
-                placeholder={topCity ? `Search ${topCity} or any city` : "Search destinations"}
-                list="staywise-destinations"
+                placeholder="Search any city worldwide"
                 className="mt-1 w-full bg-transparent text-sm font-semibold text-[#5f5148] outline-none placeholder:text-[#8b7d74]"
               />
-              <datalist id="staywise-destinations">
-                {cityOptions.map((city) => (
-                  <option key={city} value={city} />
-                ))}
-              </datalist>
             </label>
 
             <div className="border-t border-[#efe8e2] px-3 py-3 transition focus-within:bg-[#fff8f9] md:border-r md:border-t-0">

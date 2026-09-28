@@ -96,26 +96,29 @@ export function SearchResultsSection({
   const hasNearbyPlaceFallback =
     !dataUnavailable && displayedListings.length === 0 && nearbyPlaces.length > 0;
   const destinationLabel = search.destination.trim() || "this area";
+  const searchSummary = hasNearbyPlaceFallback
+    ? `${nearbyPlaces.length} stay options near ${destinationLabel}`
+    : resultSummary;
 
   return (
     <section id="results" className="min-w-0 scroll-mt-24">
       <div className="flex flex-col gap-4 border-b border-[#eadfd6] pb-5 2xl:flex-row 2xl:items-end 2xl:justify-between">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-[#786a60]">
-            {dataUnavailable ? "Marketplace data unavailable" : resultSummary}
+            {dataUnavailable ? "Marketplace data unavailable" : searchSummary}
           </p>
           <h2 className="mt-1 text-2xl font-semibold tracking-tight">
             {dataUnavailable
               ? "Live stays need attention"
               : hasNearbyPlaceFallback
-                ? `Real places for ${destinationLabel}`
+                ? `Places to stay in ${destinationLabel}`
                 : "Recommended stays"}
           </h2>
           <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#5f5148]">
             {dataUnavailable
               ? "StayWise does not fall back to hardcoded places when Supabase is missing or failing."
               : hasNearbyPlaceFallback
-                ? "No bookable StayWise stays match this search yet. These real external accommodation results come from OpenStreetMap, so city, county, state, and country searches still give you useful places."
+                ? "Compare hotel and guest-stay options with photos, maps, and availability actions. StayWise direct booking is available for host listings as inventory expands."
                 : "Smart sort weighs budget, trip style, guest count, amenities, and the filters in your shareable search URL."}
           </p>
           {availabilityFilterApplied && (
@@ -381,14 +384,13 @@ function NearbyPlacesFallback({
       <Surface className="p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <Badge tone="info">OpenStreetMap places</Badge>
+            <Badge tone="info">Live place data</Badge>
             <h3 className="mt-3 text-xl font-extrabold tracking-tight">
-              Hotel options for {destinationLabel}
+              More options around {destinationLabel}
             </h3>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-[#5f5148]">
-              These hotels and guest stays come from OpenStreetMap. Check availability
-              opens the hotel site when available; otherwise StayWise opens booking
-              search options for that place.
+              Availability actions open the hotel website when listed, or a focused
+              booking search for that specific place.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row lg:shrink-0">
@@ -459,7 +461,7 @@ function NearbyPlacesFallback({
               </div>
 
               <div className="mt-5 flex flex-col gap-3 border-t border-[#f0e7df] pt-4 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs font-semibold text-[#786a60]">OpenStreetMap</p>
+                <p className="text-xs font-semibold text-[#786a60]">Place data</p>
                 <div className="flex flex-wrap gap-2">
                   {place.actionUrl !== place.mapUrl && (
                     <a

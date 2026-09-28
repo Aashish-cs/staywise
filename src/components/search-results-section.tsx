@@ -413,7 +413,7 @@ function NearbyPlacesFallback({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={place.imageUrl}
-                alt={place.imageAttribution === "Provider photo" ? place.name : ""}
+                alt=""
                 className="h-full w-full object-cover"
                 loading="lazy"
               />

@@ -103,7 +103,6 @@ describe("nearby places", () => {
       actionUrl: "https://hotel-vinache.example/",
       address: "1300 Canal Street, New Orleans, Louisiana, United States",
       id: "way:328669269",
-      imageAttribution: "Provider photo",
       imageUrl: "https://example.com/hotel-vinache.jpg",
       kind: "hotel",
       mapUrl: "https://www.openstreetmap.org/way/328669269",
@@ -148,7 +147,6 @@ describe("nearby places", () => {
 
     expect(places[0]).toMatchObject({
       actionLabel: "Find booking options",
-      imageAttribution: "Representative photo",
     });
     expect(places[0]?.actionUrl).toContain("duckduckgo.com");
     expect(places[0]?.actionUrl).toContain("Map%20Only%20Hotel");

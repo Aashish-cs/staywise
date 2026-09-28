@@ -21,7 +21,6 @@ export type NearbyPlace = {
   distanceMiles: number | null;
   id: string;
   kind: NearbyPlaceKind;
-  imageAttribution: string;
   imageUrl: string;
   lat: number;
   lng: number;
@@ -264,7 +263,6 @@ function mapNearbyPlace(
     attribution: "Data © OpenStreetMap contributors, ODbL 1.0",
     distanceMiles,
     id: makePlaceId(row, lat, lng),
-    imageAttribution: providerImageUrl ? "Provider photo" : "Representative photo",
     imageUrl,
     kind,
     lat,

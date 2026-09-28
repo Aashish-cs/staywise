@@ -60,9 +60,10 @@ const nominatimEndpoint =
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://staywise-tau.vercel.app";
 const contactEmail = process.env.NOMINATIM_EMAIL;
 const nearbyPlacesCacheTtlMs = 1000 * 60 * 60 * 24 * 7;
-const maxNearbyDistanceMiles = 25;
+const maxNearbyDistanceMiles = 75;
 const maxFetchedPlaces = 12;
 const maxDisplayedPlaces = 8;
+const minSufficientPlaces = 4;
 const nearbyPlacesCache = new Map<
   string,
   {
@@ -94,19 +95,8 @@ export async function getNearbyPlacesForLocation(location: LocationLookupResult 
   }
 
   try {
-    const broadArea = isBroadArea(location);
-    const rows = await fetchNearbyPlaceRows(location);
-    const places = rows
-      .map((row) => mapNearbyPlace(location, row, { broadArea }))
-      .filter((place): place is NearbyPlace => Boolean(place))
-      .sort(
-        (first, second) =>
-          (first.distanceMiles ?? Number.POSITIVE_INFINITY) -
-            (second.distanceMiles ?? Number.POSITIVE_INFINITY) ||
-          first.name.localeCompare(second.name),
-      )
-      .filter(dedupePlace)
-      .slice(0, maxDisplayedPlaces);
+    const areaSearch = isAreaSearch(location);
+    const places = await fetchNearbyPlaces(location, { areaSearch });
 
     nearbyPlacesCache.set(cacheKey, {
       expiresAt: Date.now() + nearbyPlacesCacheTtlMs,
@@ -126,16 +116,32 @@ export async function getNearbyPlacesForLocation(location: LocationLookupResult 
   }
 }
 
-async function fetchNearbyPlaceRows(location: LocationLookupResult) {
+async function fetchNearbyPlaces(
+  location: LocationLookupResult,
+  {
+    areaSearch,
+  }: {
+    areaSearch: boolean;
+  },
+) {
+  const places: NearbyPlace[] = [];
+
   for (const query of getPlaceQueries(location)) {
     const rows = await fetchNominatimRows(query);
+    const mappedPlaces = rows
+      .map((row) => mapNearbyPlace(location, row, { areaSearch }))
+      .filter((place): place is NearbyPlace => Boolean(place));
 
-    if (rows.length > 0) {
-      return rows;
+    places.push(...mappedPlaces);
+
+    const rankedPlaces = rankPlaces(places);
+
+    if (rankedPlaces.length >= minSufficientPlaces) {
+      return rankedPlaces;
     }
   }
 
-  return [];
+  return rankPlaces(places);
 }
 
 async function fetchNominatimRows(query: string) {
@@ -173,9 +179,9 @@ function mapNearbyPlace(
   location: LocationLookupResult,
   row: NominatimPlaceRow,
   {
-    broadArea,
+    areaSearch,
   }: {
-    broadArea: boolean;
+    areaSearch: boolean;
   },
 ) {
   const lat = Number(row.lat);
@@ -189,7 +195,7 @@ function mapNearbyPlace(
     return null;
   }
 
-  if (broadArea && location.bounds && !isInsideBounds(location.bounds, { lat, lng })) {
+  if (areaSearch && location.bounds && !isInsideBounds(location.bounds, { lat, lng })) {
     return null;
   }
 
@@ -199,11 +205,11 @@ function mapNearbyPlace(
     return null;
   }
 
-  const distanceMiles = broadArea
+  const distanceMiles = areaSearch
     ? null
     : calculateDistanceMiles({ lat: location.lat, lng: location.lng }, { lat, lng });
 
-  if (!broadArea && distanceMiles !== null && distanceMiles > maxNearbyDistanceMiles) {
+  if (!areaSearch && distanceMiles !== null && distanceMiles > maxNearbyDistanceMiles) {
     return null;
   }
 
@@ -226,11 +232,17 @@ function mapNearbyPlace(
 
 function getPlaceQueries(location: LocationLookupResult) {
   const placeQuery = getPlaceQuery(location);
+  const regionQuery = uniqueParts([location.region, location.country]).join(", ");
+  const countryQuery = location.country ?? "";
 
   return uniqueParts([
     `hotel in ${placeQuery}`,
     `guest house in ${placeQuery}`,
     `hostel in ${placeQuery}`,
+    `motel in ${placeQuery}`,
+    location.city && regionQuery ? `hotel in ${regionQuery}` : null,
+    location.city && regionQuery ? `guest house in ${regionQuery}` : null,
+    location.city && countryQuery ? `hotel in ${countryQuery}` : null,
   ]);
 }
 
@@ -316,15 +328,8 @@ function makeMapUrl(row: NominatimPlaceRow, lat: number, lng: number) {
   return `https://www.openstreetmap.org/?mlat=${safeLat}&mlon=${safeLng}#map=16/${safeLat}/${safeLng}`;
 }
 
-function isBroadArea(location: LocationLookupResult) {
-  if (!location.bounds) {
-    return false;
-  }
-
-  const latSpan = Math.abs(location.bounds.north - location.bounds.south);
-  const lngSpan = Math.abs(location.bounds.east - location.bounds.west);
-
-  return !location.city && (latSpan > 0.75 || lngSpan > 0.75);
+function isAreaSearch(location: LocationLookupResult) {
+  return !location.city && Boolean(location.bounds);
 }
 
 function isInsideBounds(
@@ -341,6 +346,18 @@ function isInsideBounds(
 
 function normalizeName(value: string) {
   return value.trim().replace(/\s+/g, " ");
+}
+
+function rankPlaces(places: NearbyPlace[]) {
+  return places
+    .sort(
+      (first, second) =>
+        (first.distanceMiles ?? Number.POSITIVE_INFINITY) -
+          (second.distanceMiles ?? Number.POSITIVE_INFINITY) ||
+        first.name.localeCompare(second.name),
+    )
+    .filter(dedupePlace)
+    .slice(0, maxDisplayedPlaces);
 }
 
 function uniqueParts(parts: Array<string | null | undefined>) {

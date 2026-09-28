@@ -162,6 +162,66 @@ describe("nearby places", () => {
     });
   });
 
+  it("tries another accommodation query when the first provider response has no usable stays", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json([
+          {
+            address: {
+              road: "North Hotel Street",
+              state: "North Carolina",
+            },
+            category: "highway",
+            lat: "34.9994837",
+            lon: "-78.6394474",
+            name: "North Hotel Street",
+            osm_id: 3,
+            osm_type: "way",
+            place_id: 3,
+            type: "residential",
+          },
+        ]),
+      )
+      .mockImplementation(async () =>
+        Response.json([
+          {
+            address: {
+              city: "Asheville",
+              country: "United States",
+              road: "Haywood Street",
+              state: "North Carolina",
+              tourism: "Downtown Guest House",
+            },
+            category: "tourism",
+            lat: "35.5950581",
+            lon: "-82.5561481",
+            name: "Downtown Guest House",
+            osm_id: 4,
+            osm_type: "node",
+            place_id: 4,
+            type: "guest_house",
+          },
+        ]),
+      );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const places = await getNearbyPlacesForLocation({
+      ...northCarolinaLocation,
+      providerId: "relation:state-nc-fallback",
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(places).toHaveLength(1);
+    expect(places[0]).toMatchObject({
+      id: "node:4",
+      kind: "guest_house",
+      name: "Downtown Guest House",
+      typeLabel: "Guest house",
+    });
+  });
+
   it("returns an empty fallback instead of breaking search when the provider fails", async () => {
     vi.stubGlobal(
       "fetch",

@@ -108,14 +108,14 @@ export function SearchResultsSection({
             {dataUnavailable
               ? "Live stays need attention"
               : hasNearbyPlaceFallback
-                ? `Real places near ${destinationLabel}`
+                ? `Real places for ${destinationLabel}`
                 : "Recommended stays"}
           </h2>
           <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-[#5f5148]">
             {dataUnavailable
               ? "StayWise does not fall back to hardcoded places when Supabase is missing or failing."
               : hasNearbyPlaceFallback
-                ? "No bookable StayWise stays match this search yet. These nearby hotels are real external places from OpenStreetMap, so the page still gives you useful local context."
+                ? "No bookable StayWise stays match this search yet. These real external accommodation results come from OpenStreetMap, so city, county, state, and country searches still give you useful places."
                 : "Smart sort weighs budget, trip style, guest count, amenities, and the filters in your shareable search URL."}
           </p>
           {availabilityFilterApplied && (
@@ -383,12 +383,12 @@ function NearbyPlacesFallback({
           <div>
             <Badge tone="info">External place data</Badge>
             <h3 className="mt-3 text-xl font-extrabold tracking-tight">
-              StayWise does not have reservable stays in {destinationLabel} yet.
+              StayWise does not have reservable stays for {destinationLabel} yet.
             </h3>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-[#5f5148]">
-              These are real hotels around the searched destination from OpenStreetMap.
-              They are for discovery only until a StayWise host adds bookable inventory
-              there.
+              These are real hotels and guest stays inside or around the searched
+              destination from OpenStreetMap. They are for discovery only until a
+              StayWise host adds bookable inventory there.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row lg:shrink-0">
@@ -434,6 +434,11 @@ function NearbyPlacesFallback({
               {place.distanceMiles !== null && (
                 <p className="mt-3 text-sm font-extrabold text-[#315d3b]">
                   {formatDistanceMiles(place.distanceMiles)} from search center
+                </p>
+              )}
+              {place.distanceMiles === null && (
+                <p className="mt-3 text-sm font-extrabold text-[#315d3b]">
+                  Inside searched area
                 </p>
               )}
             </div>

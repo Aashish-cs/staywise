@@ -252,21 +252,24 @@ function mapNearbyPlace(
 
   const kind = normalizePlaceKind(row.type);
   const websiteUrl = getWebsiteUrl(row);
-  const imageUrl = getImageUrl(row) ?? getRepresentativeImageUrl(row);
+  const providerImageUrl = getImageUrl(row);
+  const imageUrl = providerImageUrl ?? getRepresentativeImageUrl(row);
+  const address = formatAddress(row);
+  const mapUrl = makeMapUrl(row, lat, lng);
 
   return {
-    actionLabel: websiteUrl ? "Check availability" : "View on map",
-    actionUrl: websiteUrl ?? makeMapUrl(row, lat, lng),
-    address: formatAddress(row),
+    actionLabel: websiteUrl ? "Check availability" : "Find booking options",
+    actionUrl: websiteUrl ?? makeBookingSearchUrl({ address, name }),
+    address,
     attribution: "Data © OpenStreetMap contributors, ODbL 1.0",
     distanceMiles,
     id: makePlaceId(row, lat, lng),
-    imageAttribution: getImageUrl(row) ? "Provider photo" : "Representative photo",
+    imageAttribution: providerImageUrl ? "Provider photo" : "Representative photo",
     imageUrl,
     kind,
     lat,
     lng,
-    mapUrl: makeMapUrl(row, lat, lng),
+    mapUrl,
     name,
     source: "openstreetmap" as const,
     typeLabel: typeLabels[kind],
@@ -400,6 +403,18 @@ function getImageUrl(row: NominatimPlaceRow) {
   }
 
   return null;
+}
+
+function makeBookingSearchUrl({
+  address,
+  name,
+}: {
+  address: string | null;
+  name: string;
+}) {
+  const query = uniqueParts([name, address, "availability booking"]).join(" ");
+
+  return `https://duckduckgo.com/?q=${encodeURIComponent(query)}`;
 }
 
 function normalizeExternalUrl(value: string | null | undefined) {

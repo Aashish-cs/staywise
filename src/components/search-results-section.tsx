@@ -388,8 +388,8 @@ function NearbyPlacesFallback({
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-[#5f5148]">
               These are real hotels and guest stays inside or around the searched
               destination from OpenStreetMap. Use Check availability when a hotel
-              website is available; StayWise reservations still require StayWise host
-              inventory.
+              website is available, or Find booking options when the source only has
+              place data; StayWise reservations still require StayWise host inventory.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row lg:shrink-0">

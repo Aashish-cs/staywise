@@ -115,7 +115,7 @@ describe("nearby places", () => {
     expect(places[0]?.distanceMiles).toBeLessThan(1);
   });
 
-  it("uses a representative image and map action when provider media and website are missing", async () => {
+  it("uses a representative image and booking search when provider media and website are missing", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () =>
@@ -147,10 +147,11 @@ describe("nearby places", () => {
     });
 
     expect(places[0]).toMatchObject({
-      actionLabel: "View on map",
-      actionUrl: "https://www.openstreetmap.org/way/328669270",
+      actionLabel: "Find booking options",
       imageAttribution: "Representative photo",
     });
+    expect(places[0]?.actionUrl).toContain("duckduckgo.com");
+    expect(places[0]?.actionUrl).toContain("Map%20Only%20Hotel");
     expect(places[0]?.imageUrl).toContain("images.unsplash.com");
   });
 

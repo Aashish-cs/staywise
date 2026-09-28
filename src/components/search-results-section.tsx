@@ -381,15 +381,14 @@ function NearbyPlacesFallback({
       <Surface className="p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <Badge tone="info">External place data</Badge>
+            <Badge tone="info">OpenStreetMap places</Badge>
             <h3 className="mt-3 text-xl font-extrabold tracking-tight">
-              External hotel options for {destinationLabel}
+              Hotel options for {destinationLabel}
             </h3>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-[#5f5148]">
-              These are real hotels and guest stays inside or around the searched
-              destination from OpenStreetMap. Use Check availability when a hotel
-              website is available, or Find booking options when the source only has
-              place data; StayWise reservations still require StayWise host inventory.
+              These hotels and guest stays come from OpenStreetMap. Check availability
+              opens the hotel site when available; otherwise StayWise opens booking
+              search options for that place.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row lg:shrink-0">
@@ -414,16 +413,13 @@ function NearbyPlacesFallback({
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={place.imageUrl}
-                alt={`${place.name} ${place.imageAttribution.toLowerCase()}`}
+                alt={place.imageAttribution === "Provider photo" ? place.name : ""}
                 className="h-full w-full object-cover"
                 loading="lazy"
               />
               <div className="absolute left-3 top-3 flex flex-wrap gap-2">
                 <Badge tone="neutral" className="bg-white/95 shadow-sm">
                   {place.typeLabel}
-                </Badge>
-                <Badge tone="info" className="bg-white/95 shadow-sm">
-                  {place.imageAttribution}
                 </Badge>
               </div>
             </div>

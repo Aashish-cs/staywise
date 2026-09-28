@@ -94,36 +94,10 @@ export async function getNearbyPlacesForLocation(location: LocationLookupResult 
   }
 
   try {
-    const url = new URL(nominatimEndpoint);
-    url.searchParams.set("q", `hotel in ${getPlaceQuery(location)}`);
-    url.searchParams.set("format", "jsonv2");
-    url.searchParams.set("addressdetails", "1");
-    url.searchParams.set("dedupe", "1");
-    url.searchParams.set("limit", String(maxFetchedPlaces));
-
-    if (contactEmail) {
-      url.searchParams.set("email", contactEmail);
-    }
-
-    const response = await fetch(url, {
-      headers: {
-        "Accept-Language": "en-US,en;q=0.9",
-        Referer: siteUrl,
-        "User-Agent": `StayWiseSeniorDesign/1.0 (${siteUrl})`,
-      },
-      next: {
-        revalidate: Math.floor(nearbyPlacesCacheTtlMs / 1000),
-      },
-      signal: AbortSignal.timeout(8000),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Nearby place lookup failed with ${response.status}.`);
-    }
-
-    const rows = (await response.json()) as NominatimPlaceRow[];
+    const broadArea = isBroadArea(location);
+    const rows = await fetchNearbyPlaceRows(location);
     const places = rows
-      .map((row) => mapNearbyPlace(location, row))
+      .map((row) => mapNearbyPlace(location, row, { broadArea }))
       .filter((place): place is NearbyPlace => Boolean(place))
       .sort(
         (first, second) =>
@@ -152,11 +126,70 @@ export async function getNearbyPlacesForLocation(location: LocationLookupResult 
   }
 }
 
-function mapNearbyPlace(location: LocationLookupResult, row: NominatimPlaceRow) {
+async function fetchNearbyPlaceRows(location: LocationLookupResult) {
+  for (const query of getPlaceQueries(location)) {
+    const rows = await fetchNominatimRows(query);
+
+    if (rows.length > 0) {
+      return rows;
+    }
+  }
+
+  return [];
+}
+
+async function fetchNominatimRows(query: string) {
+  const url = new URL(nominatimEndpoint);
+  url.searchParams.set("q", query);
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("addressdetails", "1");
+  url.searchParams.set("dedupe", "1");
+  url.searchParams.set("limit", String(maxFetchedPlaces));
+
+  if (contactEmail) {
+    url.searchParams.set("email", contactEmail);
+  }
+
+  const response = await fetch(url, {
+    headers: {
+      "Accept-Language": "en-US,en;q=0.9",
+      Referer: siteUrl,
+      "User-Agent": `StayWiseSeniorDesign/1.0 (${siteUrl})`,
+    },
+    next: {
+      revalidate: Math.floor(nearbyPlacesCacheTtlMs / 1000),
+    },
+    signal: AbortSignal.timeout(8000),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Nearby place lookup failed with ${response.status}.`);
+  }
+
+  return (await response.json()) as NominatimPlaceRow[];
+}
+
+function mapNearbyPlace(
+  location: LocationLookupResult,
+  row: NominatimPlaceRow,
+  {
+    broadArea,
+  }: {
+    broadArea: boolean;
+  },
+) {
   const lat = Number(row.lat);
   const lng = Number(row.lon);
 
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+    return null;
+  }
+
+  if (!isTourismPlace(row)) {
+    return null;
+  }
+
+  if (broadArea && location.bounds && !isInsideBounds(location.bounds, { lat, lng })) {
     return null;
   }
 
@@ -166,12 +199,11 @@ function mapNearbyPlace(location: LocationLookupResult, row: NominatimPlaceRow) 
     return null;
   }
 
-  const distanceMiles = calculateDistanceMiles(
-    { lat: location.lat, lng: location.lng },
-    { lat, lng },
-  );
+  const distanceMiles = broadArea
+    ? null
+    : calculateDistanceMiles({ lat: location.lat, lng: location.lng }, { lat, lng });
 
-  if (distanceMiles !== null && distanceMiles > maxNearbyDistanceMiles) {
+  if (!broadArea && distanceMiles !== null && distanceMiles > maxNearbyDistanceMiles) {
     return null;
   }
 
@@ -190,6 +222,16 @@ function mapNearbyPlace(location: LocationLookupResult, row: NominatimPlaceRow) 
     source: "openstreetmap" as const,
     typeLabel: typeLabels[kind],
   };
+}
+
+function getPlaceQueries(location: LocationLookupResult) {
+  const placeQuery = getPlaceQuery(location);
+
+  return uniqueParts([
+    `hotel in ${placeQuery}`,
+    `guest house in ${placeQuery}`,
+    `hostel in ${placeQuery}`,
+  ]);
 }
 
 function getPlaceQuery(location: LocationLookupResult) {
@@ -219,6 +261,18 @@ function normalizePlaceKind(type: string | undefined): NearbyPlaceKind {
   }
 
   return "place";
+}
+
+function isTourismPlace(row: NominatimPlaceRow) {
+  return (
+    row.category === "tourism" &&
+    (row.type === "apartment" ||
+      row.type === "chalet" ||
+      row.type === "guest_house" ||
+      row.type === "hostel" ||
+      row.type === "hotel" ||
+      row.type === "motel")
+  );
 }
 
 function formatAddress(row: NominatimPlaceRow) {
@@ -260,6 +314,29 @@ function makeMapUrl(row: NominatimPlaceRow, lat: number, lng: number) {
   const safeLng = formatCoordinateForUrl(lng);
 
   return `https://www.openstreetmap.org/?mlat=${safeLat}&mlon=${safeLng}#map=16/${safeLat}/${safeLng}`;
+}
+
+function isBroadArea(location: LocationLookupResult) {
+  if (!location.bounds) {
+    return false;
+  }
+
+  const latSpan = Math.abs(location.bounds.north - location.bounds.south);
+  const lngSpan = Math.abs(location.bounds.east - location.bounds.west);
+
+  return !location.city && (latSpan > 0.75 || lngSpan > 0.75);
+}
+
+function isInsideBounds(
+  bounds: NonNullable<LocationLookupResult["bounds"]>,
+  coordinates: { lat: number; lng: number },
+) {
+  return (
+    coordinates.lat >= bounds.south &&
+    coordinates.lat <= bounds.north &&
+    coordinates.lng >= bounds.west &&
+    coordinates.lng <= bounds.east
+  );
 }
 
 function normalizeName(value: string) {

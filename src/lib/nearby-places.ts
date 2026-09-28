@@ -14,11 +14,15 @@ export type NearbyPlaceKind =
   | "place";
 
 export type NearbyPlace = {
+  actionLabel: string;
+  actionUrl: string;
   address: string | null;
   attribution: string;
   distanceMiles: number | null;
   id: string;
   kind: NearbyPlaceKind;
+  imageAttribution: string;
+  imageUrl: string;
   lat: number;
   lng: number;
   mapUrl: string;
@@ -45,6 +49,17 @@ type NominatimPlaceRow = {
   };
   category?: string;
   display_name?: string;
+  extratags?: {
+    "contact:website"?: string;
+    "reservation:website"?: string;
+    image?: string;
+    image_1?: string;
+    phone?: string;
+    rooms?: string;
+    stars?: string;
+    website?: string;
+    wikimedia_commons?: string;
+  };
   importance?: number;
   lat?: string;
   lon?: string;
@@ -64,6 +79,7 @@ const maxNearbyDistanceMiles = 75;
 const maxFetchedPlaces = 12;
 const maxDisplayedPlaces = 8;
 const minSufficientPlaces = 4;
+const providerTimeoutMs = 15000;
 const nearbyPlacesCache = new Map<
   string,
   {
@@ -81,6 +97,12 @@ const typeLabels: Record<NearbyPlaceKind, string> = {
   motel: "Motel",
   place: "Place",
 };
+const representativePlaceImages = [
+  "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?auto=format&fit=crop&w=900&q=80",
+];
 
 export async function getNearbyPlacesForLocation(location: LocationLookupResult | null) {
   if (!location) {
@@ -125,9 +147,19 @@ async function fetchNearbyPlaces(
   },
 ) {
   const places: NearbyPlace[] = [];
+  let lastError: unknown = null;
 
   for (const query of getPlaceQueries(location)) {
-    const rows = await fetchNominatimRows(query);
+    let rows: NominatimPlaceRow[] = [];
+
+    try {
+      rows = await fetchNominatimRows(query);
+    } catch (error) {
+      lastError = error;
+      console.warn("Nearby place query failed", { error, query });
+      continue;
+    }
+
     const mappedPlaces = rows
       .map((row) => mapNearbyPlace(location, row, { areaSearch }))
       .filter((place): place is NearbyPlace => Boolean(place));
@@ -141,6 +173,10 @@ async function fetchNearbyPlaces(
     }
   }
 
+  if (places.length === 0 && lastError) {
+    throw lastError;
+  }
+
   return rankPlaces(places);
 }
 
@@ -150,6 +186,7 @@ async function fetchNominatimRows(query: string) {
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("addressdetails", "1");
   url.searchParams.set("dedupe", "1");
+  url.searchParams.set("extratags", "1");
   url.searchParams.set("limit", String(maxFetchedPlaces));
 
   if (contactEmail) {
@@ -165,7 +202,7 @@ async function fetchNominatimRows(query: string) {
     next: {
       revalidate: Math.floor(nearbyPlacesCacheTtlMs / 1000),
     },
-    signal: AbortSignal.timeout(8000),
+    signal: AbortSignal.timeout(providerTimeoutMs),
   });
 
   if (!response.ok) {
@@ -214,12 +251,18 @@ function mapNearbyPlace(
   }
 
   const kind = normalizePlaceKind(row.type);
+  const websiteUrl = getWebsiteUrl(row);
+  const imageUrl = getImageUrl(row) ?? getRepresentativeImageUrl(row);
 
   return {
+    actionLabel: websiteUrl ? "Check availability" : "View on map",
+    actionUrl: websiteUrl ?? makeMapUrl(row, lat, lng),
     address: formatAddress(row),
     attribution: "Data © OpenStreetMap contributors, ODbL 1.0",
     distanceMiles,
     id: makePlaceId(row, lat, lng),
+    imageAttribution: getImageUrl(row) ? "Provider photo" : "Representative photo",
+    imageUrl,
     kind,
     lat,
     lng,
@@ -328,6 +371,64 @@ function makeMapUrl(row: NominatimPlaceRow, lat: number, lng: number) {
   return `https://www.openstreetmap.org/?mlat=${safeLat}&mlon=${safeLng}#map=16/${safeLat}/${safeLng}`;
 }
 
+function getWebsiteUrl(row: NominatimPlaceRow) {
+  return normalizeExternalUrl(
+    row.extratags?.["reservation:website"] ??
+      row.extratags?.website ??
+      row.extratags?.["contact:website"] ??
+      null,
+  );
+}
+
+function getImageUrl(row: NominatimPlaceRow) {
+  const directImage = normalizeExternalUrl(row.extratags?.image ?? row.extratags?.image_1 ?? null);
+
+  if (directImage) {
+    return directImage;
+  }
+
+  const commons = row.extratags?.wikimedia_commons?.trim();
+
+  if (commons) {
+    const fileName = commons.replace(/^File:/i, "");
+
+    if (fileName) {
+      return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(
+        fileName,
+      )}`;
+    }
+  }
+
+  return null;
+}
+
+function normalizeExternalUrl(value: string | null | undefined) {
+  const trimmed = value?.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  try {
+    const url = new URL(trimmed);
+
+    if (url.protocol !== "https:" && url.protocol !== "http:") {
+      return null;
+    }
+
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function getRepresentativeImageUrl(row: NominatimPlaceRow) {
+  const seed = `${row.osm_type ?? "place"}:${row.osm_id ?? row.place_id ?? row.name ?? "stay"}`;
+  const index = Math.abs(hashString(seed)) % representativePlaceImages.length;
+
+  return representativePlaceImages[index];
+}
+
 function isAreaSearch(location: LocationLookupResult) {
   return !location.city && Boolean(location.bounds);
 }
@@ -346,6 +447,17 @@ function isInsideBounds(
 
 function normalizeName(value: string) {
   return value.trim().replace(/\s+/g, " ");
+}
+
+function hashString(value: string) {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash << 5) - hash + value.charCodeAt(index);
+    hash |= 0;
+  }
+
+  return hash;
 }
 
 function rankPlaces(places: NearbyPlace[]) {

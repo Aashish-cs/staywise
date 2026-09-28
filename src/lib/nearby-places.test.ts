@@ -59,6 +59,10 @@ describe("nearby places", () => {
           category: "tourism",
           display_name:
             "Hotel Vinache, 1300, Canal Street, New Orleans, Louisiana, United States",
+          extratags: {
+            image: "https://example.com/hotel-vinache.jpg",
+            website: "https://hotel-vinache.example",
+          },
           lat: "29.9562708",
           lon: "-90.0744216",
           name: "Hotel Vinache",
@@ -95,8 +99,12 @@ describe("nearby places", () => {
     expect(String(calls[0]?.[0])).toContain("hotel+in+New+Orleans");
     expect(places).toHaveLength(1);
     expect(places[0]).toMatchObject({
+      actionLabel: "Check availability",
+      actionUrl: "https://hotel-vinache.example/",
       address: "1300 Canal Street, New Orleans, Louisiana, United States",
       id: "way:328669269",
+      imageAttribution: "Provider photo",
+      imageUrl: "https://example.com/hotel-vinache.jpg",
       kind: "hotel",
       mapUrl: "https://www.openstreetmap.org/way/328669269",
       name: "Hotel Vinache",
@@ -105,6 +113,45 @@ describe("nearby places", () => {
     });
     expect(places[0]?.distanceMiles).toBeGreaterThan(0);
     expect(places[0]?.distanceMiles).toBeLessThan(1);
+  });
+
+  it("uses a representative image and map action when provider media and website are missing", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json([
+          {
+            address: {
+              city: "New Orleans",
+              country: "United States",
+              road: "Canal Street",
+              state: "Louisiana",
+              tourism: "Map Only Hotel",
+            },
+            category: "tourism",
+            lat: "29.9562708",
+            lon: "-90.0744216",
+            name: "Map Only Hotel",
+            osm_id: 328669270,
+            osm_type: "way",
+            place_id: 304208242,
+            type: "hotel",
+          },
+        ]),
+      ),
+    );
+
+    const places = await getNearbyPlacesForLocation({
+      ...newOrleansLocation,
+      providerId: "relation:map-only",
+    });
+
+    expect(places[0]).toMatchObject({
+      actionLabel: "View on map",
+      actionUrl: "https://www.openstreetmap.org/way/328669270",
+      imageAttribution: "Representative photo",
+    });
+    expect(places[0]?.imageUrl).toContain("images.unsplash.com");
   });
 
   it("keeps real hotels inside a broad state search even when they are far from the state center", async () => {

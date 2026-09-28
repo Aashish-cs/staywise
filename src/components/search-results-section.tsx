@@ -383,12 +383,13 @@ function NearbyPlacesFallback({
           <div>
             <Badge tone="info">External place data</Badge>
             <h3 className="mt-3 text-xl font-extrabold tracking-tight">
-              StayWise does not have reservable stays for {destinationLabel} yet.
+              External hotel options for {destinationLabel}
             </h3>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-[#5f5148]">
               These are real hotels and guest stays inside or around the searched
-              destination from OpenStreetMap. They are for discovery only until a
-              StayWise host adds bookable inventory there.
+              destination from OpenStreetMap. Use Check availability when a hotel
+              website is available; StayWise reservations still require StayWise host
+              inventory.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row lg:shrink-0">
@@ -407,53 +408,84 @@ function NearbyPlacesFallback({
           <Surface
             as="article"
             key={place.id}
-            className="flex min-h-56 flex-col justify-between p-5"
+            className="flex min-h-96 flex-col justify-between overflow-hidden"
           >
-            <div>
-              <div className="flex items-start justify-between gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#fff3f5] text-[#bd1740]">
-                  {place.kind === "place" ? (
-                    <MapPin className="h-5 w-5" aria-hidden="true" />
-                  ) : (
-                    <Hotel className="h-5 w-5" aria-hidden="true" />
-                  )}
-                </span>
-                <Badge tone="neutral" className="shrink-0">
+            <div className="relative aspect-[4/3] overflow-hidden bg-[#f7f3ee]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={place.imageUrl}
+                alt={`${place.name} ${place.imageAttribution.toLowerCase()}`}
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+              <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+                <Badge tone="neutral" className="bg-white/95 shadow-sm">
                   {place.typeLabel}
                 </Badge>
+                <Badge tone="info" className="bg-white/95 shadow-sm">
+                  {place.imageAttribution}
+                </Badge>
               </div>
-
-              <h3 className="mt-4 line-clamp-2 text-lg font-extrabold leading-6">
-                {place.name}
-              </h3>
-              {place.address && (
-                <p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-[#5f5148]">
-                  {place.address}
-                </p>
-              )}
-              {place.distanceMiles !== null && (
-                <p className="mt-3 text-sm font-extrabold text-[#315d3b]">
-                  {formatDistanceMiles(place.distanceMiles)} from search center
-                </p>
-              )}
-              {place.distanceMiles === null && (
-                <p className="mt-3 text-sm font-extrabold text-[#315d3b]">
-                  Inside searched area
-                </p>
-              )}
             </div>
 
-            <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#f0e7df] pt-4">
-              <p className="text-xs font-semibold text-[#786a60]">OpenStreetMap</p>
-              <a
-                href={place.mapUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[#eadfd6] bg-white px-3 text-xs font-extrabold text-[#201a18] transition hover:border-[#ff385c] hover:text-[#df2348]"
-              >
-                View map
-                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-              </a>
+            <div className="flex flex-1 flex-col justify-between p-5">
+              <div>
+                <div className="flex items-start gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fff3f5] text-[#bd1740]">
+                    {place.kind === "place" ? (
+                      <MapPin className="h-5 w-5" aria-hidden="true" />
+                    ) : (
+                      <Hotel className="h-5 w-5" aria-hidden="true" />
+                    )}
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="line-clamp-2 text-lg font-extrabold leading-6">
+                      {place.name}
+                    </h3>
+                    {place.address && (
+                      <p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-[#5f5148]">
+                        {place.address}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {place.distanceMiles !== null && (
+                  <p className="mt-3 text-sm font-extrabold text-[#315d3b]">
+                    {formatDistanceMiles(place.distanceMiles)} from search center
+                  </p>
+                )}
+                {place.distanceMiles === null && (
+                  <p className="mt-3 text-sm font-extrabold text-[#315d3b]">
+                    Inside searched area
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-5 flex flex-col gap-3 border-t border-[#f0e7df] pt-4 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs font-semibold text-[#786a60]">OpenStreetMap</p>
+                <div className="flex flex-wrap gap-2">
+                  {place.actionUrl !== place.mapUrl && (
+                    <a
+                      href={place.mapUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[#eadfd6] bg-white px-3 text-xs font-extrabold text-[#201a18] transition hover:border-[#ff385c] hover:text-[#df2348]"
+                    >
+                      Map
+                    </a>
+                  )}
+                  <a
+                    href={place.actionUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex h-9 items-center justify-center gap-2 rounded-full bg-[#201a18] px-3 text-xs font-extrabold text-white transition hover:bg-black"
+                  >
+                    {place.actionLabel}
+                    <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                  </a>
+                </div>
+              </div>
             </div>
           </Surface>
         ))}

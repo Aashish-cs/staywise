@@ -74,7 +74,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   });
   const nearbyPlaces =
     location && listingResult.dataState.status === "ready" && listingResult.listings.length === 0
-      ? await getNearbyPlacesForLocation(location)
+      ? await getNearbyPlacesForLocation(location, {
+          checkIn: search.checkIn,
+          checkOut: search.checkOut,
+          guests: search.guests,
+        })
       : [];
   const accountRole =
     profile?.role === "host" ? "host" : profile?.role === "guest" ? "guest" : null;

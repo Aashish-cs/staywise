@@ -2,6 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { getNearbyPlacesForLocation } from "@/lib/nearby-places";
 import type { LocationLookupResult } from "@/lib/location-service";
 
+const originalAmadeusClientId = process.env.AMADEUS_CLIENT_ID;
+const originalAmadeusClientSecret = process.env.AMADEUS_CLIENT_SECRET;
+const originalAmadeusBaseUrl = process.env.AMADEUS_BASE_URL;
+
 const newOrleansLocation: LocationLookupResult = {
   attribution: "Data © OpenStreetMap contributors, ODbL 1.0",
   bounds: null,
@@ -41,7 +45,122 @@ const northCarolinaLocation: LocationLookupResult = {
 
 describe("nearby places", () => {
   afterEach(() => {
+    restoreEnv("AMADEUS_CLIENT_ID", originalAmadeusClientId);
+    restoreEnv("AMADEUS_CLIENT_SECRET", originalAmadeusClientSecret);
+    restoreEnv("AMADEUS_BASE_URL", originalAmadeusBaseUrl);
     vi.unstubAllGlobals();
+  });
+
+  it("uses Amadeus hotel offers when travel provider credentials are configured", async () => {
+    process.env.AMADEUS_CLIENT_ID = "staywise-test-client";
+    process.env.AMADEUS_CLIENT_SECRET = "staywise-test-secret";
+
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url.includes("/v1/security/oauth2/token")) {
+        return Response.json({
+          access_token: "amadeus-token",
+          expires_in: 1800,
+        });
+      }
+
+      if (url.includes("/v1/reference-data/locations/hotels/by-geocode")) {
+        return Response.json({
+          data: [
+            {
+              address: {
+                cityName: "New Orleans",
+                countryCode: "US",
+                lines: ["1300 Canal Street"],
+                stateCode: "LA",
+              },
+              chainCode: "SW",
+              geoCode: {
+                latitude: 29.9562708,
+                longitude: -90.0744216,
+              },
+              hotelId: "SWNOLA1",
+              name: "Royal Canal Hotel",
+              rating: "4",
+            },
+          ],
+        });
+      }
+
+      if (url.includes("/v3/shopping/hotel-offers")) {
+        return Response.json({
+          data: [
+            {
+              hotel: {
+                address: {
+                  cityName: "New Orleans",
+                  countryCode: "US",
+                  lines: ["1300 Canal Street"],
+                  stateCode: "LA",
+                },
+                chainCode: "SW",
+                geoCode: {
+                  latitude: 29.9562708,
+                  longitude: -90.0744216,
+                },
+                hotelId: "SWNOLA1",
+                name: "Royal Canal Hotel",
+                rating: "4",
+              },
+              offers: [
+                {
+                  id: "OFFER-123",
+                  price: {
+                    currency: "USD",
+                    total: "243",
+                  },
+                  room: {
+                    description: {
+                      text: "King room\nFree Wi-Fi",
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        });
+      }
+
+      return new Response("Unexpected provider request", { status: 500 });
+    });
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const places = await getNearbyPlacesForLocation(
+      {
+        ...newOrleansLocation,
+        providerId: "relation:amadeus-new-orleans",
+      },
+      {
+        checkIn: "2027-01-10",
+        checkOut: "2027-01-13",
+        guests: 2,
+      },
+    );
+
+    const offerUrl = String((fetchMock.mock.calls as Array<[RequestInfo | URL]>)[2]?.[0]);
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(offerUrl).toContain("hotelIds=SWNOLA1");
+    expect(offerUrl).toContain("adults=2");
+    expect(offerUrl).toContain("checkInDate=2027-01-10");
+    expect(places).toHaveLength(1);
+    expect(places[0]).toMatchObject({
+      actionLabel: "View availability",
+      address: "1300 Canal Street, New Orleans, LA, US",
+      description: "King room Free Wi-Fi",
+      id: "amadeus:SWNOLA1",
+      name: "Royal Canal Hotel",
+      priceLabel: "$243",
+      source: "amadeus",
+      typeLabel: "4-star hotel",
+    });
   });
 
   it("maps real provider rows into nearby external places", async () => {
@@ -282,3 +401,12 @@ describe("nearby places", () => {
     expect(places).toEqual([]);
   });
 });
+
+function restoreEnv(key: string, value: string | undefined) {
+  if (typeof value === "undefined") {
+    delete process.env[key];
+    return;
+  }
+
+  process.env[key] = value;
+}

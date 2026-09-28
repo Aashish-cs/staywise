@@ -66,6 +66,10 @@ Use `.env.example` as the source of truth. Important groups:
   - `NOMINATIM_EMAIL`
   - `NOMINATIM_BASE_URL`
   - `NOMINATIM_REVERSE_BASE_URL`
+- Optional hotel inventory provider:
+  - `AMADEUS_CLIENT_ID`
+  - `AMADEUS_CLIENT_SECRET`
+  - `AMADEUS_BASE_URL`
 - Reserved future map provider:
   - `MAPBOX_ACCESS_TOKEN`
 - Optional server-only AI:

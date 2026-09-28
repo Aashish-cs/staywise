@@ -379,6 +379,10 @@ function NearbyPlacesFallback({
   onClearAdvancedFilters: () => void;
   onFocusSearch: () => void;
 }) {
+  const attributionLabel = nearbyPlaces.some((place) => place.source === "amadeus")
+    ? "Hotel availability powered by Amadeus Self-Service APIs. Map links use OpenStreetMap."
+    : "Data © OpenStreetMap contributors, ODbL 1.0.";
+
   return (
     <div className="mt-6 space-y-4">
       <Surface className="p-5">
@@ -424,6 +428,11 @@ function NearbyPlacesFallback({
                   {place.typeLabel}
                 </Badge>
               </div>
+              {place.priceLabel && (
+                <div className="absolute bottom-3 left-3 rounded-full bg-white/95 px-3 py-1 text-sm font-extrabold text-[#201a18] shadow-sm">
+                  {place.priceLabel}
+                </div>
+              )}
             </div>
 
             <div className="flex flex-1 flex-col justify-between p-5">
@@ -445,6 +454,11 @@ function NearbyPlacesFallback({
                         {place.address}
                       </p>
                     )}
+                    {place.description && (
+                      <p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-[#5f5148]">
+                        {place.description}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -461,7 +475,9 @@ function NearbyPlacesFallback({
               </div>
 
               <div className="mt-5 flex flex-col gap-3 border-t border-[#f0e7df] pt-4 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs font-semibold text-[#786a60]">Place data</p>
+                <p className="text-xs font-semibold text-[#786a60]">
+                  {place.source === "amadeus" ? "Hotel offer" : "Place data"}
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {place.actionUrl !== place.mapUrl && (
                     <a
@@ -490,7 +506,7 @@ function NearbyPlacesFallback({
       </div>
 
       <p className="text-xs font-semibold text-[#786a60]">
-        Data © OpenStreetMap contributors, ODbL 1.0.
+        {attributionLabel}
       </p>
     </div>
   );

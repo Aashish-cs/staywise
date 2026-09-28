@@ -7,6 +7,9 @@
 - Added missing optional variables:
   - `OPENAI_API_KEY`
   - `OPENAI_MODEL`
+  - `AMADEUS_CLIENT_ID`
+  - `AMADEUS_CLIENT_SECRET`
+  - `AMADEUS_BASE_URL`
   - `MAPBOX_ACCESS_TOKEN` as a reserved future-provider placeholder
   - `STAYWISE_ENABLE_STRIPE_CHECKOUT`
   - `PLAYWRIGHT_BASE_URL`
@@ -16,7 +19,8 @@
 ## Current Provider Notes
 
 - Supabase public URL and anon key are required for real auth, listings, favorites, trips, and reservations.
-- OpenStreetMap/Nominatim is the current free location provider and runs server-side.
+- OpenStreetMap/Nominatim is the free location provider and fallback place search, and runs server-side.
+- Amadeus hotel list/offers are optional and run server-side when credentials are configured.
 - Mapbox is not used by current runtime code; the env placeholder is documented as reserved.
 - AI search works without an AI key through the deterministic parser.
 - Stripe variables are optional until payment-required reservations are enabled; `STAYWISE_ENABLE_STRIPE_CHECKOUT` must remain `false` unless Stripe test credentials and the payment-required reservation migration are ready.
@@ -25,5 +29,5 @@
 
 ## Verification
 
-- Passed: env usage audit with `rg "process\\.env|NEXT_PUBLIC_|SUPABASE_|NOMINATIM|STAYWISE_AI|OPENAI|STRIPE|PLAYWRIGHT"`.
+- Passed: env usage audit with `rg "process\\.env|NEXT_PUBLIC_|SUPABASE_|NOMINATIM|AMADEUS|STAYWISE_AI|OPENAI|STRIPE|PLAYWRIGHT"`.
 - Passed: `git diff --check`

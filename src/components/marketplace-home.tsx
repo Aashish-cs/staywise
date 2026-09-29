@@ -64,7 +64,6 @@ export function MarketplaceHome({
     signInHref: `/auth?mode=signin&next=${encodeURIComponent("/")}`,
   });
 
-  const topCity = useMemo(() => getTopCity(initialListings), [initialListings]);
   const rankedListings = useMemo(
     () =>
       rankListings(broadMarketplaceSearchInput, initialListings, {
@@ -73,8 +72,8 @@ export function MarketplaceHome({
     [initialFavoriteIds, initialListings],
   );
   const sections = useMemo(
-    () => buildListingSections(rankedListings, topCity, makeSearchHref),
-    [rankedListings, topCity],
+    () => buildListingSections(rankedListings, makeSearchHref),
+    [rankedListings],
   );
   const homesHref = useMemo(() => makeSearchHref(homeTabSearchInput), []);
   const accountHref = isSignedIn
@@ -217,19 +216,32 @@ export function MarketplaceHome({
 
 function buildListingSections(
   listings: RankedListing[],
-  topCity: string | null,
   getHref: (input: Partial<SearchInput>) => string,
 ) {
-  const cityListings = topCity
-    ? listings.filter((listing) => listing.city === topCity)
-    : listings;
-  const weekendPicks =
-    cityListings.length >= 6
-      ? cityListings
-      : [
-          ...cityListings,
-          ...listings.filter((listing) => listing.city !== topCity),
-        ];
+  const listingsByCity = new Map<string, RankedListing[]>();
+
+  for (const listing of listings) {
+    const cityListings = listingsByCity.get(listing.city) ?? [];
+    cityListings.push(listing);
+    listingsByCity.set(listing.city, cityListings);
+  }
+
+  const citySections = Array.from(listingsByCity.entries())
+    .sort(
+      ([firstCity, firstListings], [secondCity, secondListings]) =>
+        secondListings.length - firstListings.length ||
+        firstCity.localeCompare(secondCity),
+    )
+    .filter(([, cityListings]) => cityListings.length >= 2)
+    .slice(0, 5)
+    .map(([city, cityListings], index) => ({
+      href: getHref({ destination: city }),
+      listings: cityListings.slice(0, 7),
+      title:
+        index % 2 === 0
+          ? `Popular homes in ${city}`
+          : `Places to stay in ${city}`,
+    }));
   const workReady = listings.filter(
     (listing) =>
       listing.amenities.includes("Fast Wi-Fi") ||
@@ -246,26 +258,24 @@ function buildListingSections(
 
   return [
     {
-      href: getHref(topCity && cityListings.length >= 6 ? { destination: topCity } : {}),
-      listings: weekendPicks.slice(0, 8),
-      title:
-        topCity && cityListings.length >= 6
-          ? `Available in ${topCity} this weekend`
-          : "Available this weekend",
+      href: getHref({}),
+      listings: listings.slice(0, 7),
+      title: "Available this weekend",
     },
+    ...citySections,
     {
       href: getHref(workReadySearchPreset),
-      listings: workReady.slice(0, 8),
+      listings: workReady.slice(0, 7),
       title: "Popular homes for remote work",
     },
     {
       href: getHref(familySearchPreset),
-      listings: groupReady.slice(0, 8),
+      listings: groupReady.slice(0, 7),
       title: "Homes with room for everyone",
     },
     {
       href: getHref(valueSearchPreset),
-      listings: valuePicks.slice(0, 8),
+      listings: valuePicks.slice(0, 7),
       title: "Great value stays",
     },
   ].filter((section) => section.listings.length > 0);
@@ -278,21 +288,6 @@ function makeSearchHref(input: Partial<SearchInput>) {
   });
 
   return `/search${query ? `?${query}` : ""}`;
-}
-
-function getTopCity(listings: Listing[]) {
-  const counts = new Map<string, number>();
-
-  for (const listing of listings) {
-    counts.set(listing.city, (counts.get(listing.city) ?? 0) + 1);
-  }
-
-  return (
-    Array.from(counts.entries()).sort(
-      ([firstCity, firstCount], [secondCity, secondCount]) =>
-        secondCount - firstCount || firstCity.localeCompare(secondCity),
-    )[0]?.[0] ?? null
-  );
 }
 
 function StayWiseFooter() {

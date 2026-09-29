@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRef } from "react";
 import {
   ListingCardMedia,
   ListingSaveButton,
@@ -67,8 +68,20 @@ function ListingRail({
   subtitle?: string;
   title: string;
 }) {
+  const railRef = useRef<HTMLDivElement>(null);
+
+  function scrollRail(direction: "next" | "previous") {
+    railRef.current?.scrollBy({
+      behavior: "smooth",
+      left:
+        direction === "next"
+          ? railRef.current.clientWidth * 0.82
+          : -railRef.current.clientWidth * 0.82,
+    });
+  }
+
   return (
-    <section className="mx-auto max-w-[1536px] px-5 lg:px-8">
+    <section className="mx-auto max-w-[1760px] px-5 lg:px-8">
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
           <Link href={href} className="group inline-flex items-center gap-2">
@@ -85,9 +98,32 @@ function ListingRail({
             </p>
           )}
         </div>
+        <div className="hidden shrink-0 items-center gap-2 sm:flex">
+          <button
+            type="button"
+            aria-label={`Show previous ${title.toLowerCase()}`}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#ded6d0] bg-white text-[#201a18] transition hover:bg-[#f7f3ee] disabled:cursor-not-allowed disabled:opacity-40"
+            onClick={() => scrollRail("previous")}
+            title="Show previous stays"
+          >
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            aria-label={`Show more ${title.toLowerCase()}`}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#ded6d0] bg-white text-[#201a18] transition hover:bg-[#f7f3ee]"
+            onClick={() => scrollRail("next")}
+            title="Show more stays"
+          >
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
       </div>
 
-      <div className="scrollbar-hide grid auto-cols-[72vw] grid-flow-col gap-5 overflow-x-auto pb-3 sm:auto-cols-[250px] lg:auto-cols-[276px] 2xl:auto-cols-[292px]">
+      <div
+        ref={railRef}
+        className="scrollbar-hide grid snap-x auto-cols-[78vw] grid-flow-col gap-4 overflow-x-auto pb-3 sm:auto-cols-[250px] sm:gap-5 lg:auto-cols-[224px] xl:auto-cols-[228px] 2xl:auto-cols-[232px]"
+      >
         {listings.map((listing, index) => (
           <MarketplaceListingCard
             key={`${title}-${listing.id}`}
@@ -125,11 +161,11 @@ function MarketplaceListingCard({
         <ListingCardMedia
           href={href}
           aria-label={`View ${listing.title}`}
-          frameClassName="block aspect-square rounded-[22px]"
+          frameClassName="block aspect-[4/3] rounded-[18px]"
           imageClassName="transition duration-500 group-hover:scale-105"
           listing={listing}
           priority={priority}
-          sizes="(min-width: 1280px) 280px, (min-width: 768px) 33vw, 82vw"
+          sizes="(min-width: 1536px) 250px, (min-width: 1024px) 238px, (min-width: 640px) 250px, 78vw"
         />
         {isGuestFavorite(listing) && (
           <Badge tone="neutral" className="absolute left-3 top-3 bg-white/95 shadow-sm">

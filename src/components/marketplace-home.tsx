@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Globe2, Search } from "lucide-react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { MarketplaceListingRails } from "@/components/marketplace-listing-rails";
+import { MarketplacePlaceRails } from "@/components/marketplace-place-rails";
 import {
   StayWiseAccountMenu,
   StayWiseHeader,
@@ -15,6 +16,7 @@ import { useSavedListings } from "@/hooks/use-saved-listings";
 import { GuestSelector, type GuestSelection } from "@/components/guest-selector";
 import type { Listing } from "@/lib/listings";
 import type { ListingDataState } from "@/lib/listing-data";
+import type { NearbyPlaceSection } from "@/lib/nearby-places";
 import { rankListings, searchSchema, type SearchInput } from "@/lib/recommendations";
 import { maximumReservationNights } from "@/lib/reservation-utils";
 import {
@@ -29,6 +31,7 @@ import { buildSearchQueryString } from "@/lib/search-url";
 type MarketplaceHomeProps = {
   accountRole: "guest" | "host" | null;
   dataState: ListingDataState;
+  discoverySections: NearbyPlaceSection[];
   initialFavoriteIds: string[];
   initialListings: Listing[];
   isSignedIn: boolean;
@@ -43,6 +46,7 @@ const homeTabSearchInput = {
 export function MarketplaceHome({
   accountRole,
   dataState,
+  discoverySections,
   initialFavoriteIds,
   initialListings,
   isSignedIn,
@@ -208,6 +212,7 @@ export function MarketplaceHome({
         savedIds={savedIds}
         sections={sections}
       />
+      <MarketplacePlaceRails sections={discoverySections} />
 
       <StayWiseFooter />
     </main>

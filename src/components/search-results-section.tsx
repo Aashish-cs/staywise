@@ -5,9 +5,7 @@ import Link from "next/link";
 import clsx from "clsx";
 import {
   ExternalLink,
-  Hotel,
   Map as MapIcon,
-  MapPin,
   SlidersHorizontal,
   Sparkles,
 } from "lucide-react";
@@ -387,135 +385,101 @@ function NearbyPlacesFallback({
     : "Data © OpenStreetMap contributors, ODbL 1.0.";
 
   return (
-    <div className="mt-6 space-y-4">
-      <Surface className="p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <Badge tone="info">Live place data</Badge>
-            <h3 className="mt-3 text-xl font-extrabold tracking-tight">
-              More options around {destinationLabel}
-            </h3>
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-[#5f5148]">
-              Reserve opens a StayWise demo booking handoff for the selected
-              external stay. Provider and map links stay available for source checking.
-            </p>
-          </div>
-          <div className="flex flex-col gap-2 sm:flex-row lg:shrink-0">
-            <Button type="button" variant="secondary" onClick={onClearAdvancedFilters}>
-              Clear advanced filters
-            </Button>
-            <Button type="button" variant="outline" onClick={onFocusSearch}>
-              Adjust search
-            </Button>
-          </div>
+    <div className="mt-6 space-y-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <Badge tone="info">Live place data</Badge>
+          <h3 className="mt-3 text-2xl font-extrabold tracking-tight">
+            Places to stay in {destinationLabel}
+          </h3>
+          <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-[#5f5148]">
+            These options come from live hotel/place providers. Reserve opens the
+            StayWise booking handoff while provider links stay visible for source checking.
+          </p>
         </div>
-      </Surface>
+        <div className="flex flex-col gap-2 sm:flex-row lg:shrink-0">
+          <Button type="button" variant="secondary" onClick={onClearAdvancedFilters}>
+            Clear advanced filters
+          </Button>
+          <Button type="button" variant="outline" onClick={onFocusSearch}>
+            Adjust search
+          </Button>
+        </div>
+      </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {nearbyPlaces.map((place) => {
           const reserveHref = makeExternalStayHref(place, search);
 
           return (
-            <Surface
-              as="article"
-              key={place.id}
-              className="flex min-h-96 flex-col justify-between overflow-hidden"
-            >
-              <div className="relative aspect-[4/3] overflow-hidden bg-[#f7f3ee]">
+            <article key={place.id} className="group min-w-0">
+              <Link
+                href={reserveHref}
+                aria-label={`Reserve ${place.name}`}
+                className="relative block overflow-hidden rounded-[18px] bg-[#f7f3ee] shadow-sm"
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={place.imageUrl}
                   alt=""
-                  className="h-full w-full object-cover"
+                  className="aspect-[4/3] h-full w-full object-cover transition duration-500 group-hover:scale-105"
                   loading="lazy"
                 />
-                <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-                  <Badge tone="neutral" className="bg-white/95 shadow-sm">
-                    {place.typeLabel}
-                  </Badge>
-                </div>
+                <Badge tone="neutral" className="absolute left-3 top-3 bg-white/95 shadow-sm">
+                  {place.typeLabel}
+                </Badge>
                 {place.priceLabel && (
                   <div className="absolute bottom-3 left-3 rounded-full bg-white/95 px-3 py-1 text-sm font-extrabold text-[#201a18] shadow-sm">
                     {place.priceLabel}
                   </div>
                 )}
-              </div>
+              </Link>
 
-              <div className="flex flex-1 flex-col justify-between p-5">
-                <div>
-                  <div className="flex items-start gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fff3f5] text-[#bd1740]">
-                      {place.kind === "place" ? (
-                        <MapPin className="h-5 w-5" aria-hidden="true" />
-                      ) : (
-                        <Hotel className="h-5 w-5" aria-hidden="true" />
-                      )}
-                    </span>
-                    <div className="min-w-0">
-                      <h3 className="line-clamp-2 text-lg font-extrabold leading-6">
-                        {place.name}
-                      </h3>
-                      {place.address && (
-                        <p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-[#5f5148]">
-                          {place.address}
-                        </p>
-                      )}
-                      {place.description && (
-                        <p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-[#5f5148]">
-                          {place.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {place.distanceMiles !== null && (
-                    <p className="mt-3 text-sm font-extrabold text-[#315d3b]">
-                      {formatDistanceMiles(place.distanceMiles)} from search center
-                    </p>
-                  )}
-                  {place.distanceMiles === null && (
-                    <p className="mt-3 text-sm font-extrabold text-[#315d3b]">
-                      Inside searched area
-                    </p>
-                  )}
-                </div>
-
-                <div className="mt-5 flex flex-col gap-3 border-t border-[#f0e7df] pt-4">
-                  <p className="text-xs font-semibold text-[#786a60]">
-                    {place.source === "amadeus" ? "Hotel offer" : "Place data"}
+              <div className="mt-3">
+                <Link href={reserveHref} className="block">
+                  <h3 className="line-clamp-1 text-base font-extrabold leading-6">
+                    {place.name}
+                  </h3>
+                  <p className="mt-0.5 line-clamp-1 text-sm font-semibold text-[#6f655e]">
+                    {formatExternalPlaceMeta(place)}
                   </p>
-                  <div className="grid gap-2">
-                    <Link
-                      href={reserveHref}
-                      className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#201a18] px-4 text-xs font-extrabold text-white transition hover:bg-black"
+                  {place.address && (
+                    <p className="mt-0.5 line-clamp-1 text-sm font-semibold text-[#8b7d74]">
+                      {place.address}
+                    </p>
+                  )}
+                </Link>
+
+                <div className="mt-3 flex items-center gap-2">
+                  <Link
+                    href={reserveHref}
+                    className="inline-flex h-9 flex-1 items-center justify-center rounded-full bg-[#201a18] px-4 text-xs font-extrabold text-white transition hover:bg-black"
+                  >
+                    Reserve
+                  </Link>
+                  {place.actionUrl !== place.mapUrl && (
+                    <a
+                      href={place.mapUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={`Open ${place.name} on map`}
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#eadfd6] bg-white text-[#201a18] transition hover:border-[#ff385c] hover:text-[#df2348]"
                     >
-                      Reserve
-                    </Link>
-                    <div className="flex flex-wrap gap-2">
-                      {place.actionUrl !== place.mapUrl && (
-                        <a
-                          href={place.mapUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-full border border-[#eadfd6] bg-white px-3 text-xs font-extrabold text-[#201a18] transition hover:border-[#ff385c] hover:text-[#df2348]"
-                        >
-                          Map
-                        </a>
-                      )}
-                      <a
-                        href={place.actionUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-full border border-[#eadfd6] bg-white px-3 text-xs font-extrabold text-[#201a18] transition hover:border-[#ff385c] hover:text-[#df2348]"
-                      >
-                        Provider
-                        <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                      </a>
-                    </div>
-                  </div>
+                      <MapIcon className="h-4 w-4" aria-hidden="true" />
+                    </a>
+                  )}
+                  <a
+                    href={place.actionUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`Open provider for ${place.name}`}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#eadfd6] bg-white text-[#201a18] transition hover:border-[#ff385c] hover:text-[#df2348]"
+                  >
+                    <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                  </a>
                 </div>
               </div>
-            </Surface>
+            </article>
           );
         })}
       </div>
@@ -525,6 +489,18 @@ function NearbyPlacesFallback({
       </p>
     </div>
   );
+}
+
+function formatExternalPlaceMeta(place: NearbyPlace) {
+  if (place.priceLabel) {
+    return `${place.priceLabel} provider total`;
+  }
+
+  if (place.distanceMiles === null) {
+    return "Inside searched area";
+  }
+
+  return `${formatDistanceMiles(place.distanceMiles)} from search center`;
 }
 
 function makeExternalStayHref(place: NearbyPlace, search: SearchInput) {

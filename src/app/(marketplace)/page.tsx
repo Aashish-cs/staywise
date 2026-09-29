@@ -5,6 +5,7 @@ import {
   getFavoriteListingIds,
   getPublicListingsResult,
 } from "@/lib/listing-data";
+import { getHomepageDiscoverySections } from "@/lib/nearby-places";
 
 export const dynamic = "force-dynamic";
 
@@ -25,9 +26,10 @@ export const metadata: Metadata = {
 
 export default async function Home() {
   const { user, profile } = await getCurrentUserProfile();
-  const [listingResult, favoriteIds] = await Promise.all([
+  const [listingResult, favoriteIds, discoverySections] = await Promise.all([
     getPublicListingsResult(),
     user ? getFavoriteListingIds(user.id) : Promise.resolve([]),
+    getHomepageDiscoverySections(),
   ]);
   const accountRole =
     profile?.role === "host" ? "host" : profile?.role === "guest" ? "guest" : null;
@@ -36,6 +38,7 @@ export default async function Home() {
     <MarketplaceHome
       accountRole={accountRole}
       dataState={listingResult.dataState}
+      discoverySections={discoverySections}
       initialFavoriteIds={favoriteIds}
       initialListings={listingResult.listings}
       isSignedIn={Boolean(user)}

@@ -37,6 +37,13 @@ export type NearbyPlace = {
   typeLabel: string;
 };
 
+export type NearbyPlaceSection = {
+  destination: string;
+  href: string;
+  places: NearbyPlace[];
+  title: string;
+};
+
 export type NearbyPlaceSearchOptions = {
   checkIn?: string;
   checkOut?: string;
@@ -70,6 +77,8 @@ type NominatimPlaceRow = {
     rooms?: string;
     stars?: string;
     website?: string;
+    wikidata?: string;
+    wikipedia?: string;
     wikimedia_commons?: string;
   };
   importance?: number;
@@ -136,9 +145,9 @@ const contactEmail = process.env.NOMINATIM_EMAIL;
 const amadeusDefaultBaseUrl = "https://test.api.amadeus.com";
 const nearbyPlacesCacheTtlMs = 1000 * 60 * 60 * 24 * 7;
 const maxNearbyDistanceMiles = 75;
-const maxFetchedPlaces = 12;
-const maxDisplayedPlaces = 8;
-const minSufficientPlaces = 4;
+const maxFetchedPlaces = 24;
+const maxDisplayedPlaces = 14;
+const minSufficientPlaces = 7;
 const providerTimeoutMs = 15000;
 const amadeusHotelRadiusKm = 35;
 let amadeusTokenCache: AmadeusTokenCache | null = null;
@@ -147,6 +156,13 @@ const nearbyPlacesCache = new Map<
   {
     expiresAt: number;
     places: NearbyPlace[];
+  }
+>();
+const wikidataImageCache = new Map<
+  string,
+  {
+    expiresAt: number;
+    imageUrl: string | null;
   }
 >();
 
@@ -164,6 +180,89 @@ const representativePlaceImages = [
   "https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=900&q=80",
   "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=900&q=80",
   "https://images.unsplash.com/photo-1445019980597-93fa8acb246c?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1560185127-6ed189bf02f4?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1600566753151-384129cf4e3e?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1613977257592-4871e5fcd7c4?auto=format&fit=crop&w=900&q=80",
+  "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=900&q=80",
+];
+const homepageDiscoveryLocations: Array<{
+  location: LocationLookupResult;
+  title: string;
+}> = [
+  {
+    location: makeStaticLocation({
+      city: "Galveston",
+      country: "United States",
+      countryCode: "US",
+      lat: 29.3013,
+      lng: -94.7977,
+      name: "Galveston",
+      region: "Texas",
+    }),
+    title: "Available in Galveston this weekend",
+  },
+  {
+    location: makeStaticLocation({
+      city: "Fort Worth",
+      country: "United States",
+      countryCode: "US",
+      lat: 32.7555,
+      lng: -97.3308,
+      name: "Fort Worth",
+      region: "Texas",
+    }),
+    title: "Check out homes in Fort Worth",
+  },
+  {
+    location: makeStaticLocation({
+      city: "New Orleans",
+      country: "United States",
+      countryCode: "US",
+      lat: 29.9511,
+      lng: -90.0715,
+      name: "New Orleans",
+      region: "Louisiana",
+    }),
+    title: "Popular stays in New Orleans",
+  },
+  {
+    location: makeStaticLocation({
+      city: "London",
+      country: "United Kingdom",
+      countryCode: "GB",
+      lat: 51.5072,
+      lng: -0.1276,
+      name: "London",
+      region: "England",
+    }),
+    title: "Great hotels for your next trip",
+  },
+  {
+    location: makeStaticLocation({
+      bounds: {
+        east: 34.6045,
+        north: 35.7089,
+        south: 34.4384,
+        west: 32.2457,
+      },
+      city: null,
+      country: "Cyprus",
+      countryCode: "CY",
+      lat: 35.1264,
+      lng: 33.4299,
+      name: "Cyprus",
+      region: null,
+    }),
+    title: "Mediterranean stays to explore",
+  },
 ];
 
 export async function getNearbyPlacesForLocation(
@@ -205,6 +304,27 @@ export async function getNearbyPlacesForLocation(
   }
 }
 
+export async function getHomepageDiscoverySections(
+  searchOptions: NearbyPlaceSearchOptions = {},
+): Promise<NearbyPlaceSection[]> {
+  const results = await Promise.allSettled(
+    homepageDiscoveryLocations.map(async ({ location, title }) => {
+      const places = await getNearbyPlacesForLocation(location, searchOptions);
+
+      return {
+        destination: location.name,
+        href: makeSearchHref(location.name),
+        places,
+        title,
+      };
+    }),
+  );
+
+  return results
+    .flatMap((result) => (result.status === "fulfilled" ? [result.value] : []))
+    .filter((section) => section.places.length > 0);
+}
+
 async function fetchOpenStreetMapNearbyPlaces(
   location: LocationLookupResult,
   {
@@ -227,9 +347,11 @@ async function fetchOpenStreetMapNearbyPlaces(
       continue;
     }
 
-    const mappedPlaces = rows
-      .map((row) => mapNearbyPlace(location, row, { areaSearch }))
-      .filter((place): place is NearbyPlace => Boolean(place));
+    const mappedPlaces = (
+      await Promise.all(
+        rows.map((row) => mapNearbyPlace(location, row, { areaSearch })),
+      )
+    ).filter((place): place is NearbyPlace => Boolean(place));
 
     places.push(...mappedPlaces);
 
@@ -507,7 +629,7 @@ function mapAmadeusPlace(
   };
 }
 
-function mapNearbyPlace(
+async function mapNearbyPlace(
   location: LocationLookupResult,
   row: NominatimPlaceRow,
   {
@@ -515,7 +637,7 @@ function mapNearbyPlace(
   }: {
     areaSearch: boolean;
   },
-): NearbyPlace | null {
+): Promise<NearbyPlace | null> {
   const lat = Number(row.lat);
   const lng = Number(row.lon);
 
@@ -547,7 +669,7 @@ function mapNearbyPlace(
 
   const kind = normalizePlaceKind(row.type);
   const websiteUrl = getWebsiteUrl(row);
-  const providerImageUrl = getImageUrl(row);
+  const providerImageUrl = await getImageUrl(row);
   const imageUrl = providerImageUrl ?? getRepresentativeImageUrl(row);
   const address = formatAddress(row);
   const mapUrl = makeMapUrl(row, lat, lng);
@@ -594,6 +716,53 @@ function getPlaceQuery(location: LocationLookupResult) {
     location.region,
     location.country,
   ]).join(", ");
+}
+
+function makeSearchHref(destination: string) {
+  const params = new URLSearchParams({
+    budget: "300",
+    destination,
+    guests: "2",
+    purpose: "remote-work",
+  });
+
+  return `/search?${params.toString()}`;
+}
+
+function makeStaticLocation({
+  bounds = null,
+  city,
+  country,
+  countryCode,
+  lat,
+  lng,
+  name,
+  region,
+}: {
+  bounds?: LocationLookupResult["bounds"];
+  city: string | null;
+  country: string;
+  countryCode: string;
+  lat: number;
+  lng: number;
+  name: string;
+  region: string | null;
+}): LocationLookupResult {
+  return {
+    attribution: "Data © OpenStreetMap contributors, ODbL 1.0",
+    bounds,
+    city,
+    country,
+    countryCode,
+    formattedAddress: uniqueParts([name, region, country]).join(", "),
+    lat,
+    lng,
+    name,
+    provider: "nominatim",
+    providerId: `staywise-home:${name.toLowerCase().replace(/\s+/g, "-")}`,
+    query: name,
+    region,
+  };
 }
 
 function makeCacheKey(
@@ -757,7 +926,7 @@ function getWebsiteUrl(row: NominatimPlaceRow) {
   );
 }
 
-function getImageUrl(row: NominatimPlaceRow) {
+async function getImageUrl(row: NominatimPlaceRow) {
   const directImage = normalizeExternalUrl(row.extratags?.image ?? row.extratags?.image_1 ?? null);
 
   if (directImage) {
@@ -776,7 +945,86 @@ function getImageUrl(row: NominatimPlaceRow) {
     }
   }
 
+  const wikidataImage = await getWikidataImageUrl(row.extratags?.wikidata);
+
+  if (wikidataImage) {
+    return wikidataImage;
+  }
+
   return null;
+}
+
+async function getWikidataImageUrl(wikidataId: string | undefined) {
+  const id = wikidataId?.trim();
+
+  if (!id || !/^Q\d+$/.test(id)) {
+    return null;
+  }
+
+  const cached = wikidataImageCache.get(id);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.imageUrl;
+  }
+
+  try {
+    const response = await fetch(
+      `https://www.wikidata.org/wiki/Special:EntityData/${id}.json`,
+      {
+        headers: {
+          "Accept-Language": "en-US,en;q=0.9",
+          Referer: siteUrl,
+          "User-Agent": `StayWiseSeniorDesign/1.0 (${siteUrl})`,
+        },
+        next: {
+          revalidate: Math.floor(nearbyPlacesCacheTtlMs / 1000),
+        },
+        signal: AbortSignal.timeout(providerTimeoutMs),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error(`Wikidata image lookup failed with ${response.status}.`);
+    }
+
+    const payload = (await response.json()) as {
+      entities?: Record<
+        string,
+        {
+          claims?: {
+            P18?: Array<{
+              mainsnak?: {
+                datavalue?: {
+                  value?: string;
+                };
+              };
+            }>;
+          };
+        }
+      >;
+    };
+    const fileName = payload.entities?.[id]?.claims?.P18?.[0]?.mainsnak?.datavalue?.value;
+    const imageUrl = fileName
+      ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(
+          fileName,
+        )}`
+      : null;
+
+    wikidataImageCache.set(id, {
+      expiresAt: Date.now() + nearbyPlacesCacheTtlMs,
+      imageUrl,
+    });
+
+    return imageUrl;
+  } catch (error) {
+    console.warn("Unable to load Wikidata hotel image", { error, wikidataId: id });
+    wikidataImageCache.set(id, {
+      expiresAt: Date.now() + 1000 * 60 * 60,
+      imageUrl: null,
+    });
+
+    return null;
+  }
 }
 
 function makeBookingSearchUrl({

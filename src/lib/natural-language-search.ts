@@ -374,9 +374,11 @@ function inferDestination(prompt: string, listings: Listing[]) {
     addDestinationCandidate(candidates, `${listing.neighborhood} ${listing.city}`);
   }
 
-  return Array.from(candidates.entries())
+  const knownDestination = Array.from(candidates.entries())
     .sort(([first], [second]) => second.length - first.length)
     .find(([normalized]) => matchesPhrase(normalizedPrompt, normalized))?.[1];
+
+  return knownDestination ?? inferFreeformDestination(prompt);
 }
 
 function addDestinationCandidate(candidates: Map<string, string>, value: string) {
@@ -430,6 +432,59 @@ function inferPurpose(prompt: string) {
   return purposeSignals.find(({ patterns }) =>
     patterns.some((pattern) => pattern.test(prompt)),
   );
+}
+
+function inferFreeformDestination(prompt: string) {
+  const patterns = [
+    /\b(?:hotel|hotels|stay|stays|place|places|home|homes|room|rooms|accommodations?|lodging)\s+(?:in|near|around|at|to)\s+([\p{L}\p{M}\d\s.',-]+?)(?=\s+(?:for|under|below|less\s+than|up\s+to|max(?:imum)?|budget|with|from|between|on|next|this|tonight|tomorrow|check\s*in|check\s*out)\b|$)/iu,
+    /\b(?:in|near|around|at|to)\s+([\p{L}\p{M}\d\s.',-]+?)(?=\s+(?:for|under|below|less\s+than|up\s+to|max(?:imum)?|budget|with|from|between|on|next|this|tonight|tomorrow|check\s*in|check\s*out)\b|$)/iu,
+  ];
+
+  for (const pattern of patterns) {
+    const destination = cleanFreeformDestination(prompt.match(pattern)?.[1]);
+
+    if (destination) {
+      return destination;
+    }
+  }
+
+  return null;
+}
+
+function cleanFreeformDestination(value: string | undefined) {
+  const cleaned = value
+    ?.replace(/[?.!,;:]+$/g, "")
+    .replace(/\b(?:hotel|hotels|stay|stays|place|places|please|find|search|book|reserve)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!cleaned || cleaned.length < 2) {
+    return null;
+  }
+
+  return toDisplayDestination(cleaned);
+}
+
+function toDisplayDestination(value: string) {
+  if (/[A-Z]/.test(value) && !/^[A-Z\s]+$/.test(value)) {
+    return value;
+  }
+
+  return value
+    .split(" ")
+    .map((word) => {
+      if (/^[A-Z]{2,}$/.test(word)) {
+        return word;
+      }
+
+      return word
+        .split("-")
+        .map((part) =>
+          part ? `${part.charAt(0).toUpperCase()}${part.slice(1).toLowerCase()}` : part,
+        )
+        .join("-");
+    })
+    .join(" ");
 }
 
 function buildSummary(detected: string[]) {

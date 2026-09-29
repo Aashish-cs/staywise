@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 
+const availableCheckIn = getFutureIso(180);
+const availableCheckOut = getFutureIso(183);
+
 test("new guest can discover a stay and reach the reservation sign-in handoff", async ({
   page,
 }) => {
@@ -9,6 +12,11 @@ test("new guest can discover a stay and reach the reservation sign-in handoff", 
   await page.getByRole("button", { name: "Search stays" }).click();
 
   await expect(page).toHaveURL(/\/search\?destination=Dallas/);
+  await expect(page.getByRole("heading", { name: "Recommended stays" })).toBeVisible();
+
+  await page.goto(
+    `/search?destination=Dallas&guests=2&checkIn=${availableCheckIn}&checkOut=${availableCheckOut}`,
+  );
   await expect(page.getByRole("heading", { name: "Recommended stays" })).toBeVisible();
 
   await page.getByRole("link", { name: /Reserve / }).first().click();
@@ -111,3 +119,46 @@ test("mobile guest flow can filter, open a stay, and reach the sticky reserve pa
   await expect(page).toHaveURL(/#reserve$/);
   await expect(page.getByRole("heading", { name: "Booking" })).toBeVisible();
 });
+
+test("external hotel result opens a StayWise reservation handoff", async ({ page }) => {
+  const params = new URLSearchParams({
+    actionUrl: "https://hotel.example/availability",
+    address: "1 Harbor Road, Limassol, Cyprus",
+    destination: "Cyprus",
+    guests: "2",
+    id: "way:cyprus-demo-hotel",
+    imageUrl:
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=80",
+    kind: "hotel",
+    lat: "34.7071",
+    lng: "33.0226",
+    mapUrl: "https://www.openstreetmap.org/way/123",
+    name: "Cyprus Harbor Hotel",
+    source: "openstreetmap",
+    typeLabel: "Hotel",
+  });
+
+  await page.goto(`/external-stays?${params.toString()}`);
+
+  await expect(
+    page.getByRole("heading", { name: "Reserve Cyprus Harbor Hotel" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Sign in to reserve" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Provider availability" })).toHaveAttribute(
+    "href",
+    "https://hotel.example/availability",
+  );
+
+  await page.getByRole("link", { name: "Sign in to reserve" }).click();
+
+  await expect(page).toHaveURL(/\/auth\?mode=signin/);
+  await expect(page).toHaveURL(/next=/);
+});
+
+function getFutureIso(daysFromNow: number) {
+  const date = new Date();
+
+  date.setUTCDate(date.getUTCDate() + daysFromNow);
+
+  return date.toISOString().slice(0, 10);
+}

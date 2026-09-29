@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 
+const availableCheckIn = getFutureIso(180);
+const availableCheckOut = getFutureIso(183);
+
 test("home page exposes the premium marketplace shell", async ({ page }) => {
   await page.goto("/");
 
@@ -27,7 +30,7 @@ test("search page renders Dallas results with preserved listing context", async 
 
 test("listing detail loads booking surface and keeps back-to-search context", async ({ page }) => {
   await page.goto(
-    "/listings/33333333-3333-4333-8333-333333333333?destination=Dallas&guests=2&budget=300&purpose=remote-work&page=2",
+    `/listings/33333333-3333-4333-8333-333333333333?destination=Dallas&guests=2&budget=300&purpose=remote-work&page=2&checkIn=${availableCheckIn}&checkOut=${availableCheckOut}`,
   );
 
   await expect(page).toHaveTitle(/StayWise/);
@@ -55,3 +58,11 @@ test("unknown routes use the branded not-found page", async ({ page }) => {
   await expect(page).toHaveTitle(/Page not found/);
   await expect(page.getByRole("heading", { name: "This StayWise path got lost." })).toBeVisible();
 });
+
+function getFutureIso(daysFromNow: number) {
+  const date = new Date();
+
+  date.setUTCDate(date.getUTCDate() + daysFromNow);
+
+  return date.toISOString().slice(0, 10);
+}

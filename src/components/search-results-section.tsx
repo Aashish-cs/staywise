@@ -118,7 +118,7 @@ export function SearchResultsSection({
             {dataUnavailable
               ? "StayWise does not fall back to hardcoded places when Supabase is missing or failing."
               : hasNearbyPlaceFallback
-                ? "Compare hotel and guest-stay options with photos, maps, and availability actions. StayWise direct booking is available for host listings as inventory expands."
+                ? "Compare external hotel and guest-stay options with photos, maps, provider links, and a StayWise reserve handoff."
                 : "Smart sort weighs budget, trip style, guest count, amenities, and the filters in your shareable search URL."}
           </p>
           {availabilityFilterApplied && (
@@ -326,6 +326,7 @@ export function SearchResultsSection({
           nearbyPlaces={nearbyPlaces}
           onClearAdvancedFilters={onClearAdvancedFilters}
           onFocusSearch={onFocusSearch}
+          search={search}
         />
       ) : (
         <EmptyState
@@ -373,11 +374,13 @@ function NearbyPlacesFallback({
   nearbyPlaces,
   onClearAdvancedFilters,
   onFocusSearch,
+  search,
 }: {
   destinationLabel: string;
   nearbyPlaces: NearbyPlace[];
   onClearAdvancedFilters: () => void;
   onFocusSearch: () => void;
+  search: SearchInput;
 }) {
   const attributionLabel = nearbyPlaces.some((place) => place.source === "amadeus")
     ? "Hotel availability powered by Amadeus Self-Service APIs. Map links use OpenStreetMap."
@@ -393,8 +396,8 @@ function NearbyPlacesFallback({
               More options around {destinationLabel}
             </h3>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-[#5f5148]">
-              Availability actions open the hotel website when listed, or a focused
-              booking search for that specific place.
+              Reserve opens a StayWise demo booking handoff for the selected
+              external stay. Provider and map links stay available for source checking.
             </p>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row lg:shrink-0">
@@ -409,100 +412,112 @@ function NearbyPlacesFallback({
       </Surface>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {nearbyPlaces.map((place) => (
-          <Surface
-            as="article"
-            key={place.id}
-            className="flex min-h-96 flex-col justify-between overflow-hidden"
-          >
-            <div className="relative aspect-[4/3] overflow-hidden bg-[#f7f3ee]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={place.imageUrl}
-                alt=""
-                className="h-full w-full object-cover"
-                loading="lazy"
-              />
-              <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-                <Badge tone="neutral" className="bg-white/95 shadow-sm">
-                  {place.typeLabel}
-                </Badge>
-              </div>
-              {place.priceLabel && (
-                <div className="absolute bottom-3 left-3 rounded-full bg-white/95 px-3 py-1 text-sm font-extrabold text-[#201a18] shadow-sm">
-                  {place.priceLabel}
-                </div>
-              )}
-            </div>
+        {nearbyPlaces.map((place) => {
+          const reserveHref = makeExternalStayHref(place, search);
 
-            <div className="flex flex-1 flex-col justify-between p-5">
-              <div>
-                <div className="flex items-start gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fff3f5] text-[#bd1740]">
-                    {place.kind === "place" ? (
-                      <MapPin className="h-5 w-5" aria-hidden="true" />
-                    ) : (
-                      <Hotel className="h-5 w-5" aria-hidden="true" />
-                    )}
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="line-clamp-2 text-lg font-extrabold leading-6">
-                      {place.name}
-                    </h3>
-                    {place.address && (
-                      <p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-[#5f5148]">
-                        {place.address}
-                      </p>
-                    )}
-                    {place.description && (
-                      <p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-[#5f5148]">
-                        {place.description}
-                      </p>
-                    )}
+          return (
+            <Surface
+              as="article"
+              key={place.id}
+              className="flex min-h-96 flex-col justify-between overflow-hidden"
+            >
+              <div className="relative aspect-[4/3] overflow-hidden bg-[#f7f3ee]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={place.imageUrl}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+                  <Badge tone="neutral" className="bg-white/95 shadow-sm">
+                    {place.typeLabel}
+                  </Badge>
+                </div>
+                {place.priceLabel && (
+                  <div className="absolute bottom-3 left-3 rounded-full bg-white/95 px-3 py-1 text-sm font-extrabold text-[#201a18] shadow-sm">
+                    {place.priceLabel}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-1 flex-col justify-between p-5">
+                <div>
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#fff3f5] text-[#bd1740]">
+                      {place.kind === "place" ? (
+                        <MapPin className="h-5 w-5" aria-hidden="true" />
+                      ) : (
+                        <Hotel className="h-5 w-5" aria-hidden="true" />
+                      )}
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="line-clamp-2 text-lg font-extrabold leading-6">
+                        {place.name}
+                      </h3>
+                      {place.address && (
+                        <p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-[#5f5148]">
+                          {place.address}
+                        </p>
+                      )}
+                      {place.description && (
+                        <p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-[#5f5148]">
+                          {place.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {place.distanceMiles !== null && (
+                    <p className="mt-3 text-sm font-extrabold text-[#315d3b]">
+                      {formatDistanceMiles(place.distanceMiles)} from search center
+                    </p>
+                  )}
+                  {place.distanceMiles === null && (
+                    <p className="mt-3 text-sm font-extrabold text-[#315d3b]">
+                      Inside searched area
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-5 flex flex-col gap-3 border-t border-[#f0e7df] pt-4">
+                  <p className="text-xs font-semibold text-[#786a60]">
+                    {place.source === "amadeus" ? "Hotel offer" : "Place data"}
+                  </p>
+                  <div className="grid gap-2">
+                    <Link
+                      href={reserveHref}
+                      className="inline-flex h-10 w-full items-center justify-center rounded-full bg-[#201a18] px-4 text-xs font-extrabold text-white transition hover:bg-black"
+                    >
+                      Reserve
+                    </Link>
+                    <div className="flex flex-wrap gap-2">
+                      {place.actionUrl !== place.mapUrl && (
+                        <a
+                          href={place.mapUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-full border border-[#eadfd6] bg-white px-3 text-xs font-extrabold text-[#201a18] transition hover:border-[#ff385c] hover:text-[#df2348]"
+                        >
+                          Map
+                        </a>
+                      )}
+                      <a
+                        href={place.actionUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-full border border-[#eadfd6] bg-white px-3 text-xs font-extrabold text-[#201a18] transition hover:border-[#ff385c] hover:text-[#df2348]"
+                      >
+                        Provider
+                        <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                      </a>
+                    </div>
                   </div>
                 </div>
-
-                {place.distanceMiles !== null && (
-                  <p className="mt-3 text-sm font-extrabold text-[#315d3b]">
-                    {formatDistanceMiles(place.distanceMiles)} from search center
-                  </p>
-                )}
-                {place.distanceMiles === null && (
-                  <p className="mt-3 text-sm font-extrabold text-[#315d3b]">
-                    Inside searched area
-                  </p>
-                )}
               </div>
-
-              <div className="mt-5 flex flex-col gap-3 border-t border-[#f0e7df] pt-4 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs font-semibold text-[#786a60]">
-                  {place.source === "amadeus" ? "Hotel offer" : "Place data"}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {place.actionUrl !== place.mapUrl && (
-                    <a
-                      href={place.mapUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[#eadfd6] bg-white px-3 text-xs font-extrabold text-[#201a18] transition hover:border-[#ff385c] hover:text-[#df2348]"
-                    >
-                      Map
-                    </a>
-                  )}
-                  <a
-                    href={place.actionUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex h-9 items-center justify-center gap-2 rounded-full bg-[#201a18] px-3 text-xs font-extrabold text-white transition hover:bg-black"
-                  >
-                    {place.actionLabel}
-                    <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                  </a>
-                </div>
-              </div>
-            </div>
-          </Surface>
-        ))}
+            </Surface>
+          );
+        })}
       </div>
 
       <p className="text-xs font-semibold text-[#786a60]">
@@ -510,6 +525,31 @@ function NearbyPlacesFallback({
       </p>
     </div>
   );
+}
+
+function makeExternalStayHref(place: NearbyPlace, search: SearchInput) {
+  const params = new URLSearchParams({
+    actionUrl: place.actionUrl,
+    destination: search.destination,
+    id: place.id,
+    imageUrl: place.imageUrl,
+    kind: place.kind,
+    lat: String(place.lat),
+    lng: String(place.lng),
+    mapUrl: place.mapUrl,
+    name: place.name,
+    source: place.source,
+    typeLabel: place.typeLabel,
+  });
+
+  if (place.address) params.set("address", place.address);
+  if (place.description) params.set("description", place.description);
+  if (place.priceLabel) params.set("providerPrice", place.priceLabel);
+  if (search.checkIn) params.set("checkIn", search.checkIn);
+  if (search.checkOut) params.set("checkOut", search.checkOut);
+  if (search.guests) params.set("guests", String(search.guests));
+
+  return `/external-stays?${params.toString()}`;
 }
 
 function SearchMapPanelLoading() {

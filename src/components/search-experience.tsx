@@ -6,20 +6,20 @@ import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import {
   Car,
-  Home,
   Map,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
-  Trees,
-  Users,
-  Wifi,
 } from "lucide-react";
 import { SearchFiltersPanel } from "@/components/search-filters-panel";
 import {
   SearchResultsSection,
 } from "@/components/search-results-section";
-import { StayWiseAccountMenu, StayWiseHeader } from "@/components/staywise-header";
+import {
+  StayWiseAccountMenu,
+  StayWiseHeader,
+  StayWisePrimaryNav,
+} from "@/components/staywise-header";
 import { Badge, Button } from "@/components/ui/primitives";
 import { useAiSearch } from "@/hooks/use-ai-search";
 import { useSavedListings } from "@/hooks/use-saved-listings";
@@ -44,37 +44,15 @@ import {
 } from "@/lib/search-results";
 import {
   defaultSearchInput,
-  familySearchPreset,
-  outdoorSearchPreset,
-  workReadySearchPreset,
 } from "@/lib/search-presets";
 import {
   buildSearchPageQueryString,
   buildSearchQueryString,
 } from "@/lib/search-url";
 
-const searchCategoryLinks = [
-  {
-    href: "/search",
-    icon: Home,
-    label: "All stays",
-  },
-  {
-    href: makeSearchHref(workReadySearchPreset),
-    icon: Wifi,
-    label: "Work-ready",
-  },
-  {
-    href: makeSearchHref(familySearchPreset),
-    icon: Users,
-    label: "Family trips",
-  },
-  {
-    href: makeSearchHref(outdoorSearchPreset),
-    icon: Trees,
-    label: "Outdoors",
-  },
-];
+const homeTabSearchInput = {
+  propertyTypes: ["House", "Townhome", "Villa"],
+} satisfies Partial<SearchInput>;
 
 export function SearchExperience({
   accountRole,
@@ -183,6 +161,7 @@ export function SearchExperience({
       ? "Host"
       : "Trips"
     : "Sign in";
+  const homesHref = makeSearchHref(homeTabSearchInput);
   const activeFilterCount =
     search.amenities.length +
     search.propertyTypes.length +
@@ -279,58 +258,26 @@ export function SearchExperience({
     <main className="min-h-screen bg-white text-[#201a18]">
       <StayWiseHeader
         className="z-20"
-        nav={
-          <nav className="hidden items-center gap-2 rounded-full border border-[#eadfd6] bg-[#fbfaf8] px-2 py-2 shadow-sm lg:flex">
-            <Link className="nav-pill" href="/search">
-              Stays
-            </Link>
-            <Link
-              className="nav-pill"
-              href={isSignedIn ? "/dashboard" : "/auth?mode=signin"}
-            >
-              Trips
-            </Link>
-            <Link className="nav-pill" href="/host">
-              Host
-            </Link>
-          </nav>
-        }
+        nav={<StayWisePrimaryNav activeTab="homes" homesHref={homesHref} />}
         actions={
-          <StayWiseAccountMenu
-            accountHref={accountHref}
-            accountLabel={accountLabel}
-            accountLinkClassName="hover:bg-white"
-            accountLinkVisibilityClassName="hidden md:block"
-            isSignedIn={isSignedIn}
-            menuClassName="z-30 shadow-lg"
-          />
+          <>
+            <Link
+              className="hidden whitespace-nowrap rounded-full px-4 py-2 text-sm font-extrabold hover:bg-[#f7f3ee] md:block"
+              href="/host"
+            >
+              Become a host
+            </Link>
+            <StayWiseAccountMenu
+              accountHref={accountHref}
+              accountLabel={accountLabel}
+              accountLinkClassName="hover:bg-white"
+              accountLinkVisibilityClassName="hidden md:block"
+              isSignedIn={isSignedIn}
+              menuClassName="z-30 shadow-lg"
+            />
+          </>
         }
-      >
-
-        <div className="border-t border-[#f3ede8]">
-          <div className="scrollbar-hide mx-auto flex max-w-[1536px] gap-2 overflow-x-auto px-5 py-3 lg:px-8">
-            {searchCategoryLinks.map((item, index) => {
-              const Icon = item.icon;
-
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={clsx(
-                    "flex min-w-fit items-center gap-2 rounded-full border px-3 py-2 text-sm font-extrabold transition hover:border-[#ff385c] hover:text-[#df2348]",
-                    index === 0
-                      ? "border-[#201a18] bg-[#201a18] text-white hover:text-white"
-                      : "border-[#eadfd6] bg-white text-[#5f5148]",
-                  )}
-                >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </StayWiseHeader>
+      />
 
       <section className="mx-auto max-w-[1536px] px-5 py-6 lg:px-8">
         <MobileSearchSummary

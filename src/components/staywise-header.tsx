@@ -3,7 +3,7 @@
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
-import { Menu, Sparkles, UserRound } from "lucide-react";
+import { Globe2, Home, Menu, Sparkles, UserRound } from "lucide-react";
 
 type StayWiseHeaderProps = {
   actions?: ReactNode;
@@ -22,6 +22,11 @@ type StayWiseAccountMenuProps = {
   accountLinkVisibilityClassName?: string;
   isSignedIn: boolean;
   menuClassName?: string;
+};
+
+type StayWisePrimaryNavProps = {
+  activeTab: "all" | "homes";
+  homesHref: string;
 };
 
 export function StayWiseHeader({
@@ -48,19 +53,14 @@ export function StayWiseHeader({
       >
         <Link
           href="/"
-          className={clsx("flex items-center gap-3", brandClassName)}
+          className={clsx("flex items-center gap-2", brandClassName)}
           aria-label="StayWise home"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ff385c] text-white shadow-sm">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#fff3f5] text-[#ff385c]">
             <Sparkles className="h-5 w-5" aria-hidden="true" />
           </span>
-          <span>
-            <span className="block text-xl font-extrabold tracking-tight">
-              StayWise
-            </span>
-            <span className="hidden text-xs font-semibold text-[#786a60] sm:block">
-              Smart Stays, Better Days.
-            </span>
+          <span className="text-xl font-extrabold tracking-tight text-[#ff385c]">
+            StayWise
           </span>
         </Link>
 
@@ -71,6 +71,59 @@ export function StayWiseHeader({
       </div>
       {children}
     </header>
+  );
+}
+
+export function StayWisePrimaryNav({ activeTab, homesHref }: StayWisePrimaryNavProps) {
+  const items = [
+    {
+      href: "/",
+      icon: Globe2,
+      key: "all",
+      label: "All",
+    },
+    {
+      href: homesHref,
+      icon: Home,
+      key: "homes",
+      label: "Homes",
+    },
+  ] as const;
+
+  return (
+    <nav aria-label="StayWise categories" className="flex items-center justify-center gap-8">
+      {items.map((item) => {
+        const Icon = item.icon;
+        const isActive = item.key === activeTab;
+
+        return (
+          <Link
+            key={item.key}
+            href={item.href}
+            aria-current={isActive ? "page" : undefined}
+            className={clsx(
+              "group relative flex h-14 items-center gap-2 text-sm font-extrabold transition",
+              isActive ? "text-[#201a18]" : "text-[#6f655e] hover:text-[#201a18]",
+            )}
+          >
+            <Icon
+              className={clsx(
+                "h-5 w-5 transition",
+                isActive ? "text-[#201a18]" : "text-[#8c8179] group-hover:text-[#201a18]",
+              )}
+              aria-hidden="true"
+            />
+            {item.label}
+            <span
+              className={clsx(
+                "absolute inset-x-0 -bottom-1 h-0.5 rounded-full transition",
+                isActive ? "bg-[#201a18]" : "bg-transparent group-hover:bg-[#d7cec7]",
+              )}
+            />
+          </Link>
+        );
+      })}
+    </nav>
   );
 }
 

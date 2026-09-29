@@ -3,12 +3,10 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import {
-  ListingFacts,
   ListingCardMedia,
-  ListingLocationLine,
   ListingSaveButton,
 } from "@/components/listing-card-primitives";
-import { Badge, Price } from "@/components/ui/primitives";
+import { Badge } from "@/components/ui/primitives";
 import {
   createListingSearchInput,
   homeSearchInput,
@@ -19,7 +17,7 @@ import type { RankedListing } from "@/lib/recommendations";
 export type MarketplaceListingSection = {
   href: string;
   listings: RankedListing[];
-  subtitle: string;
+  subtitle?: string;
   title: string;
 };
 
@@ -35,7 +33,7 @@ export function MarketplaceListingRails({
   sections,
 }: MarketplaceListingRailsProps) {
   return (
-    <section className="space-y-11 py-12">
+    <section className="space-y-14 py-10">
       {sections.map((section, sectionIndex) => (
         <ListingRail
           key={section.title}
@@ -66,30 +64,30 @@ function ListingRail({
   onToggleSaved: (id: string) => void;
   savedIds: string[];
   sectionIndex: number;
-  subtitle: string;
+  subtitle?: string;
   title: string;
 }) {
   return (
     <section className="mx-auto max-w-[1536px] px-5 lg:px-8">
-      <div className="mb-5 flex items-end justify-between gap-4">
+      <div className="mb-5 flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-extrabold tracking-tight md:text-2xl">
-            {title}
-          </h2>
-          <p className="mt-1 max-w-2xl text-sm font-semibold text-[#786a60]">
-            {subtitle}
-          </p>
+          <Link href={href} className="group inline-flex items-center gap-2">
+            <h2 className="text-xl font-extrabold tracking-tight md:text-2xl">
+              {title}
+            </h2>
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f1f1f1] text-[#201a18] transition group-hover:bg-[#201a18] group-hover:text-white">
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </span>
+          </Link>
+          {subtitle && (
+            <p className="mt-1 max-w-2xl text-sm font-semibold text-[#786a60]">
+              {subtitle}
+            </p>
+          )}
         </div>
-        <Link
-          href={href}
-          aria-label={`View all ${title}`}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#f1ebe6] text-[#201a18] hover:bg-[#201a18] hover:text-white"
-        >
-          <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </Link>
       </div>
 
-      <div className="scrollbar-hide grid auto-cols-[minmax(245px,1fr)] grid-flow-col gap-5 overflow-x-auto pb-3 md:auto-cols-[minmax(260px,1fr)] lg:auto-cols-[minmax(275px,1fr)]">
+      <div className="scrollbar-hide grid auto-cols-[72vw] grid-flow-col gap-5 overflow-x-auto pb-3 sm:auto-cols-[250px] lg:auto-cols-[276px] 2xl:auto-cols-[292px]">
         {listings.map((listing, index) => (
           <MarketplaceListingCard
             key={`${title}-${listing.id}`}
@@ -123,22 +121,24 @@ function MarketplaceListingCard({
 
   return (
     <article className="group min-w-0">
-      <div className="relative overflow-hidden rounded-[24px] bg-[#e8dfd6] shadow-sm">
+      <div className="relative overflow-hidden rounded-[22px] bg-[#e8dfd6] shadow-sm">
         <ListingCardMedia
           href={href}
           aria-label={`View ${listing.title}`}
-          frameClassName="block aspect-square rounded-[24px]"
+          frameClassName="block aspect-square rounded-[22px]"
           imageClassName="transition duration-500 group-hover:scale-105"
           listing={listing}
           priority={priority}
           sizes="(min-width: 1280px) 280px, (min-width: 768px) 33vw, 82vw"
         />
-        <Badge tone="neutral" className="absolute left-3 top-3 bg-white/95 shadow-sm">
-          {listing.matchScore}% match
-        </Badge>
+        {isGuestFavorite(listing) && (
+          <Badge tone="neutral" className="absolute left-3 top-3 bg-white/95 shadow-sm">
+            Guest favorite
+          </Badge>
+        )}
         <ListingSaveButton
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-[#201a18] shadow-sm backdrop-blur transition hover:scale-105"
-          iconClassName="h-5 w-5"
+          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.65)] transition hover:scale-105"
+          iconClassName="h-7 w-7 fill-black/25 stroke-[2.5]"
           listingTitle={listing.title}
           onClick={() => onToggleSaved(listing.id)}
           saved={saved}
@@ -146,23 +146,38 @@ function MarketplaceListingCard({
       </div>
 
       <Link href={href} className="mt-3 block">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h3 className="line-clamp-2 text-sm font-extrabold leading-5">
-              {listing.title}
-            </h3>
-            <ListingLocationLine listing={listing} className="mt-1" />
-          </div>
-          <Badge tone="neutral" className="shrink-0">Live</Badge>
-        </div>
-        <ListingFacts listing={listing} className="mt-2" />
-        <p className="mt-2 text-sm text-[#5f5148]">
-          <Price amount={listing.pricePerNight} />
-        </p>
-        <p className="mt-1 line-clamp-2 text-xs font-semibold leading-5 text-[#315d3b]">
-          {listing.matchReasons[0]}
+        <h3 className="line-clamp-1 text-base font-extrabold leading-6">
+          {formatListingCardTitle(listing)}
+        </h3>
+        <p className="mt-0.5 line-clamp-1 text-sm font-semibold text-[#6f655e]">
+          {formatTwoNightPrice(listing.pricePerNight)}
+          {listing.ratingAverage ? (
+            <> · ★ {formatRating(listing.ratingAverage)}</>
+          ) : null}
         </p>
       </Link>
     </article>
   );
+}
+
+function formatListingCardTitle(listing: RankedListing) {
+  const type = listing.propertyType === "House" ? "Home" : listing.propertyType;
+
+  return `${type} in ${listing.city}`;
+}
+
+function formatTwoNightPrice(pricePerNight: number) {
+  return `${new Intl.NumberFormat("en-US", {
+    currency: "USD",
+    maximumFractionDigits: 0,
+    style: "currency",
+  }).format(pricePerNight * 2)} for 2 nights`;
+}
+
+function formatRating(rating: number) {
+  return rating.toFixed(2).replace(/0$/, "").replace(/\.0$/, ".0");
+}
+
+function isGuestFavorite(listing: RankedListing) {
+  return (listing.ratingAverage ?? 0) >= 4.8 || listing.matchScore >= 88;
 }

@@ -324,12 +324,21 @@ async function parseWithConfiguredLlm(
   }
 
   const parsedOutput = JSON.parse(outputText) as Record<string, unknown>;
-  const parsedSearch = searchSchema.safeParse({
-    ...searchSchema.parse(currentSearch),
+  const previousSearch = searchSchema.parse(currentSearch);
+  const mergedSearch = {
+    ...previousSearch,
     ...parsedOutput,
     nearLat: null,
     nearLng: null,
-  });
+  };
+
+  if (!inferGuests(prompt)) {
+    mergedSearch.guests = previousSearch.guests;
+    mergedSearch.adults = previousSearch.adults;
+    mergedSearch.children = previousSearch.children;
+  }
+
+  const parsedSearch = searchSchema.safeParse(mergedSearch);
 
   if (!parsedSearch.success) {
     return null;

@@ -12,14 +12,12 @@ export const propertyTypeOptions: PropertyType[] = [
 
 export const defaultSearchInput = createSearchInput();
 
-export const homeSearchInput = createSearchInput({
-  maxNightlyBudget: 300,
-});
+export const homeSearchInput = createSearchInput();
 
 export const broadMarketplaceSearchInput = createSearchInput({
   amenities: [],
   destination: "",
-  maxNightlyBudget: 300,
+  maxNightlyBudget: 1200,
 });
 
 export const workReadySearchPreset = {
@@ -52,14 +50,14 @@ export function createSearchInput(overrides: Partial<SearchInput> = {}): SearchI
     infants: 0,
     pets: 0,
     guests: 2,
-    maxNightlyBudget: 250,
+    maxNightlyBudget: 1200,
     minBathrooms: 0,
     minBedrooms: 0,
     nearLat: null,
     nearLng: null,
     propertyTypes: [],
     tripPurpose: "remote-work",
-    amenities: ["Fast Wi-Fi", "Workspace"],
+    amenities: [],
   };
 
   const next = {

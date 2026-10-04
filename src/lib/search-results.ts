@@ -29,7 +29,9 @@ export function getActiveSearchFilterLabels(search: SearchInput) {
   if (hasSearchDateRange(search)) {
     labels.push(`${search.checkIn} to ${search.checkOut}`);
   }
-  if (search.maxNightlyBudget) labels.push(`Up to $${search.maxNightlyBudget}`);
+  if (search.maxNightlyBudget < 1200) {
+    labels.push(`Up to $${search.maxNightlyBudget}`);
+  }
   if (search.minBedrooms > 0) labels.push(`${search.minBedrooms}+ bedrooms`);
   if (search.minBathrooms > 0) labels.push(`${search.minBathrooms}+ baths`);
   labels.push(...search.propertyTypes);

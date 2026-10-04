@@ -50,7 +50,7 @@ const searchObjectSchema = z.object({
   infants: z.coerce.number().int().min(0).max(5).default(0),
   pets: z.coerce.number().int().min(0).max(5).default(0),
   guests: z.coerce.number().int().min(1).max(16).default(2),
-  maxNightlyBudget: z.coerce.number().int().min(50).max(1200).default(250),
+  maxNightlyBudget: z.coerce.number().int().min(50).max(1200).default(1200),
   minBathrooms: z.coerce.number().min(0).max(12).default(0),
   minBedrooms: z.coerce.number().int().min(0).max(12).default(0),
   propertyTypes: z.array(z.enum(propertyTypeValues)).default([]),

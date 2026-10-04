@@ -35,7 +35,7 @@ export function parseSearchParams(params: RawSearchParams): SearchInput {
       : clampNumberParam(firstParam(params.guests), 2, 1, 16),
     maxNightlyBudget: clampNumberParam(
       firstParam(params.budget) ?? firstParam(params.maxNightlyBudget),
-      250,
+      1200,
       50,
       1200,
     ),

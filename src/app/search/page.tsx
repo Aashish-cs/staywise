@@ -73,7 +73,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     },
   });
   const nearbyPlaces =
-    location && listingResult.dataState.status === "ready" && listingResult.listings.length === 0
+    location && listingResult.dataState.status === "ready" && listingResult.listings.length < 12
       ? await getNearbyPlacesForLocation(location, {
           checkIn: search.checkIn,
           checkOut: search.checkOut,

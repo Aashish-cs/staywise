@@ -93,9 +93,13 @@ export function SearchResultsSection({
   const dataUnavailable = dataState.status !== "ready";
   const hasNearbyPlaceFallback =
     !dataUnavailable && displayedListings.length === 0 && nearbyPlaces.length > 0;
+  const hasSupplementalNearbyPlaces =
+    !dataUnavailable && displayedListings.length > 0 && nearbyPlaces.length > 0;
   const destinationLabel = search.destination.trim() || "this area";
   const searchSummary = hasNearbyPlaceFallback
     ? `${nearbyPlaces.length} stay options near ${destinationLabel}`
+    : hasSupplementalNearbyPlaces
+      ? `${resultSummary} + ${nearbyPlaces.length} live provider options`
     : resultSummary;
 
   return (
@@ -117,6 +121,8 @@ export function SearchResultsSection({
               ? "StayWise does not fall back to hardcoded places when Supabase is missing or failing."
               : hasNearbyPlaceFallback
                 ? "Compare external hotel and guest-stay options with photos, maps, provider links, and a StayWise reserve handoff."
+                : hasSupplementalNearbyPlaces
+                  ? "Smart sort weighs budget, trip style, guest count, amenities, and live hotel/home options so the search stays full."
                 : "Smart sort weighs budget, trip style, guest count, amenities, and the filters in your shareable search URL."}
           </p>
           {availabilityFilterApplied && (
@@ -174,125 +180,10 @@ export function SearchResultsSection({
       )}
 
       {displayedListings.length > 0 ? (
-        <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-          {selectedListing && showMapPanel && (
-            <Surface as="aside" className="p-5 xl:hidden">
-              <SearchMapPanel
-                listings={displayedListings}
-                listing={selectedListing}
-                listingDetailQuery={listingDetailQuery}
-                onSelectListing={onSelectListing}
-                search={search}
-              />
-            </Surface>
-          )}
-
-          <div className={clsx("grid gap-5 md:grid-cols-2", showMapPanel && "hidden xl:grid")}>
-            {displayedListings.map((listing, index) => {
-              const listingHref = `/listings/${listing.id}${
-                listingDetailQuery ? `?${listingDetailQuery}` : ""
-              }`;
-
-              return (
-                <Surface
-                  as="article"
-                  key={listing.id}
-                  className={clsx(
-                    "group overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md",
-                    selectedListing?.id === listing.id && "border-[#ff385c]",
-                  )}
-                >
-                  <Link
-                    href={listingHref}
-                    className="block"
-                    aria-label={`View ${listing.title}`}
-                    onFocus={() => onSelectListing(listing.id)}
-                    onMouseEnter={() => onSelectListing(listing.id)}
-                  >
-                    <ListingCardMedia
-                      imageClassName="transition duration-500 group-hover:scale-105"
-                      listing={listing}
-                      priority={index === 0}
-                      sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
-                    >
-                      <Badge
-                        tone="neutral"
-                        className="absolute left-3 top-3 bg-white/95 text-sm font-semibold shadow-sm"
-                      >
-                        {listing.matchScore}% match
-                      </Badge>
-                    </ListingCardMedia>
-
-                    <div className="p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <h3 className="line-clamp-2 text-base font-extrabold leading-6">
-                            {listing.title}
-                          </h3>
-                          <ListingLocationLine
-                            listing={listing}
-                            distanceMiles={listing.distanceMiles}
-                            className="mt-1"
-                          />
-                        </div>
-                        <Badge tone="neutral" className="shrink-0">
-                          Live
-                        </Badge>
-                      </div>
-
-                      <ListingFacts listing={listing} className="mt-3" />
-
-                      <div className="mt-4 flex items-end justify-between gap-3">
-                        <p className="text-sm">
-                          <Price amount={listing.pricePerNight} />
-                        </p>
-                        <p className="line-clamp-2 text-right text-xs font-semibold leading-5 text-[#315d3b]">
-                          {listing.matchReasons[0]}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-
-                  <div className="flex items-center justify-between border-t border-[#f0e7df] px-4 py-3">
-                    <ListingSaveButton
-                      className="flex h-9 items-center gap-2 rounded-full px-3 text-sm font-semibold hover:bg-[#fff3f5]"
-                      iconClassName="h-4 w-4"
-                      listingTitle={listing.title}
-                      onClick={() => onToggleSaved(listing.id)}
-                      saved={savedIds.includes(listing.id)}
-                      showLabel
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        aria-label={`Preview ${listing.title}`}
-                        size="sm"
-                        variant="outline"
-                        onClick={() => onSelectListing(listing.id)}
-                      >
-                        Preview
-                      </Button>
-                      <ButtonLink
-                        href={listingHref}
-                        aria-label={`Reserve ${listing.title}`}
-                        size="sm"
-                        variant="secondary"
-                      >
-                        Reserve
-                      </ButtonLink>
-                    </div>
-                  </div>
-                </Surface>
-              );
-            })}
-          </div>
-
-          {selectedListing && (
-            <Surface
-              as="aside"
-              className="hidden self-start p-5 xl:sticky xl:top-24 xl:block"
-            >
-              {showMapPanel ? (
+        <>
+          <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+            {selectedListing && showMapPanel && (
+              <Surface as="aside" className="p-5 xl:hidden">
                 <SearchMapPanel
                   listings={displayedListings}
                   listing={selectedListing}
@@ -300,24 +191,155 @@ export function SearchResultsSection({
                   onSelectListing={onSelectListing}
                   search={search}
                 />
-              ) : (
-                <ListingFitPanel listing={selectedListing} />
-              )}
-            </Surface>
-          )}
-
-          {pagination &&
-            (pagination.hasPreviousPage || pagination.hasNextPage) && (
-              <div
-                className={clsx(
-                  "md:col-span-2 xl:col-span-1",
-                  showMapPanel && "hidden xl:block",
-                )}
-              >
-                <SearchPagination pagination={pagination} />
-              </div>
+              </Surface>
             )}
-        </div>
+
+            <div className={clsx("grid gap-5 md:grid-cols-2", showMapPanel && "hidden xl:grid")}>
+              {displayedListings.map((listing, index) => {
+                const listingHref = `/listings/${listing.id}${
+                  listingDetailQuery ? `?${listingDetailQuery}` : ""
+                }`;
+
+                return (
+                  <Surface
+                    as="article"
+                    key={listing.id}
+                    className={clsx(
+                      "group overflow-hidden transition hover:-translate-y-0.5 hover:shadow-md",
+                      selectedListing?.id === listing.id && "border-[#ff385c]",
+                    )}
+                  >
+                    <Link
+                      href={listingHref}
+                      className="block"
+                      aria-label={`View ${listing.title}`}
+                      onFocus={() => onSelectListing(listing.id)}
+                      onMouseEnter={() => onSelectListing(listing.id)}
+                    >
+                      <ListingCardMedia
+                        imageClassName="transition duration-500 group-hover:scale-105"
+                        listing={listing}
+                        priority={index === 0}
+                        sizes="(min-width: 1280px) 360px, (min-width: 768px) 50vw, 100vw"
+                      >
+                        <Badge
+                          tone="neutral"
+                          className="absolute left-3 top-3 bg-white/95 text-sm font-semibold shadow-sm"
+                        >
+                          {listing.matchScore}% match
+                        </Badge>
+                      </ListingCardMedia>
+
+                      <div className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <h3 className="line-clamp-2 text-base font-extrabold leading-6">
+                              {listing.title}
+                            </h3>
+                            <ListingLocationLine
+                              listing={listing}
+                              distanceMiles={listing.distanceMiles}
+                              className="mt-1"
+                            />
+                          </div>
+                          <Badge tone="neutral" className="shrink-0">
+                            Live
+                          </Badge>
+                        </div>
+
+                        <ListingFacts listing={listing} className="mt-3" />
+
+                        <div className="mt-4 flex items-end justify-between gap-3">
+                          <p className="text-sm">
+                            <Price amount={listing.pricePerNight} />
+                          </p>
+                          <p className="line-clamp-2 text-right text-xs font-semibold leading-5 text-[#315d3b]">
+                            {listing.matchReasons[0]}
+                          </p>
+                        </div>
+                      </div>
+                    </Link>
+
+                    <div className="flex items-center justify-between border-t border-[#f0e7df] px-4 py-3">
+                      <ListingSaveButton
+                        className="flex h-9 items-center gap-2 rounded-full px-3 text-sm font-semibold hover:bg-[#fff3f5]"
+                        iconClassName="h-4 w-4"
+                        listingTitle={listing.title}
+                        onClick={() => onToggleSaved(listing.id)}
+                        saved={savedIds.includes(listing.id)}
+                        showLabel
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          aria-label={`Preview ${listing.title}`}
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onSelectListing(listing.id)}
+                        >
+                          Preview
+                        </Button>
+                        <ButtonLink
+                          href={listingHref}
+                          aria-label={`Reserve ${listing.title}`}
+                          size="sm"
+                          variant="secondary"
+                        >
+                          Reserve
+                        </ButtonLink>
+                      </div>
+                    </div>
+                  </Surface>
+                );
+              })}
+            </div>
+
+            {selectedListing && (
+              <Surface
+                as="aside"
+                className="hidden self-start p-5 xl:sticky xl:top-24 xl:block"
+              >
+                {showMapPanel ? (
+                  <SearchMapPanel
+                    listings={displayedListings}
+                    listing={selectedListing}
+                    listingDetailQuery={listingDetailQuery}
+                    onSelectListing={onSelectListing}
+                    search={search}
+                  />
+                ) : (
+                  <ListingFitPanel listing={selectedListing} />
+                )}
+              </Surface>
+            )}
+
+            {pagination &&
+              (pagination.hasPreviousPage || pagination.hasNextPage) && (
+                <div
+                  className={clsx(
+                    "md:col-span-2 xl:col-span-1",
+                    showMapPanel && "hidden xl:block",
+                  )}
+                >
+                  <SearchPagination pagination={pagination} />
+                </div>
+              )}
+          </div>
+
+          {hasSupplementalNearbyPlaces && (
+            <NearbyPlacesFallback
+              className="mt-10 border-t border-[#eadfd6] pt-8"
+              destinationLabel={destinationLabel}
+              heading={`More places near ${destinationLabel}`}
+              nearbyPlaces={nearbyPlaces}
+              onClearAdvancedFilters={onClearAdvancedFilters}
+              onFocusSearch={onFocusSearch}
+              search={search}
+              showFilterActions={false}
+              summary="More live hotel and home options from provider data, with photos, map links, and a StayWise reserve handoff."
+            />
+          )}
+        </>
       ) : hasNearbyPlaceFallback ? (
         <NearbyPlacesFallback
           destinationLabel={destinationLabel}
@@ -368,43 +390,53 @@ export function SearchResultsSection({
 }
 
 function NearbyPlacesFallback({
+  className,
   destinationLabel,
+  heading,
   nearbyPlaces,
   onClearAdvancedFilters,
   onFocusSearch,
   search,
+  showFilterActions = true,
+  summary,
 }: {
+  className?: string;
   destinationLabel: string;
+  heading?: string;
   nearbyPlaces: NearbyPlace[];
   onClearAdvancedFilters: () => void;
   onFocusSearch: () => void;
   search: SearchInput;
+  showFilterActions?: boolean;
+  summary?: string;
 }) {
   const attributionLabel = nearbyPlaces.some((place) => place.source === "amadeus")
     ? "Hotel availability powered by Amadeus Self-Service APIs. Map links use OpenStreetMap."
     : "Data © OpenStreetMap contributors, ODbL 1.0.";
 
   return (
-    <div className="mt-6 space-y-5">
+    <div className={clsx("mt-6 space-y-5", className)}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <Badge tone="info">Live place data</Badge>
           <h3 className="mt-3 text-2xl font-extrabold tracking-tight">
-            Places to stay in {destinationLabel}
+            {heading ?? `Places to stay in ${destinationLabel}`}
           </h3>
           <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-[#5f5148]">
-            These options come from live hotel/place providers. Reserve opens the
-            StayWise booking handoff while provider links stay visible for source checking.
+            {summary ??
+              "These options come from live hotel/place providers. Reserve opens the StayWise booking handoff while provider links stay visible for source checking."}
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row lg:shrink-0">
-          <Button type="button" variant="secondary" onClick={onClearAdvancedFilters}>
-            Clear advanced filters
-          </Button>
-          <Button type="button" variant="outline" onClick={onFocusSearch}>
-            Adjust search
-          </Button>
-        </div>
+        {showFilterActions && (
+          <div className="flex flex-col gap-2 sm:flex-row lg:shrink-0">
+            <Button type="button" variant="secondary" onClick={onClearAdvancedFilters}>
+              Clear advanced filters
+            </Button>
+            <Button type="button" variant="outline" onClick={onFocusSearch}>
+              Adjust search
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-x-5 gap-y-8 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">

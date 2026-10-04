@@ -42,6 +42,8 @@ type RankedListing = ReturnType<typeof rankListings>[number];
 const homeTabSearchInput = {
   propertyTypes: ["House", "Townhome", "Villa"],
 } satisfies Partial<SearchInput>;
+const listingCardsPerSection = 12;
+const maxCityListingSections = 12;
 
 export function MarketplaceHome({
   accountRole,
@@ -238,10 +240,10 @@ function buildListingSections(
         firstCity.localeCompare(secondCity),
     )
     .filter(([, cityListings]) => cityListings.length >= 2)
-    .slice(0, 5)
+    .slice(0, maxCityListingSections)
     .map(([city, cityListings], index) => ({
       href: getHref({ destination: city }),
-      listings: cityListings.slice(0, 7),
+      listings: cityListings.slice(0, listingCardsPerSection),
       title:
         index % 2 === 0
           ? `Popular homes in ${city}`
@@ -260,30 +262,136 @@ function buildListingSections(
       first.pricePerNight - second.pricePerNight ||
       second.matchScore - first.matchScore,
   );
+  const guestFavorites = [...listings].sort(
+    (first, second) =>
+      (second.ratingAverage ?? 0) - (first.ratingAverage ?? 0) ||
+      second.matchScore - first.matchScore,
+  );
+  const homes = listings.filter((listing) =>
+    ["House", "Townhome", "Villa"].includes(listing.propertyType),
+  );
+  const apartments = listings.filter((listing) =>
+    ["Apartment", "Loft"].includes(listing.propertyType),
+  );
+  const cabins = listings.filter((listing) => listing.propertyType === "Cabin");
+  const kitchenReady = listings.filter((listing) => listing.amenities.includes("Kitchen"));
+  const petFriendly = listings.filter((listing) =>
+    listing.amenities.includes("Pet friendly"),
+  );
+  const broadDiscoverySections = [
+    {
+      href: getHref({}),
+      listings: rotateListings(listings, 2),
+      title: "Trending StayWise picks",
+    },
+    {
+      href: getHref({}),
+      listings: rotateListings(listings, 4),
+      title: "Weekend-ready stays",
+    },
+    {
+      href: getHref({}),
+      listings: rotateListings(guestFavorites, 1),
+      title: "Highly rated guest stays",
+    },
+    {
+      href: getHref({}),
+      listings: rotateListings(valuePicks, 3),
+      title: "Budget-friendly getaways",
+    },
+    {
+      href: getHref({}),
+      listings: rotateListings(groupReady.length > 0 ? groupReady : listings, 2),
+      title: "Roomy stays for groups",
+    },
+    {
+      href: getHref({}),
+      listings: rotateListings(workReady.length > 0 ? workReady : listings, 5),
+      title: "Laptop-friendly homes",
+    },
+    {
+      href: getHref(homeTabSearchInput),
+      listings: rotateListings(homes.length > 0 ? homes : listings, 1),
+      title: "Homes with space to settle in",
+    },
+    {
+      href: getHref({}),
+      listings: rotateListings(listings, 6),
+      title: "More stays to explore",
+    },
+  ];
 
   return [
     {
       href: getHref({}),
-      listings: listings.slice(0, 7),
+      listings: rotateListings(listings, 0),
       title: "Available this weekend",
     },
     ...citySections,
     {
+      href: getHref({}),
+      listings: rotateListings(guestFavorites, 0),
+      title: "Guest favorite stays",
+    },
+    {
       href: getHref(workReadySearchPreset),
-      listings: workReady.slice(0, 7),
+      listings: rotateListings(workReady, 0),
       title: "Popular homes for remote work",
     },
     {
       href: getHref(familySearchPreset),
-      listings: groupReady.slice(0, 7),
+      listings: rotateListings(groupReady, 0),
       title: "Homes with room for everyone",
     },
     {
       href: getHref(valueSearchPreset),
-      listings: valuePicks.slice(0, 7),
+      listings: rotateListings(valuePicks, 0),
       title: "Great value stays",
     },
+    ...broadDiscoverySections,
+    {
+      href: getHref(homeTabSearchInput),
+      listings: rotateListings(homes, 0),
+      title: "Entire homes to settle into",
+    },
+    {
+      href: getHref({ propertyTypes: ["Apartment", "Loft"] }),
+      listings: rotateListings(apartments, 0),
+      title: "Apartments near the action",
+    },
+    {
+      href: getHref({ propertyTypes: ["Cabin"] }),
+      listings: rotateListings(cabins, 0),
+      title: "Cabins and quiet getaways",
+    },
+    {
+      href: getHref({ amenities: ["Kitchen"] }),
+      listings: rotateListings(kitchenReady, 0),
+      title: "Stays with kitchens",
+    },
+    {
+      href: getHref({ amenities: ["Pet friendly"] }),
+      listings: rotateListings(petFriendly, 0),
+      title: "Pet-friendly picks",
+    },
   ].filter((section) => section.listings.length > 0);
+}
+
+function rotateListings(
+  listings: RankedListing[],
+  offset: number,
+  limit = listingCardsPerSection,
+) {
+  if (listings.length === 0) {
+    return [];
+  }
+
+  const count = Math.min(limit, listings.length);
+
+  return Array.from(
+    { length: count },
+    (_, index) => listings[(offset + index) % listings.length],
+  );
 }
 
 function makeSearchHref(input: Partial<SearchInput>) {

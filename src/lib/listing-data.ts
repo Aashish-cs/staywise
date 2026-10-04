@@ -635,7 +635,7 @@ async function loadPublicListingRows(supabase: SupabaseClient) {
     .select(listingSelect)
     .eq("is_active", true)
     .order("created_at", { ascending: false })
-    .limit(80);
+    .limit(160);
 }
 
 async function enrichListingsWithRecommendationSignals(

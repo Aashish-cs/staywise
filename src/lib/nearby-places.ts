@@ -145,11 +145,12 @@ const contactEmail = process.env.NOMINATIM_EMAIL;
 const amadeusDefaultBaseUrl = "https://test.api.amadeus.com";
 const nearbyPlacesCacheTtlMs = 1000 * 60 * 60 * 24 * 7;
 const maxNearbyDistanceMiles = 75;
-const maxFetchedPlaces = 24;
-const maxDisplayedPlaces = 14;
-const minSufficientPlaces = 7;
+const maxFetchedPlaces = 30;
+const maxDisplayedPlaces = 16;
+const minSufficientPlaces = 12;
 const providerTimeoutMs = 15000;
 const amadeusHotelRadiusKm = 35;
+const freeProviderHomepageSectionLimit = 0;
 let amadeusTokenCache: AmadeusTokenCache | null = null;
 const nearbyPlacesCache = new Map<
   string,
@@ -199,6 +200,30 @@ const homepageDiscoveryLocations: Array<{
 }> = [
   {
     location: makeStaticLocation({
+      city: "Austin",
+      country: "United States",
+      countryCode: "US",
+      lat: 30.2672,
+      lng: -97.7431,
+      name: "Austin",
+      region: "Texas",
+    }),
+    title: "Available in Austin this weekend",
+  },
+  {
+    location: makeStaticLocation({
+      city: "Dallas",
+      country: "United States",
+      countryCode: "US",
+      lat: 32.7767,
+      lng: -96.797,
+      name: "Dallas",
+      region: "Texas",
+    }),
+    title: "Popular homes in Dallas",
+  },
+  {
+    location: makeStaticLocation({
       city: "Galveston",
       country: "United States",
       countryCode: "US",
@@ -208,6 +233,18 @@ const homepageDiscoveryLocations: Array<{
       region: "Texas",
     }),
     title: "Available in Galveston this weekend",
+  },
+  {
+    location: makeStaticLocation({
+      city: "Houston",
+      country: "United States",
+      countryCode: "US",
+      lat: 29.7604,
+      lng: -95.3698,
+      name: "Houston",
+      region: "Texas",
+    }),
+    title: "Homes and hotels in Houston",
   },
   {
     location: makeStaticLocation({
@@ -223,6 +260,66 @@ const homepageDiscoveryLocations: Array<{
   },
   {
     location: makeStaticLocation({
+      city: "Fredericksburg",
+      country: "United States",
+      countryCode: "US",
+      lat: 30.2752,
+      lng: -98.8719,
+      name: "Fredericksburg",
+      region: "Texas",
+    }),
+    title: "Hill Country stays in Fredericksburg",
+  },
+  {
+    location: makeStaticLocation({
+      city: "San Antonio",
+      country: "United States",
+      countryCode: "US",
+      lat: 29.4252,
+      lng: -98.4946,
+      name: "San Antonio",
+      region: "Texas",
+    }),
+    title: "Homes in San Antonio",
+  },
+  {
+    location: makeStaticLocation({
+      city: "South Padre Island",
+      country: "United States",
+      countryCode: "US",
+      lat: 26.1118,
+      lng: -97.1681,
+      name: "South Padre Island",
+      region: "Texas",
+    }),
+    title: "Stay in South Padre Island",
+  },
+  {
+    location: makeStaticLocation({
+      city: "Corpus Christi",
+      country: "United States",
+      countryCode: "US",
+      lat: 27.8006,
+      lng: -97.3964,
+      name: "Corpus Christi",
+      region: "Texas",
+    }),
+    title: "Popular homes in Corpus Christi",
+  },
+  {
+    location: makeStaticLocation({
+      city: "Broken Bow",
+      country: "United States",
+      countryCode: "US",
+      lat: 34.0293,
+      lng: -94.7391,
+      name: "Broken Bow",
+      region: "Oklahoma",
+    }),
+    title: "Cabins around Broken Bow",
+  },
+  {
+    location: makeStaticLocation({
       city: "New Orleans",
       country: "United States",
       countryCode: "US",
@@ -235,6 +332,66 @@ const homepageDiscoveryLocations: Array<{
   },
   {
     location: makeStaticLocation({
+      city: "Miami Beach",
+      country: "United States",
+      countryCode: "US",
+      lat: 25.7907,
+      lng: -80.13,
+      name: "Miami Beach",
+      region: "Florida",
+    }),
+    title: "Beach stays in Miami",
+  },
+  {
+    location: makeStaticLocation({
+      city: "Orlando",
+      country: "United States",
+      countryCode: "US",
+      lat: 28.5383,
+      lng: -81.3792,
+      name: "Orlando",
+      region: "Florida",
+    }),
+    title: "Family stays in Orlando",
+  },
+  {
+    location: makeStaticLocation({
+      city: "Las Vegas",
+      country: "United States",
+      countryCode: "US",
+      lat: 36.1716,
+      lng: -115.1391,
+      name: "Las Vegas",
+      region: "Nevada",
+    }),
+    title: "Great hotels for your next trip",
+  },
+  {
+    location: makeStaticLocation({
+      city: "Chicago",
+      country: "United States",
+      countryCode: "US",
+      lat: 41.8781,
+      lng: -87.6298,
+      name: "Chicago",
+      region: "Illinois",
+    }),
+    title: "Weekend stays in Chicago",
+  },
+  {
+    location: makeStaticLocation({
+      city: "New York",
+      country: "United States",
+      countryCode: "US",
+      lat: 40.7128,
+      lng: -74.006,
+      name: "New York",
+      region: "New York",
+    }),
+    title: "Popular stays in New York",
+  },
+  {
+    location: makeStaticLocation({
       city: "London",
       country: "United Kingdom",
       countryCode: "GB",
@@ -243,7 +400,43 @@ const homepageDiscoveryLocations: Array<{
       name: "London",
       region: "England",
     }),
-    title: "Great hotels for your next trip",
+    title: "Places to stay in London",
+  },
+  {
+    location: makeStaticLocation({
+      city: "Paris",
+      country: "France",
+      countryCode: "FR",
+      lat: 48.8566,
+      lng: 2.3522,
+      name: "Paris",
+      region: "Ile-de-France",
+    }),
+    title: "Romantic stays in Paris",
+  },
+  {
+    location: makeStaticLocation({
+      city: "Barcelona",
+      country: "Spain",
+      countryCode: "ES",
+      lat: 41.3874,
+      lng: 2.1686,
+      name: "Barcelona",
+      region: "Catalonia",
+    }),
+    title: "Apartment stays in Barcelona",
+  },
+  {
+    location: makeStaticLocation({
+      city: "Tokyo",
+      country: "Japan",
+      countryCode: "JP",
+      lat: 35.6762,
+      lng: 139.6503,
+      name: "Tokyo",
+      region: "Tokyo",
+    }),
+    title: "City stays in Tokyo",
   },
   {
     location: makeStaticLocation({
@@ -307,8 +500,11 @@ export async function getNearbyPlacesForLocation(
 export async function getHomepageDiscoverySections(
   searchOptions: NearbyPlaceSearchOptions = {},
 ): Promise<NearbyPlaceSection[]> {
+  const locations = shouldUseExpandedHomepageDiscovery()
+    ? homepageDiscoveryLocations
+    : homepageDiscoveryLocations.slice(0, freeProviderHomepageSectionLimit);
   const results = await Promise.allSettled(
-    homepageDiscoveryLocations.map(async ({ location, title }) => {
+    locations.map(async ({ location, title }) => {
       const places = await getNearbyPlacesForLocation(location, searchOptions);
 
       return {
@@ -343,6 +539,15 @@ async function fetchOpenStreetMapNearbyPlaces(
       rows = await fetchNominatimRows(query);
     } catch (error) {
       lastError = error;
+
+      if (isProviderRateLimitError(error)) {
+        if (places.length > 0) {
+          return rankPlaces(places);
+        }
+
+        throw error;
+      }
+
       console.warn("Nearby place query failed", { error, query });
       continue;
     }
@@ -395,6 +600,10 @@ async function fetchNominatimRows(query: string) {
   });
 
   if (!response.ok) {
+    if (response.status === 429) {
+      throw new ProviderRateLimitError();
+    }
+
     throw new Error(`Nearby place lookup failed with ${response.status}.`);
   }
 
@@ -453,6 +662,21 @@ function getAmadeusConfig() {
     clientId,
     clientSecret,
   };
+}
+
+function shouldUseExpandedHomepageDiscovery() {
+  return Boolean(getAmadeusConfig()) || process.env.STAYWISE_EXPANDED_HOMEPAGE_PLACES === "true";
+}
+
+class ProviderRateLimitError extends Error {
+  constructor() {
+    super("Nearby place provider rate limit reached.");
+    this.name = "ProviderRateLimitError";
+  }
+}
+
+function isProviderRateLimitError(error: unknown) {
+  return error instanceof ProviderRateLimitError;
 }
 
 async function getAmadeusAccessToken(config: NonNullable<ReturnType<typeof getAmadeusConfig>>) {

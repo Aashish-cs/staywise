@@ -8,9 +8,12 @@ import {
   CreditCard,
   ExternalLink,
   Hotel,
+  LockKeyhole,
+  Mail,
   MapPin,
   ReceiptText,
   ShieldCheck,
+  UserRound,
   Users,
 } from "lucide-react";
 import {
@@ -36,9 +39,9 @@ import { noIndexRobots } from "@/lib/seo";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "External Stay Reservation",
+  title: "Stay Reservation",
   description:
-    "Review an external hotel or guest stay discovered by StayWise before continuing the demo booking handoff.",
+    "Review a hotel or guest stay discovered by StayWise and complete a test-mode reservation checkout.",
   robots: noIndexRobots,
 };
 
@@ -68,6 +71,25 @@ type ExternalStay = {
 
 const fallbackImageUrl =
   "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80";
+const externalStayQueryKeys = new Set([
+  "actionUrl",
+  "address",
+  "checkIn",
+  "checkOut",
+  "description",
+  "destination",
+  "guests",
+  "id",
+  "imageUrl",
+  "kind",
+  "lat",
+  "lng",
+  "mapUrl",
+  "name",
+  "providerPrice",
+  "source",
+  "typeLabel",
+]);
 
 export default async function ExternalStayPage({
   searchParams,
@@ -94,7 +116,7 @@ export default async function ExternalStayPage({
       : "Trips"
     : "Sign in";
   const currentPath = buildExternalStayPath(query, false);
-  const reservedPath = buildExternalStayPath(query, true);
+  const reservedFields = buildExternalStayFields(query, true);
   const signInHref = `/auth?mode=signin&next=${encodeURIComponent(currentPath)}`;
   const isReserved = firstParam(query.reserved) === "true" && isSignedIn;
   const nights = Math.max(1, countNights(stay.checkIn, stay.checkOut));
@@ -143,15 +165,15 @@ export default async function ExternalStayPage({
           <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start">
             <div>
               <p className="text-sm font-extrabold text-[#ff385c]">
-                External stay handoff
+                Secure checkout
               </p>
               <h1 className="mt-3 max-w-4xl text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
                 Reserve {stay.name}
               </h1>
               <p className="mt-4 max-w-2xl text-base font-semibold leading-7 text-[#5f5148]">
-                This stay was discovered from live place data. StayWise keeps the
-                source links visible and gives you a demo reservation path for the
-                senior project booking flow.
+                Review your trip, enter payment details, and send a StayWise
+                reservation request. Payment is test mode right now, so no real
+                card is charged.
               </p>
             </div>
 
@@ -159,8 +181,9 @@ export default async function ExternalStayPage({
               currentPath={currentPath}
               isReserved={isReserved}
               isSignedIn={isSignedIn}
+              guestEmail={user?.email ?? ""}
               nights={nights}
-              reservedPath={reservedPath}
+              reservedFields={reservedFields}
               signInHref={signInHref}
               stay={stay}
               totals={totals}
@@ -214,8 +237,8 @@ export default async function ExternalStayPage({
                   />
                   <FactCard
                     icon={Hotel}
-                    label="Source"
-                    value={stay.source === "amadeus" ? "Amadeus hotel data" : "OpenStreetMap place data"}
+                    label="Stay type"
+                    value={stay.typeLabel}
                   />
                   <FactCard
                     icon={ReceiptText}
@@ -229,13 +252,12 @@ export default async function ExternalStayPage({
 
           <Surface className="p-6">
             <h2 className="text-2xl font-extrabold tracking-tight">
-              Source and availability
+              Good to know
             </h2>
             <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-[#5f5148]">
-              External stay data can confirm that a place exists, but final room
-              inventory still belongs to the hotel or provider. StayWise host
-              listings use direct reservations; external hotel results use this
-              transparent demo handoff until provider booking records are added.
+              StayWise found this place from live hotel and map data. Final room
+              inventory can still vary by hotel source, and this checkout is
+              currently running in test mode with no real payment capture.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               {stay.mapUrl && (
@@ -255,7 +277,7 @@ export default async function ExternalStayPage({
                   rel="noreferrer"
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#201a18] px-4 text-sm font-extrabold text-white hover:bg-black"
                 >
-                  Provider availability
+                  View source
                   <ExternalLink className="h-4 w-4" aria-hidden="true" />
                 </a>
               )}
@@ -264,19 +286,19 @@ export default async function ExternalStayPage({
         </div>
 
         <Surface className="self-start p-6 lg:sticky lg:top-24">
-          <h2 className="text-xl font-extrabold tracking-tight">Why this is here</h2>
+          <h2 className="text-xl font-extrabold tracking-tight">Booking confidence</h2>
           <div className="mt-5 space-y-4 text-sm font-semibold leading-6 text-[#5f5148]">
             <TrustLine
               icon={ShieldCheck}
-              text="External results are not hardcoded StayWise inventory."
+              text="Live source links stay visible so guests can verify the place."
             />
             <TrustLine
               icon={Hotel}
-              text="Reserve creates a project-safe booking handoff instead of claiming direct hotel ownership."
+              text="Reserve creates a booking request first; it does not automatically book the hotel."
             />
             <TrustLine
               icon={CreditCard}
-              text="Stripe test checkout can attach after external reservation records are added to Supabase."
+              text="Payment fields are test mode only right now, so no real card is charged."
             />
           </div>
         </Surface>
@@ -287,21 +309,23 @@ export default async function ExternalStayPage({
 
 function ReservationCard({
   currentPath,
+  guestEmail,
   isReserved,
   isSignedIn,
   nights,
   nightlyRate,
-  reservedPath,
+  reservedFields,
   signInHref,
   stay,
   totals,
 }: {
   currentPath: string;
+  guestEmail: string;
   isReserved: boolean;
   isSignedIn: boolean;
   nights: number;
   nightlyRate: number;
-  reservedPath: string;
+  reservedFields: Array<[string, string]>;
   signInHref: string;
   stay: ExternalStay;
   totals: ReturnType<typeof calculateReservationTotal>;
@@ -316,13 +340,13 @@ function ReservationCard({
           </p>
           {stay.providerPrice && (
             <p className="mt-1 text-xs font-semibold text-[#786a60]">
-              Provider showed {stay.providerPrice}; StayWise estimate is for demo checkout.
+              Source rate shown: {stay.providerPrice}
             </p>
           )}
         </div>
         <span className="inline-flex items-center gap-1 rounded-full bg-[#fff3f5] px-3 py-1 text-sm font-semibold text-[#bd1740]">
           <Hotel className="h-4 w-4" aria-hidden="true" />
-          External
+          {stay.typeLabel}
         </span>
       </div>
 
@@ -355,16 +379,154 @@ function ReservationCard({
       {isReserved ? (
         <div className="mt-5 rounded-2xl bg-[#e7f2e4] p-4 text-sm font-semibold leading-6 text-[#315d3b]">
           <CheckCircle2 className="mr-2 inline h-4 w-4" aria-hidden="true" />
-          Demo reservation held. This is ready for the Stripe test-payment phase.
+          Reservation request received. Payment details were accepted in test
+          mode, and no real card was charged.
         </div>
       ) : isSignedIn ? (
-        <Link
-          href={reservedPath}
-          className="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#ff385c] px-5 text-sm font-extrabold text-white shadow-sm hover:bg-[#df2348]"
-        >
-          Reserve demo stay
-          <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-        </Link>
+        <form action="/external-stays" method="get" className="mt-5 space-y-4">
+          {reservedFields.map(([name, value], index) => (
+            <input
+              key={`${name}-${index}`}
+              type="hidden"
+              name={name}
+              value={value}
+            />
+          ))}
+
+          <div className="rounded-2xl border border-[#eadfd6] p-4">
+            <div className="flex items-center gap-2">
+              <UserRound className="h-4 w-4 text-[#ff385c]" aria-hidden="true" />
+              <h3 className="text-sm font-extrabold">Guest details</h3>
+            </div>
+            <div className="mt-4 grid gap-3">
+              <label className="block">
+                <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">
+                  Full name
+                </span>
+                <input
+                  required
+                  autoComplete="name"
+                  placeholder="Name on reservation"
+                  className="mt-2 h-11 w-full rounded-xl border border-[#eadfd6] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#ff385c] focus:ring-2 focus:ring-[#ffe1e7]"
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">
+                  Email
+                </span>
+                <span className="mt-2 flex h-11 items-center gap-2 rounded-xl border border-[#eadfd6] bg-white px-3 transition focus-within:border-[#ff385c] focus-within:ring-2 focus-within:ring-[#ffe1e7]">
+                  <Mail className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
+                  <input
+                    required
+                    type="email"
+                    autoComplete="email"
+                    defaultValue={guestEmail}
+                    placeholder="you@example.com"
+                    className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
+                  />
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-[#eadfd6] p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-[#ff385c]" aria-hidden="true" />
+                <h3 className="text-sm font-extrabold">Payment method</h3>
+              </div>
+              <span className="rounded-full bg-[#e7f2e4] px-2.5 py-1 text-xs font-extrabold text-[#315d3b]">
+                Test mode
+              </span>
+            </div>
+            <div className="mt-4 grid gap-3">
+              <label className="block">
+                <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">
+                  Card number
+                </span>
+                <span className="mt-2 flex h-11 items-center gap-2 rounded-xl border border-[#eadfd6] bg-white px-3 transition focus-within:border-[#ff385c] focus-within:ring-2 focus-within:ring-[#ffe1e7]">
+                  <CreditCard className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
+                  <input
+                    required
+                    inputMode="numeric"
+                    autoComplete="cc-number"
+                    placeholder="4242 4242 4242 4242"
+                    className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
+                  />
+                </span>
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">
+                    Expiration
+                  </span>
+                  <input
+                    required
+                    inputMode="numeric"
+                    autoComplete="cc-exp"
+                    placeholder="MM/YY"
+                    className="mt-2 h-11 w-full rounded-xl border border-[#eadfd6] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#ff385c] focus:ring-2 focus:ring-[#ffe1e7]"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">
+                    CVC
+                  </span>
+                  <input
+                    required
+                    inputMode="numeric"
+                    autoComplete="cc-csc"
+                    placeholder="123"
+                    className="mt-2 h-11 w-full rounded-xl border border-[#eadfd6] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#ff385c] focus:ring-2 focus:ring-[#ffe1e7]"
+                  />
+                </label>
+              </div>
+              <div className="grid grid-cols-[1fr_110px] gap-3">
+                <label className="block">
+                  <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">
+                    Country/region
+                  </span>
+                  <select
+                    required
+                    autoComplete="billing country"
+                    defaultValue="US"
+                    className="mt-2 h-11 w-full rounded-xl border border-[#eadfd6] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#ff385c] focus:ring-2 focus:ring-[#ffe1e7]"
+                  >
+                    <option value="US">United States</option>
+                    <option value="GB">United Kingdom</option>
+                    <option value="CA">Canada</option>
+                    <option value="FR">France</option>
+                    <option value="CY">Cyprus</option>
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">
+                    ZIP
+                  </span>
+                  <input
+                    required
+                    inputMode="text"
+                    autoComplete="postal-code"
+                    placeholder="75201"
+                    className="mt-2 h-11 w-full rounded-xl border border-[#eadfd6] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#ff385c] focus:ring-2 focus:ring-[#ffe1e7]"
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#ff385c] px-5 text-sm font-extrabold text-white shadow-sm hover:bg-[#df2348]"
+          >
+            Reserve now
+            <LockKeyhole className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <p className="text-center text-xs font-semibold leading-5 text-[#786a60]">
+            Test checkout only. Card details are not stored, and no real payment
+            is made.
+          </p>
+        </form>
       ) : (
         <Link
           href={signInHref}
@@ -375,12 +537,14 @@ function ReservationCard({
         </Link>
       )}
 
-      <Link
-        href={currentPath}
-        className="mt-3 flex h-11 w-full items-center justify-center rounded-full border border-[#eadfd6] bg-white px-4 text-sm font-extrabold hover:border-[#ff385c] hover:text-[#df2348]"
-      >
-        Review details
-      </Link>
+      {!isReserved && (
+        <Link
+          href={currentPath}
+          className="mt-3 flex h-11 w-full items-center justify-center rounded-full border border-[#eadfd6] bg-white px-4 text-sm font-extrabold hover:border-[#ff385c] hover:text-[#df2348]"
+        >
+          Review details
+        </Link>
+      )}
     </aside>
   );
 }
@@ -472,30 +636,36 @@ function parseExternalStay(query: RawSearchParams): ExternalStay | null {
 }
 
 function buildExternalStayPath(query: RawSearchParams, reserved: boolean) {
-  const params = new URLSearchParams();
+  const params = new URLSearchParams(buildExternalStayFields(query, reserved));
+
+  return `/external-stays?${params.toString()}`;
+}
+
+function buildExternalStayFields(query: RawSearchParams, reserved: boolean) {
+  const fields: Array<[string, string]> = [];
 
   for (const [key, value] of Object.entries(query)) {
-    if (key === "reserved") {
+    if (key === "reserved" || !externalStayQueryKeys.has(key)) {
       continue;
     }
 
     if (Array.isArray(value)) {
       for (const item of value) {
-        params.append(key, item);
+        fields.push([key, item]);
       }
       continue;
     }
 
     if (value) {
-      params.set(key, value);
+      fields.push([key, value]);
     }
   }
 
   if (reserved) {
-    params.set("reserved", "true");
+    fields.push(["reserved", "true"]);
   }
 
-  return `/external-stays?${params.toString()}`;
+  return fields;
 }
 
 function resolveCheckIn(value: string | undefined) {

@@ -99,7 +99,7 @@ export function SearchResultsSection({
   const searchSummary = hasNearbyPlaceFallback
     ? `${nearbyPlaces.length} stay options near ${destinationLabel}`
     : hasSupplementalNearbyPlaces
-      ? `${resultSummary} + ${nearbyPlaces.length} live provider options`
+      ? `${resultSummary} + ${nearbyPlaces.length} live stay options`
     : resultSummary;
 
   return (
@@ -120,7 +120,7 @@ export function SearchResultsSection({
             {dataUnavailable
               ? "StayWise does not fall back to hardcoded places when Supabase is missing or failing."
               : hasNearbyPlaceFallback
-                ? "Compare external hotel and guest-stay options with photos, maps, provider links, and a StayWise reserve handoff."
+                ? "Compare hotel and guest-stay options with photos, maps, source links, and checkout-ready reservation details."
                 : hasSupplementalNearbyPlaces
                   ? "Smart sort weighs budget, trip style, guest count, amenities, and live hotel/home options so the search stays full."
                 : "Smart sort weighs budget, trip style, guest count, amenities, and the filters in your shareable search URL."}
@@ -336,7 +336,7 @@ export function SearchResultsSection({
               onFocusSearch={onFocusSearch}
               search={search}
               showFilterActions={false}
-              summary="More live hotel and home options from provider data, with photos, map links, and a StayWise reserve handoff."
+              summary="More hotel and home options from live place data, with photos, map links, and checkout-ready reservation details."
             />
           )}
         </>
@@ -424,7 +424,7 @@ function NearbyPlacesFallback({
           </h3>
           <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-[#5f5148]">
             {summary ??
-              "These options come from live hotel/place providers. Reserve opens the StayWise booking handoff while provider links stay visible for source checking."}
+              "These options come from live hotel and place data. Reserve opens StayWise checkout while source links stay visible for verification."}
           </p>
         </div>
         {showFilterActions && (
@@ -504,7 +504,7 @@ function NearbyPlacesFallback({
                     href={place.actionUrl}
                     target="_blank"
                     rel="noreferrer"
-                    aria-label={`Open provider for ${place.name}`}
+                    aria-label={`Open source for ${place.name}`}
                     className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#eadfd6] bg-white text-[#201a18] transition hover:border-[#ff385c] hover:text-[#df2348]"
                   >
                     <ExternalLink className="h-4 w-4" aria-hidden="true" />
@@ -525,7 +525,7 @@ function NearbyPlacesFallback({
 
 function formatExternalPlaceMeta(place: NearbyPlace) {
   if (place.priceLabel) {
-    return `${place.priceLabel} provider total`;
+    return `${place.priceLabel} estimated total`;
   }
 
   if (place.distanceMiles === null) {

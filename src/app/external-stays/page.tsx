@@ -8,30 +8,30 @@ import {
   CreditCard,
   ExternalLink,
   Hotel,
-  LockKeyhole,
-  Mail,
   MapPin,
   ReceiptText,
   ShieldCheck,
-  UserRound,
   Users,
 } from "lucide-react";
+import { ExternalStayCheckoutButton } from "@/components/external-stay-checkout-button";
 import {
   StayWiseAccountMenu,
   StayWiseHeader,
   StayWisePrimaryNav,
 } from "@/components/staywise-header";
 import { Surface } from "@/components/ui/primitives";
+import {
+  buildExternalStayFields,
+  buildExternalStayPath,
+  getExternalStayPricing,
+  parseExternalStay,
+  type ExternalStay,
+} from "@/lib/external-stay-checkout";
 import { getCurrentUserProfile } from "@/lib/listing-data";
 import {
-  addDaysToIso,
-  calculateReservationTotal,
-  countNights,
   formatMoney,
   formatMoneyFromCents,
   formatStayDate,
-  getFutureIso,
-  isValidIsoDate,
 } from "@/lib/reservation-utils";
 import { firstParam, type RawSearchParams } from "@/lib/search-url";
 import { noIndexRobots } from "@/lib/seo";
@@ -41,55 +41,13 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Stay Reservation",
   description:
-    "Review a hotel or guest stay discovered by StayWise and complete a test-mode reservation checkout.",
+    "Review a hotel or guest stay discovered by StayWise and open secure Stripe Checkout.",
   robots: noIndexRobots,
 };
 
 type ExternalStayPageProps = {
   searchParams: Promise<RawSearchParams>;
 };
-
-type ExternalStay = {
-  actionUrl: string | null;
-  address: string | null;
-  checkIn: string;
-  checkOut: string;
-  description: string | null;
-  destination: string;
-  guests: number;
-  id: string;
-  imageUrl: string;
-  kind: string;
-  lat: string | null;
-  lng: string | null;
-  mapUrl: string | null;
-  name: string;
-  providerPrice: string | null;
-  source: "amadeus" | "openstreetmap";
-  typeLabel: string;
-};
-
-const fallbackImageUrl =
-  "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80";
-const externalStayQueryKeys = new Set([
-  "actionUrl",
-  "address",
-  "checkIn",
-  "checkOut",
-  "description",
-  "destination",
-  "guests",
-  "id",
-  "imageUrl",
-  "kind",
-  "lat",
-  "lng",
-  "mapUrl",
-  "name",
-  "providerPrice",
-  "source",
-  "typeLabel",
-]);
 
 export default async function ExternalStayPage({
   searchParams,
@@ -115,13 +73,12 @@ export default async function ExternalStayPage({
       ? "Host"
       : "Trips"
     : "Sign in";
-  const currentPath = buildExternalStayPath(query, false);
-  const reservedFields = buildExternalStayFields(query, true);
+  const currentPath = buildExternalStayPath(query);
+  const checkoutFields = buildExternalStayFields(query);
   const signInHref = `/auth?mode=signin&next=${encodeURIComponent(currentPath)}`;
   const isReserved = firstParam(query.reserved) === "true" && isSignedIn;
-  const nights = Math.max(1, countNights(stay.checkIn, stay.checkOut));
-  const nightlyRate = estimateNightlyRate(stay);
-  const totals = calculateReservationTotal(nightlyRate, nights);
+  const wasCancelled = firstParam(query.payment) === "cancelled" && isSignedIn;
+  const { nightlyRate, nights, totals } = getExternalStayPricing(stay);
 
   return (
     <main className="min-h-screen bg-white text-[#201a18]">
@@ -171,23 +128,23 @@ export default async function ExternalStayPage({
                 Reserve {stay.name}
               </h1>
               <p className="mt-4 max-w-2xl text-base font-semibold leading-7 text-[#5f5148]">
-                Review your trip, enter payment details, and send a StayWise
-                reservation request. Payment is test mode right now, so no real
-                card is charged.
+                Review your trip and open secure Stripe Checkout to send a
+                StayWise booking request. Card details are handled by Stripe,
+                not stored by StayWise.
               </p>
             </div>
 
             <ReservationCard
+              checkoutFields={checkoutFields}
               currentPath={currentPath}
               isReserved={isReserved}
               isSignedIn={isSignedIn}
-              guestEmail={user?.email ?? ""}
               nights={nights}
-              reservedFields={reservedFields}
+              nightlyRate={nightlyRate}
               signInHref={signInHref}
               stay={stay}
               totals={totals}
-              nightlyRate={nightlyRate}
+              wasCancelled={wasCancelled}
             />
           </div>
         </div>
@@ -256,8 +213,9 @@ export default async function ExternalStayPage({
             </h2>
             <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-[#5f5148]">
               StayWise found this place from live hotel and map data. Final room
-              inventory can still vary by hotel source, and this checkout is
-              currently running in test mode with no real payment capture.
+              inventory can still vary by hotel source, so the checkout creates
+              a booking request first instead of claiming automatic hotel
+              confirmation.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               {stay.mapUrl && (
@@ -298,7 +256,7 @@ export default async function ExternalStayPage({
             />
             <TrustLine
               icon={CreditCard}
-              text="Payment fields are test mode only right now, so no real card is charged."
+              text="Stripe hosts the card entry screen, so StayWise never stores card numbers."
             />
           </div>
         </Surface>
@@ -308,27 +266,27 @@ export default async function ExternalStayPage({
 }
 
 function ReservationCard({
+  checkoutFields,
   currentPath,
-  guestEmail,
   isReserved,
   isSignedIn,
   nights,
   nightlyRate,
-  reservedFields,
   signInHref,
   stay,
   totals,
+  wasCancelled,
 }: {
+  checkoutFields: Array<[string, string]>;
   currentPath: string;
-  guestEmail: string;
   isReserved: boolean;
   isSignedIn: boolean;
   nights: number;
   nightlyRate: number;
-  reservedFields: Array<[string, string]>;
   signInHref: string;
   stay: ExternalStay;
-  totals: ReturnType<typeof calculateReservationTotal>;
+  totals: ReturnType<typeof getExternalStayPricing>["totals"];
+  wasCancelled: boolean;
 }) {
   return (
     <aside className="rounded-[28px] border border-[#eadfd6] bg-white p-5 shadow-[0_18px_55px_rgba(32,26,24,0.12)]">
@@ -379,154 +337,32 @@ function ReservationCard({
       {isReserved ? (
         <div className="mt-5 rounded-2xl bg-[#e7f2e4] p-4 text-sm font-semibold leading-6 text-[#315d3b]">
           <CheckCircle2 className="mr-2 inline h-4 w-4" aria-hidden="true" />
-          Reservation request received. Payment details were accepted in test
-          mode, and no real card was charged.
+          Booking request received. Stripe Checkout completed and StayWise saved
+          your request for this stay.
         </div>
       ) : isSignedIn ? (
-        <form action="/external-stays" method="get" className="mt-5 space-y-4">
-          {reservedFields.map(([name, value], index) => (
-            <input
-              key={`${name}-${index}`}
-              type="hidden"
-              name={name}
-              value={value}
-            />
-          ))}
-
+        <div className="mt-5 space-y-4">
+          {wasCancelled && (
+            <p className="rounded-2xl bg-[#fff8e8] p-3 text-sm font-bold text-[#7a4b11]">
+              Checkout was cancelled. You can reopen Stripe whenever you are ready.
+            </p>
+          )}
           <div className="rounded-2xl border border-[#eadfd6] p-4">
             <div className="flex items-center gap-2">
-              <UserRound className="h-4 w-4 text-[#ff385c]" aria-hidden="true" />
-              <h3 className="text-sm font-extrabold">Guest details</h3>
+              <CreditCard className="h-4 w-4 text-[#ff385c]" aria-hidden="true" />
+              <h3 className="text-sm font-extrabold">Secure payment</h3>
             </div>
-            <div className="mt-4 grid gap-3">
-              <label className="block">
-                <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">
-                  Full name
-                </span>
-                <input
-                  required
-                  autoComplete="name"
-                  placeholder="Name on reservation"
-                  className="mt-2 h-11 w-full rounded-xl border border-[#eadfd6] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#ff385c] focus:ring-2 focus:ring-[#ffe1e7]"
-                />
-              </label>
-              <label className="block">
-                <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">
-                  Email
-                </span>
-                <span className="mt-2 flex h-11 items-center gap-2 rounded-xl border border-[#eadfd6] bg-white px-3 transition focus-within:border-[#ff385c] focus-within:ring-2 focus-within:ring-[#ffe1e7]">
-                  <Mail className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-                  <input
-                    required
-                    type="email"
-                    autoComplete="email"
-                    defaultValue={guestEmail}
-                    placeholder="you@example.com"
-                    className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
-                  />
-                </span>
-              </label>
-            </div>
+            <p className="mt-3 text-sm font-semibold leading-6 text-[#5f5148]">
+              You will enter card details on Stripe Checkout. StayWise creates a
+              booking request first, then the hotel can be verified from the
+              source link.
+            </p>
           </div>
-
-          <div className="rounded-2xl border border-[#eadfd6] p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-[#ff385c]" aria-hidden="true" />
-                <h3 className="text-sm font-extrabold">Payment method</h3>
-              </div>
-              <span className="rounded-full bg-[#e7f2e4] px-2.5 py-1 text-xs font-extrabold text-[#315d3b]">
-                Test mode
-              </span>
-            </div>
-            <div className="mt-4 grid gap-3">
-              <label className="block">
-                <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">
-                  Card number
-                </span>
-                <span className="mt-2 flex h-11 items-center gap-2 rounded-xl border border-[#eadfd6] bg-white px-3 transition focus-within:border-[#ff385c] focus-within:ring-2 focus-within:ring-[#ffe1e7]">
-                  <CreditCard className="h-4 w-4 text-[#786a60]" aria-hidden="true" />
-                  <input
-                    required
-                    inputMode="numeric"
-                    autoComplete="cc-number"
-                    placeholder="4242 4242 4242 4242"
-                    className="min-w-0 flex-1 bg-transparent text-sm font-semibold outline-none"
-                  />
-                </span>
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">
-                    Expiration
-                  </span>
-                  <input
-                    required
-                    inputMode="numeric"
-                    autoComplete="cc-exp"
-                    placeholder="MM/YY"
-                    className="mt-2 h-11 w-full rounded-xl border border-[#eadfd6] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#ff385c] focus:ring-2 focus:ring-[#ffe1e7]"
-                  />
-                </label>
-                <label className="block">
-                  <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">
-                    CVC
-                  </span>
-                  <input
-                    required
-                    inputMode="numeric"
-                    autoComplete="cc-csc"
-                    placeholder="123"
-                    className="mt-2 h-11 w-full rounded-xl border border-[#eadfd6] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#ff385c] focus:ring-2 focus:ring-[#ffe1e7]"
-                  />
-                </label>
-              </div>
-              <div className="grid grid-cols-[1fr_110px] gap-3">
-                <label className="block">
-                  <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">
-                    Country/region
-                  </span>
-                  <select
-                    required
-                    autoComplete="billing country"
-                    defaultValue="US"
-                    className="mt-2 h-11 w-full rounded-xl border border-[#eadfd6] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#ff385c] focus:ring-2 focus:ring-[#ffe1e7]"
-                  >
-                    <option value="US">United States</option>
-                    <option value="GB">United Kingdom</option>
-                    <option value="CA">Canada</option>
-                    <option value="FR">France</option>
-                    <option value="CY">Cyprus</option>
-                  </select>
-                </label>
-                <label className="block">
-                  <span className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#786a60]">
-                    ZIP
-                  </span>
-                  <input
-                    required
-                    inputMode="text"
-                    autoComplete="postal-code"
-                    placeholder="75201"
-                    className="mt-2 h-11 w-full rounded-xl border border-[#eadfd6] bg-white px-3 text-sm font-semibold outline-none transition focus:border-[#ff385c] focus:ring-2 focus:ring-[#ffe1e7]"
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#ff385c] px-5 text-sm font-extrabold text-white shadow-sm hover:bg-[#df2348]"
-          >
-            Reserve now
-            <LockKeyhole className="h-4 w-4" aria-hidden="true" />
-          </button>
+          <ExternalStayCheckoutButton checkoutFields={checkoutFields} />
           <p className="text-center text-xs font-semibold leading-5 text-[#786a60]">
-            Test checkout only. Card details are not stored, and no real payment
-            is made.
+            Stripe handles the card form. StayWise does not store card numbers.
           </p>
-        </form>
+        </div>
       ) : (
         <Link
           href={signInHref}
@@ -599,143 +435,4 @@ function PriceRow({
       <span className="font-semibold">{value}</span>
     </div>
   );
-}
-
-function parseExternalStay(query: RawSearchParams): ExternalStay | null {
-  const name = firstParam(query.name)?.trim();
-
-  if (!name) {
-    return null;
-  }
-
-  const checkIn = resolveCheckIn(firstParam(query.checkIn));
-  const checkOut = resolveCheckOut(checkIn, firstParam(query.checkOut));
-  const guests = clampInteger(firstParam(query.guests), 1, 16, 2);
-  const source = firstParam(query.source) === "amadeus" ? "amadeus" : "openstreetmap";
-  const imageUrl = sanitizeExternalUrl(firstParam(query.imageUrl)) ?? fallbackImageUrl;
-
-  return {
-    actionUrl: sanitizeExternalUrl(firstParam(query.actionUrl)),
-    address: optionalText(firstParam(query.address)),
-    checkIn,
-    checkOut,
-    description: optionalText(firstParam(query.description)),
-    destination: optionalText(firstParam(query.destination)) ?? "",
-    guests,
-    id: optionalText(firstParam(query.id)) ?? "external-stay",
-    imageUrl,
-    kind: optionalText(firstParam(query.kind)) ?? "hotel",
-    lat: optionalCoordinate(firstParam(query.lat)),
-    lng: optionalCoordinate(firstParam(query.lng)),
-    mapUrl: sanitizeExternalUrl(firstParam(query.mapUrl)),
-    name,
-    providerPrice: optionalText(firstParam(query.providerPrice)),
-    source,
-    typeLabel: optionalText(firstParam(query.typeLabel)) ?? "Hotel",
-  };
-}
-
-function buildExternalStayPath(query: RawSearchParams, reserved: boolean) {
-  const params = new URLSearchParams(buildExternalStayFields(query, reserved));
-
-  return `/external-stays?${params.toString()}`;
-}
-
-function buildExternalStayFields(query: RawSearchParams, reserved: boolean) {
-  const fields: Array<[string, string]> = [];
-
-  for (const [key, value] of Object.entries(query)) {
-    if (key === "reserved" || !externalStayQueryKeys.has(key)) {
-      continue;
-    }
-
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        fields.push([key, item]);
-      }
-      continue;
-    }
-
-    if (value) {
-      fields.push([key, value]);
-    }
-  }
-
-  if (reserved) {
-    fields.push(["reserved", "true"]);
-  }
-
-  return fields;
-}
-
-function resolveCheckIn(value: string | undefined) {
-  return isValidIsoDate(value) ? value : getFutureIso(7);
-}
-
-function resolveCheckOut(checkIn: string, value: string | undefined) {
-  return isValidIsoDate(value) && countNights(checkIn, value) > 0
-    ? value
-    : addDaysToIso(checkIn, 3);
-}
-
-function estimateNightlyRate(stay: ExternalStay) {
-  const seed = hashString(`${stay.id}:${stay.name}:${stay.destination}`);
-
-  return 145 + (Math.abs(seed) % 180);
-}
-
-function sanitizeExternalUrl(value: string | undefined) {
-  if (!value) {
-    return null;
-  }
-
-  try {
-    const url = new URL(value);
-
-    if (url.protocol !== "https:" && url.protocol !== "http:") {
-      return null;
-    }
-
-    return url.toString();
-  } catch {
-    return null;
-  }
-}
-
-function optionalText(value: string | undefined) {
-  const trimmed = value?.trim();
-
-  return trimmed ? trimmed : null;
-}
-
-function optionalCoordinate(value: string | undefined) {
-  const numeric = Number(value);
-
-  return Number.isFinite(numeric) ? String(numeric) : null;
-}
-
-function clampInteger(
-  value: string | undefined,
-  min: number,
-  max: number,
-  fallback: number,
-) {
-  const numeric = Number(value);
-
-  if (!Number.isInteger(numeric)) {
-    return fallback;
-  }
-
-  return Math.min(max, Math.max(min, numeric));
-}
-
-function hashString(value: string) {
-  let hash = 0;
-
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash << 5) - hash + value.charCodeAt(index);
-    hash |= 0;
-  }
-
-  return hash;
 }

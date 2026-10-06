@@ -23,5 +23,5 @@ export function isStripeCheckoutEnabled() {
 }
 
 export function getPaymentNotConfiguredMessage() {
-  return "Payment checkout is not configured yet. Your StayWise reservation stays in pay-later mode.";
+  return "Stripe Checkout is not configured yet. Add a Stripe test-mode secret key and enable checkout before taking payments.";
 }

@@ -337,8 +337,8 @@ function ReservationCard({
       {isReserved ? (
         <div className="mt-5 rounded-2xl bg-[#e7f2e4] p-4 text-sm font-semibold leading-6 text-[#315d3b]">
           <CheckCircle2 className="mr-2 inline h-4 w-4" aria-hidden="true" />
-          Booking request received. Stripe Checkout completed and StayWise saved
-          your request for this stay.
+          Stripe Checkout completed. StayWise can review this booking request
+          from the Stripe checkout session.
         </div>
       ) : isSignedIn ? (
         <div className="mt-5 space-y-4">

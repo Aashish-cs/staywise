@@ -7,6 +7,7 @@ import { Globe2, Search } from "lucide-react";
 import { DateRangePicker } from "@/components/date-range-picker";
 import { MarketplaceListingRails } from "@/components/marketplace-listing-rails";
 import { MarketplacePlaceRails } from "@/components/marketplace-place-rails";
+import { HomeTripAssistant } from "@/components/home-trip-assistant";
 import {
   StayWiseAccountMenu,
   StayWiseHeader,
@@ -208,6 +209,8 @@ export function MarketplaceHome({
           )}
         </div>
       </section>
+
+      <HomeTripAssistant getCurrentSearch={getCurrentSearch} />
 
       <MarketplaceListingRails
         onToggleSaved={toggleSaved}

@@ -28,6 +28,7 @@ import type { ListingDataState } from "@/lib/listing-data";
 import type { NearbyPlace } from "@/lib/nearby-places";
 import type { RankedListing, SearchInput } from "@/lib/recommendations";
 import type { SortMode } from "@/lib/search-results";
+import { StayComparison } from "@/components/stay-comparison";
 
 const SearchMapPanel = dynamic(
   () =>
@@ -178,6 +179,12 @@ export function SearchResultsSection({
           ))}
         </div>
       )}
+
+      <StayComparison
+        listings={displayedListings}
+        search={search}
+        listingDetailQuery={listingDetailQuery}
+      />
 
       {displayedListings.length > 0 ? (
         <>

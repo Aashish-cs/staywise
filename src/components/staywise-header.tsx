@@ -47,7 +47,7 @@ export function StayWiseHeader({
     >
       <div
         className={clsx(
-          "mx-auto flex max-w-[1536px] items-center justify-between gap-4 px-5 py-4 lg:px-8",
+          "mx-auto flex max-w-[1536px] flex-wrap items-center justify-between gap-4 px-5 py-4 sm:flex-nowrap lg:px-8",
           innerClassName,
         )}
       >
@@ -91,7 +91,7 @@ export function StayWisePrimaryNav({ activeTab, homesHref }: StayWisePrimaryNavP
   ] as const;
 
   return (
-    <nav aria-label="StayWise categories" className="flex items-center justify-center gap-8">
+    <nav aria-label="StayWise categories" className="order-last flex w-full items-center justify-center gap-8 sm:order-none sm:w-auto">
       {items.map((item) => {
         const Icon = item.icon;
         const isActive = item.key === activeTab;

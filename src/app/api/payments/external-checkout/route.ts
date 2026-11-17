@@ -42,6 +42,9 @@ export async function POST(request: Request) {
   if (!config.stripeCheckoutEnabled || !config.stripeSecretKey) {
     return NextResponse.json({ error: getPaymentNotConfiguredMessage() }, { status: 503 });
   }
+  if (!config.stripeSecretKey.startsWith("sk_test_")) {
+    return NextResponse.json({ error: "External stays support test checkout only." }, { status: 409 });
+  }
 
   const { nights, totals } = getExternalStayPricing(stay);
   const successPath = buildExternalStayPath(query, {

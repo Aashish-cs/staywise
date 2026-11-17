@@ -16,6 +16,7 @@ import {
   Users,
 } from "lucide-react";
 import { PaymentCheckoutButton } from "@/components/payment-checkout-button";
+import { PaymentConfirmationRefresh } from "@/components/payment-confirmation-refresh";
 import { StayWiseHeader } from "@/components/staywise-header";
 import { getCurrentUserProfile, getReservationById } from "@/lib/listing-data";
 import type { PaymentRecordStatus, ReservationPayment, ReservationStatus } from "@/lib/listings";
@@ -40,6 +41,7 @@ export const metadata: Metadata = {
 const reservationIdSchema = z.string().uuid();
 
 type ReservationConfirmationPageProps = {
+  searchParams: Promise<{ payment?: string }>;
   params: Promise<{
     id: string;
   }>;
@@ -47,8 +49,10 @@ type ReservationConfirmationPageProps = {
 
 export default async function ReservationConfirmationPage({
   params,
+  searchParams,
 }: ReservationConfirmationPageProps) {
   const { id } = await params;
+  const query = await searchParams;
 
   if (!reservationIdSchema.safeParse(id).success) {
     notFound();
@@ -262,6 +266,7 @@ export default async function ReservationConfirmationPage({
           </div>
 
           <PaymentSummary
+            isVerifying={query.payment === "success"}
             payment={payment}
             reservationId={reservation.id}
             reservationStatus={reservation.status}
@@ -342,15 +347,18 @@ function PriceRow({
 }
 
 function PaymentSummary({
+  isVerifying,
   payment,
   reservationId,
   reservationStatus,
 }: {
+  isVerifying: boolean;
   payment: ReservationPayment | null;
   reservationId: string;
   reservationStatus: ReservationStatus;
 }) {
   if (reservationStatus === "awaiting_payment" && payment?.status === "requires_payment") {
+    if (isVerifying) return <PaymentConfirmationRefresh />;
     return (
       <div className="mt-5 space-y-4 rounded-2xl border border-[#ffd0da] bg-[#fff7f9] p-4 text-sm font-semibold text-[#5f5148]">
         <p className="flex gap-3">
@@ -358,6 +366,11 @@ function PaymentSummary({
           Complete secure Stripe Checkout to confirm this reservation.
         </p>
         <PaymentCheckoutButton reservationId={reservationId} />
+        {process.env.STRIPE_SECRET_KEY?.startsWith("sk_test_") && (
+          <p className="text-xs font-bold text-[#bd1740]">
+            Test payment demo · Use a Stripe test card. No real charge.
+          </p>
+        )}
         <p className="text-xs font-semibold leading-5 text-[#786a60]">
           StayWise never stores card numbers. Stripe sends payment status back through the signed webhook.
         </p>

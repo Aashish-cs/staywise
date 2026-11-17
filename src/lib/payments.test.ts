@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { getPaymentProviderConfig, isStripeCheckoutEnabled } from "@/lib/payments";
 
 const originalStripeMode = process.env.STAYWISE_ENABLE_STRIPE_CHECKOUT;
@@ -6,6 +6,7 @@ const originalStripeSecretKey = process.env.STRIPE_SECRET_KEY;
 
 describe("payment provider config", () => {
   afterEach(() => {
+    vi.unstubAllEnvs();
     restoreEnv("STAYWISE_ENABLE_STRIPE_CHECKOUT", originalStripeMode);
     restoreEnv("STRIPE_SECRET_KEY", originalStripeSecretKey);
   });
@@ -18,13 +19,22 @@ describe("payment provider config", () => {
     expect(isStripeCheckoutEnabled()).toBe(false);
   });
 
-  it("requires both the explicit flag and a Stripe secret key", () => {
+  it("requires checkout credentials and webhook reconciliation credentials", () => {
     process.env.STAYWISE_ENABLE_STRIPE_CHECKOUT = "true";
     delete process.env.STRIPE_SECRET_KEY;
 
     expect(isStripeCheckoutEnabled()).toBe(false);
 
     process.env.STRIPE_SECRET_KEY = "sk_test_staywise";
+
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "");
+    expect(isStripeCheckoutEnabled()).toBe(false);
+
+    vi.stubEnv("STRIPE_WEBHOOK_SECRET", "whsec_test");
+    expect(isStripeCheckoutEnabled()).toBe(false);
+
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service_test");
 
     expect(isStripeCheckoutEnabled()).toBe(true);
   });
